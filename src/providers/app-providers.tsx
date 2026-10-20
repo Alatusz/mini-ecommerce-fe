@@ -2,6 +2,7 @@ import { type ReactNode } from "react"
 import { BrowserRouter } from "react-router-dom"
 import { ThemeProvider } from "@/components/theme-provider"
 import { QueryProvider } from "./query-provider"
+import { Toaster } from "@/components/ui/toast"
 
 interface AppProvidersProps {
   children: ReactNode
@@ -19,6 +20,7 @@ export function AppProviders({ children }: AppProvidersProps) {
       <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
         <BrowserRouter>
           {children}
+          <Toaster />
         </BrowserRouter>
       </ThemeProvider>
     </QueryProvider>
