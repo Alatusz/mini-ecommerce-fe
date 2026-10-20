@@ -1,9 +1,9 @@
 import { Routes, Route, Navigate } from "react-router-dom"
 import MainLayout from "./layout/Layout"
 import LoginPage from "@/pages/auth/login/Index"
+import RegisterPage from "@/pages/auth/register/Index"
 
 const HomePage = () => <div className="p-6 text-xl"> หน้าแรก</div>
-const RegisterPage = () => <div className="p-6 text-xl">หน้าสมัครสมาชิก</div>
 const NotFoundPage = () => (
   <div className="p-6 text-xl text-red-500">404 - ไม่พบหน้า</div>
 )
