@@ -1,10 +1,9 @@
 import { Button } from "@/components/ui/button"
-import { useNavigate } from "react-router-dom"
 import Logo from "@/assets/alatusz-logo.svg"
+import ThemeToggle from "@/components/shares/Theme-toggle"
+import { Link } from "react-router-dom"
 
 function Navbar() {
-  const navigate = useNavigate()
-
   const navMenus = [
     { title: "สมัครสมาชิก", href: "/register" },
     { title: "เข้าสู่ระบบ", href: "/login" },
@@ -12,22 +11,24 @@ function Navbar() {
 
   return (
     <nav className="flex max-h-[60px] items-center justify-between bg-background/95 px-6 py-4">
-      <img
-        src={Logo}
-        width="45px"
-        onClick={() => navigate("/")}
-        className="cursor-pointer rounded-md object-cover"
-      />
+      <Link to="/">
+        <img
+          src={Logo}
+          width="45px"
+          className="cursor-pointer rounded-md object-cover"
+        />
+      </Link>
+
       <div className="flex items-center gap-4">
+        <ThemeToggle />
         {navMenus.map((menu) => (
           <Button
             size="default"
             variant="default"
             key={menu.title}
-            onClick={() => navigate(menu.href)}
             className="cursor-pointer"
           >
-            {menu.title}
+            <Link to={menu.href}>{menu.title}</Link>
           </Button>
         ))}
       </div>
