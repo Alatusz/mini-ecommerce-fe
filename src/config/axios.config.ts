@@ -1,0 +1,42 @@
+import axios from "axios"
+import Cookies from "js-cookie";
+
+
+// BASE URL 
+const apiClient = axios.create({
+  baseURL: "http://localhost:3000/api",
+  timeout: 10000,
+  headers: {
+    "Content-Type": "application/json",
+  },
+})
+
+// REQUEST INTERCEPTOR
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = Cookies.get("token")
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+    },
+    (error) => {
+        return Promise.reject(error)
+    }
+)
+
+// RESPONSE INTERCEPTOR
+apiClient.interceptors.response.use(
+  (response) => {
+    return response
+  },
+  (error) => {
+    if (error.response?.status === 401) {
+      Cookies.remove("token")
+      window.location.href = "/login"
+    }
+    return Promise.reject(error)
+  }
+)
+
+export default apiClient

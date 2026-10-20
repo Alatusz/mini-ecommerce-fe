@@ -1,0 +1,1 @@
+const QUERY_KEYS = { AUTH: "auth", PRODUCTS: "products" }

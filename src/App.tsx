@@ -1,20 +1,30 @@
-import { Button } from "@/components/ui/button"
+import { Routes, Route, Navigate } from "react-router-dom"
+import MainLayout from "./layout/Layout"
+
+const HomePage = () => <div className="p-6 text-xl"> หน้าแรก</div>
+
+const LoginPage = () => <div className="p-6 text-xl">หน้าเข้าสู่ระบบ</div>
+const RegisterPage = () => <div className="p-6 text-xl">หน้าสมัครสมาชิก</div>
+const NotFoundPage = () => (
+  <div className="p-6 text-xl text-red-500">404 - ไม่พบหน้า</div>
+)
 
 export function App() {
   return (
-    <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        <div>
-          <h1 className="font-medium">Project ready!</h1>
-          <p>You may now add components and start building.</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <Button className="mt-2">Button</Button>
-        </div>
-        <div className="font-mono text-xs text-muted-foreground">
-          (Press <kbd>d</kbd> to toggle dark mode)
-        </div>
-      </div>
-    </div>
+    <Routes>
+      {/* หน้าแรก */}
+      <Route path="/" element={<MainLayout />}>
+        <Route path="/" element={<HomePage /> }/>
+      </Route>
+
+      {/* เข้าสู่ระบบ */}
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+
+      {/* ถ้าพิมพ์ path มั่ว ให้วิ่งกลับหน้าแรก */}
+      <Route path="/404" element={<NotFoundPage />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   )
 }
 
