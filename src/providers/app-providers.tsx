@@ -3,6 +3,7 @@ import { BrowserRouter } from "react-router-dom"
 import { ThemeProvider } from "@/components/theme-provider"
 import { QueryProvider } from "./query-provider"
 import { Toaster } from "@/components/ui/toast"
+import { AuthProvider } from "@/context/AuthContext"
 
 interface AppProvidersProps {
   children: ReactNode
@@ -19,7 +20,7 @@ export function AppProviders({ children }: AppProvidersProps) {
     <QueryProvider>
       <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
         <BrowserRouter>
-          {children}
+          <AuthProvider>{children}</AuthProvider>
           <Toaster />
         </BrowserRouter>
       </ThemeProvider>

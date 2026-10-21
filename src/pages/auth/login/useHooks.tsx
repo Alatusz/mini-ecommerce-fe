@@ -5,6 +5,7 @@ import { login } from "@/services/auth.services"
 import { toast } from "@/components/ui/toast"
 import { useNavigate } from "react-router-dom"
 import Cookies from "js-cookie"
+import { useAuth } from "@/context/AuthContext"
 
 export const loginSchema = z.object({
   email: z.string().min(1, "กรุณากรอกอีเมล").email("รูปแบบอีเมลไม่ถูกต้อง"),
@@ -15,6 +16,8 @@ export type LoginFormValues = z.infer<typeof loginSchema>
 
 export function useLogin() {
   const navigate = useNavigate()
+
+  const { setUser } = useAuth()
 
   const {
     control,
@@ -33,7 +36,11 @@ export function useLogin() {
     try {
       const res = await login(data)
 
-      Cookies.set("token", res.data.token, { expires: 7 })
+      setUser({
+        id: res.data.id,
+        email: res.data.email,
+        role: res.data.role,
+      })
 
       toast.add({
         type: "success",
