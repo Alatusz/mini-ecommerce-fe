@@ -4,7 +4,6 @@ import { z } from "zod"
 import { login } from "@/services/auth.services"
 import { toast } from "@/components/ui/toast"
 import { useNavigate } from "react-router-dom"
-import Cookies from "js-cookie"
 import { useAuth } from "@/context/AuthContext"
 
 export const loginSchema = z.object({
