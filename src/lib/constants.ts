@@ -1,1 +1,1 @@
-const QUERY_KEYS = { AUTH: "auth", PRODUCTS: "products" }
+export const QUERY_KEYS = { AUTH: "auth", PRODUCTS: "products" }
