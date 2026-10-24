@@ -42,17 +42,34 @@ function Navbar() {
 
   return (
     <nav className="flex h-16 items-center justify-between px-4 sm:px-6">
-      {/* Brand Logo */}
-      <Link to="/" className="flex items-center gap-2">
-        <img
-          src={Logo}
-          alt="Alatusz Dev Logo"
-          className="h-9 w-9 rounded-md object-contain"
-        />
-        <span className="hidden text-base font-bold sm:inline-block">
-          Mini Ecommerce
-        </span>
-      </Link>
+      {/* Brand Logo & Nav */}
+      <div className="flex items-center gap-6">
+        <Link to="/" className="flex items-center gap-2">
+          <img
+            src={Logo}
+            alt="Alatusz Dev Logo"
+            className="h-9 w-9 rounded-md object-contain"
+          />
+          <span className="hidden text-base font-bold sm:inline-block">
+            Mini Ecommerce
+          </span>
+        </Link>
+
+        <div className="hidden sm:flex items-center gap-4 text-sm font-medium">
+          <Link
+            to="/"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            หน้าแรก
+          </Link>
+          <Link
+            to="/products"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            สินค้าทั้งหมด
+          </Link>
+        </div>
+      </div>
 
       {/* Right Controls */}
       <div className="flex items-center gap-1 sm:gap-2">
