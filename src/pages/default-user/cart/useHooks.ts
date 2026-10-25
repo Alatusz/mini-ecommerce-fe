@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react"
+import { useNavigate } from "react-router-dom"
 
 export interface CartItem {
   id: string
@@ -41,7 +42,7 @@ export function useCart() {
   const [promoCode, setPromoCode] = useState<string>("")
   const [bonusCard, setBonusCard] = useState<string>("")
   const [discount, setDiscount] = useState<number>(0)
-  const [isCheckingOut, setIsCheckingOut] = useState<boolean>(false)
+  const isCheckingOut = false
 
   const increaseQuantity = (id: string) => {
     setCartItems((prev) =>
@@ -86,12 +87,10 @@ export function useCart() {
   const shipping = cartItems.length > 0 ? 29 : 0
   const total = Math.max(0, subtotal + tax + shipping - discount)
 
+  const navigate = useNavigate()
+
   const handleCheckout = () => {
-    setIsCheckingOut(true)
-    setTimeout(() => {
-      setIsCheckingOut(false)
-      alert("Order placed successfully!")
-    }, 1200)
+    navigate("/checkout")
   }
 
   return {
