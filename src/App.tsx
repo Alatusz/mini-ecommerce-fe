@@ -4,6 +4,7 @@ import LoginPage from "@/pages/auth/login/Index"
 import RegisterPage from "@/pages/auth/register/Index"
 import HomePage from "@/pages/home/Index"
 import ProductListPage from "@/pages/products/Index"
+import CartPage from "@/pages/default-user/cart/Index"
 
 const NotFoundPage = () => (
   <div className="p-6 text-xl text-red-500">404 - ไม่พบหน้า</div>
@@ -12,10 +13,11 @@ const NotFoundPage = () => (
 export function App() {
   return (
     <Routes>
-      {/* หน้าแรก และ หน้ารายการสินค้า */}
+      {/* หน้าแรก, หน้ารายการสินค้า, ตะกร้าสินค้า */}
       <Route path="/" element={<MainLayout />}>
         <Route index element={<HomePage />} />
         <Route path="products" element={<ProductListPage />} />
+        <Route path="cart" element={<CartPage />} />
       </Route>
 
       {/* เข้าสู่ระบบ */}
