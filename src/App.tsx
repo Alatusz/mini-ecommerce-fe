@@ -3,7 +3,7 @@ import MainLayout from "./layout/Layout"
 import LoginPage from "@/pages/auth/login/Index"
 import RegisterPage from "@/pages/auth/register/Index"
 import HomePage from "@/pages/home/Index"
-import ProductDetailPage from "@/pages/default-user/product-detail/Index"
+import ProductListPage from "@/pages/products/Index"
 
 const NotFoundPage = () => (
   <div className="p-6 text-xl text-red-500">404 - ไม่พบหน้า</div>
@@ -12,10 +12,10 @@ const NotFoundPage = () => (
 export function App() {
   return (
     <Routes>
-      {/* หน้าแรก และ หน้ารายละเอียดสินค้า */}
+      {/* หน้าแรก และ หน้ารายการสินค้า */}
       <Route path="/" element={<MainLayout />}>
         <Route index element={<HomePage />} />
-        <Route path="product-detail/:id" element={<ProductDetailPage />} />
+        <Route path="products" element={<ProductListPage />} />
       </Route>
 
       {/* เข้าสู่ระบบ */}
