@@ -174,9 +174,15 @@ function Navbar() {
             </div>
 
             <DrawerFooter>
-              <Button className="w-full cursor-pointer" disabled>
-                ดำเนินการสั่งซื้อ
-              </Button>
+              <Link to="/cart" className="w-full">
+                <DrawerClose
+                  render={
+                    <Button className="w-full cursor-pointer">
+                      ดูตะกร้าสินค้า
+                    </Button>
+                  }
+                />
+              </Link>
               <DrawerClose
                 render={
                   <Button variant="outline" className="w-full cursor-pointer">
