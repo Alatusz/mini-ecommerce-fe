@@ -229,10 +229,12 @@ function Navbar() {
                 </DropdownMenuItem>
 
                 {user.role === "admin" && (
-                  <DropdownMenuItem>
-                    <LayoutDashboard />
-                    จัดการระบบ
-                  </DropdownMenuItem>
+                  <Link to="/dashboard">
+                    <DropdownMenuItem className="cursor-pointer">
+                      <LayoutDashboard />
+                      จัดการระบบ
+                    </DropdownMenuItem>
+                  </Link>
                 )}
               </DropdownMenuGroup>
 
