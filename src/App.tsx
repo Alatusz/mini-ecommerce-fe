@@ -6,6 +6,7 @@ import HomePage from "@/pages/home/Index"
 import ProductListPage from "@/pages/products/Index"
 import CartPage from "@/pages/default-user/cart/Index"
 import CheckoutPage from "@/pages/default-user/checkout/Index"
+import DashboardPage from "@/pages/dashboard/Index"
 
 const NotFoundPage = () => (
   <div className="p-6 text-xl text-red-500">404 - ไม่พบหน้า</div>
@@ -21,6 +22,9 @@ export function App() {
         <Route path="cart" element={<CartPage />} />
         <Route path="checkout" element={<CheckoutPage />} />
       </Route>
+
+      {/* หน้าจัดการระบบ Dashboard */}
+      <Route path="/dashboard" element={<DashboardPage />} />
 
       {/* เข้าสู่ระบบ */}
       <Route path="/login" element={<LoginPage />} />
