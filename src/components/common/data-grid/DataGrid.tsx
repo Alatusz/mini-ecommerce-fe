@@ -31,6 +31,7 @@ import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuCheckboxItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -177,21 +178,25 @@ export function DataGrid<TData extends RowData>({
               </DropdownMenuTrigger>
 
               <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuLabel className="text-xs">Toggle Columns</DropdownMenuLabel>
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel className="text-xs">Toggle Columns</DropdownMenuLabel>
+                </DropdownMenuGroup>
                 <DropdownMenuSeparator />
-                {table
-                  .getAllLeafColumns()
-                  .filter((column) => column.getCanHide())
-                  .map((column) => (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize text-xs cursor-pointer"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  ))}
+                <DropdownMenuGroup>
+                  {table
+                    .getAllLeafColumns()
+                    .filter((column) => column.getCanHide())
+                    .map((column) => (
+                      <DropdownMenuCheckboxItem
+                        key={column.id}
+                        className="capitalize text-xs cursor-pointer"
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                      >
+                        {column.id}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
           )}

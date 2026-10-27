@@ -9,6 +9,8 @@ import CheckoutPage from "@/pages/default-user/checkout/Index"
 import DashboardLayout from "@/pages/dashboard/Index"
 import DashboardPage from "@/pages/dashboard/default/Index"
 import DashboardCategoryPage from "@/pages/dashboard/category/Index"
+import DashboardCategoryCreatePage from "@/pages/dashboard/category/create/Index"
+import DashboardCategoryEditPage from "@/pages/dashboard/category/edit/Index"
 import DashboardProductPage from "@/pages/dashboard/product/Index"
 import DashboardUserManagementPage from "@/pages/dashboard/user-management/Index"
 
@@ -31,6 +33,8 @@ export function App() {
       <Route path="/dashboard" element={<DashboardLayout />}>
         <Route index element={<DashboardPage />} />
         <Route path="category" element={<DashboardCategoryPage />} />
+        <Route path="category/create" element={<DashboardCategoryCreatePage />} />
+        <Route path="category/edit/:id" element={<DashboardCategoryEditPage />} />
         <Route path="product" element={<DashboardProductPage />} />
         <Route path="user-management" element={<DashboardUserManagementPage />} />
       </Route>

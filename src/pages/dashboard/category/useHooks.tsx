@@ -1,34 +1,32 @@
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import {
-  initialCategories,
+  getStoredCategories,
+  deleteCategoryFromStore,
   type CategoryItem,
 } from "./common/mockCategory"
 
 export type { CategoryItem }
 
 export function useCategory() {
-  const [categories, setCategories] = useState<CategoryItem[]>(initialCategories)
-  const [viewMode, setViewMode] = useState<"table" | "grid">("table")
-  const [searchQuery, setSearchQuery] = useState("")
-
-  // Dialog UI states
-  const [isAddOpen, setIsAddOpen] = useState(false)
-  const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null)
+  const [categories, setCategories] = useState<CategoryItem[]>(getStoredCategories)
   const [deletingCategory, setDeletingCategory] = useState<CategoryItem | null>(null)
+
+  const refreshCategories = useCallback(() => {
+    setCategories(getStoredCategories())
+  }, [])
+
+  const handleDeleteCategory = (id: string) => {
+    deleteCategoryFromStore(id)
+    refreshCategories()
+    setDeletingCategory(null)
+  }
 
   return {
     categories,
     setCategories,
-    viewMode,
-    setViewMode,
-    searchQuery,
-    setSearchQuery,
-    // Dialogs
-    isAddOpen,
-    setIsAddOpen,
-    editingCategory,
-    setEditingCategory,
+    refreshCategories,
     deletingCategory,
     setDeletingCategory,
+    handleDeleteCategory,
   }
 }

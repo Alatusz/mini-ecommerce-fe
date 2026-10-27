@@ -3,74 +3,105 @@ export interface CategoryItem {
   name: string
   slug: string
   itemCount: number
-  description: string
+  image?: string
   status?: "Active" | "Archived"
   icon?: string
 }
 
 export const initialCategories: CategoryItem[] = [
   {
-    id: "cat-1",
+    id: "category-1",
     name: "Smartphones",
     slug: "smartphones",
     itemCount: 142,
-    description: "Latest flagship phones, foldable devices, and mobile technology.",
+    image: "/images/detail-purple.png",
     status: "Active",
   },
   {
-    id: "cat-2",
+    id: "category-2",
     name: "Audio & Headphones",
     slug: "audio",
     itemCount: 88,
-    description: "Noise cancelling over-ear headphones, Hi-Fi DACs, and wireless earbuds.",
+    image: "/images/hero-airpods.png",
     status: "Active",
   },
   {
-    id: "cat-3",
+    id: "category-3",
     name: "Wearables & Watches",
     slug: "wearables",
     itemCount: 64,
-    description: "Smartwatches, biometric fitness trackers, and health sensors.",
+    image: "/images/cart-watch.png",
     status: "Active",
   },
   {
-    id: "cat-4",
+    id: "category-4",
     name: "Computers & Laptops",
     slug: "computers",
     itemCount: 52,
-    description: "High-performance laptops, ultrabooks, workstations, and displays.",
+    image: "/images/hero-macbook.png",
     status: "Active",
   },
   {
-    id: "cat-5",
+    id: "category-5",
     name: "Gaming & Consoles",
     slug: "gaming",
     itemCount: 45,
-    description: "Next-gen consoles, mechanical keyboards, gaming mice, and VR headsets.",
+    image: "/images/hero-ps5.png",
     status: "Active",
   },
   {
-    id: "cat-6",
+    id: "category-6",
     name: "Accessories",
     slug: "accessories",
     itemCount: 180,
-    description: "GaN fast chargers, braided cables, MagSafe docks, and protective cases.",
+    image: "/images/showcase-gadgets.png",
     status: "Active",
   },
   {
-    id: "cat-7",
+    id: "category-7",
     name: "Photography & Cameras",
     slug: "cameras",
     itemCount: 29,
-    description: "Mirrorless camera bodies, prime lenses, gimbals, and studio lighting.",
+    image: "/images/showcase-foldable.png",
     status: "Active",
   },
   {
-    id: "cat-8",
+    id: "category-8",
     name: "Smart Home",
     slug: "smart-home",
     itemCount: 38,
-    description: "IoT hubs, intelligent lights, security cameras, and voice speakers.",
+    image: "/images/showcase-ipad.png",
     status: "Active",
   },
 ]
+
+let categoryStore: CategoryItem[] = [...initialCategories]
+
+export const getStoredCategories = (): CategoryItem[] => {
+  return [...categoryStore]
+}
+
+export const getCategoryById = (id: string): CategoryItem | undefined => {
+  return categoryStore.find((c) => c.id === id)
+}
+
+export const addCategoryToStore = (category: CategoryItem): void => {
+  categoryStore = [category, ...categoryStore]
+}
+
+export const updateCategoryInStore = (
+  id: string,
+  updated: Partial<CategoryItem>
+): CategoryItem | null => {
+  const index = categoryStore.findIndex((c) => c.id === id)
+  if (index === -1) return null
+  const newItem = { ...categoryStore[index], ...updated }
+  categoryStore[index] = newItem
+  return newItem
+}
+
+export const deleteCategoryFromStore = (id: string): boolean => {
+  const initialLen = categoryStore.length
+  categoryStore = categoryStore.filter((c) => c.id !== id)
+  return categoryStore.length < initialLen
+}
