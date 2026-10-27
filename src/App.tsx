@@ -12,6 +12,8 @@ import DashboardCategoryPage from "@/pages/dashboard/category/Index"
 import DashboardCategoryCreatePage from "@/pages/dashboard/category/create/Index"
 import DashboardCategoryEditPage from "@/pages/dashboard/category/edit/Index"
 import DashboardProductPage from "@/pages/dashboard/product/Index"
+import DashboardProductCreatePage from "@/pages/dashboard/product/create/Index"
+import DashboardProductEditPage from "@/pages/dashboard/product/edit/Index"
 import DashboardUserManagementPage from "@/pages/dashboard/user-management/Index"
 
 const NotFoundPage = () => (
@@ -36,6 +38,8 @@ export function App() {
         <Route path="category/create" element={<DashboardCategoryCreatePage />} />
         <Route path="category/edit/:id" element={<DashboardCategoryEditPage />} />
         <Route path="product" element={<DashboardProductPage />} />
+        <Route path="product/create" element={<DashboardProductCreatePage />} />
+        <Route path="product/edit/:id" element={<DashboardProductEditPage />} />
         <Route path="user-management" element={<DashboardUserManagementPage />} />
       </Route>
 
