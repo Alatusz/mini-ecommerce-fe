@@ -100,3 +100,37 @@ export const initialUsers: UserItem[] = [
     avatar: "AJ",
   },
 ]
+
+export const userRoles: UserItem["role"][] = ["Customer", "Staff", "Admin"]
+export const userStatuses: UserItem["status"][] = ["Active", "Inactive", "Suspended"]
+
+let userStore: UserItem[] = [...initialUsers]
+
+export const getStoredUsers = (): UserItem[] => {
+  return [...userStore]
+}
+
+export const getUserById = (id: string): UserItem | undefined => {
+  return userStore.find((u) => u.id === id)
+}
+
+export const addUserToStore = (user: UserItem): void => {
+  userStore = [user, ...userStore]
+}
+
+export const updateUserInStore = (
+  id: string,
+  updated: Partial<UserItem>
+): UserItem | null => {
+  const index = userStore.findIndex((u) => u.id === id)
+  if (index === -1) return null
+  const newItem = { ...userStore[index], ...updated }
+  userStore[index] = newItem
+  return newItem
+}
+
+export const deleteUserFromStore = (id: string): boolean => {
+  const initialLen = userStore.length
+  userStore = userStore.filter((u) => u.id !== id)
+  return userStore.length < initialLen
+}

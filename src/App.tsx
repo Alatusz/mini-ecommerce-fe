@@ -15,6 +15,8 @@ import DashboardProductPage from "@/pages/dashboard/product/Index"
 import DashboardProductCreatePage from "@/pages/dashboard/product/create/Index"
 import DashboardProductEditPage from "@/pages/dashboard/product/edit/Index"
 import DashboardUserManagementPage from "@/pages/dashboard/user-management/Index"
+import DashboardUserCreatePage from "@/pages/dashboard/user-management/create/Index"
+import DashboardUserEditPage from "@/pages/dashboard/user-management/edit/Index"
 
 const NotFoundPage = () => (
   <div className="p-6 text-xl text-red-500">404 - ไม่พบหน้า</div>
@@ -41,6 +43,8 @@ export function App() {
         <Route path="product/create" element={<DashboardProductCreatePage />} />
         <Route path="product/edit/:id" element={<DashboardProductEditPage />} />
         <Route path="user-management" element={<DashboardUserManagementPage />} />
+        <Route path="user-management/create" element={<DashboardUserCreatePage />} />
+        <Route path="user-management/edit/:id" element={<DashboardUserEditPage />} />
       </Route>
 
       {/* เข้าสู่ระบบ */}

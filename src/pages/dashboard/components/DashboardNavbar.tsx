@@ -202,6 +202,30 @@ export function DashboardNavbar({
                   <BreadcrumbPage>Edit Product</BreadcrumbPage>
                 </BreadcrumbItem>
               </>
+            ) : location.pathname === "/dashboard/user-management/create" ? (
+              <>
+                <BreadcrumbItem>
+                  <BreadcrumbLink render={<Link to="/dashboard/user-management" />}>
+                    User Management
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Create User</BreadcrumbPage>
+                </BreadcrumbItem>
+              </>
+            ) : location.pathname.startsWith("/dashboard/user-management/edit") ? (
+              <>
+                <BreadcrumbItem>
+                  <BreadcrumbLink render={<Link to="/dashboard/user-management" />}>
+                    User Management
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Edit User</BreadcrumbPage>
+                </BreadcrumbItem>
+              </>
             ) : (
               <BreadcrumbItem>
                 <BreadcrumbPage>{formattedMenuTitle}</BreadcrumbPage>
