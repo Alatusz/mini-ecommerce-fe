@@ -1,35 +1,4 @@
-import React from "react"
-import {
-  DollarSign,
-  ShoppingBag,
-  Users,
-  TrendingUp,
-  Download,
-  ArrowUpRight,
-  Package,
-  Eye,
-  CheckCircle2,
-  Clock,
-  Tags,
-  Star,
-  TicketPercent,
-  Plus,
-  Truck,
-  Pencil,
-  Trash2,
-} from "lucide-react"
-import {
-  AreaChart,
-  Area,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts"
-
-import { useDashboard, type OrderItem } from "./useHooks"
+import { Outlet } from "react-router-dom"
 import { DashboardSidebar } from "./components/DashboardSidebar"
 import { DashboardNavbar } from "./components/DashboardNavbar"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
@@ -250,17 +219,14 @@ function DashboardPage() {
     []
   )
 
+export function DashboardLayout() {
   return (
     <SidebarProvider defaultOpen={true}>
-      <DashboardSidebar activeMenu={activeMenu} setActiveMenu={setActiveMenu} />
+      <DashboardSidebar />
 
       <SidebarInset className="min-w-[1200px] h-svh overflow-y-auto overflow-x-auto">
         {/* ── Top Dashboard Navbar ── */}
-        <DashboardNavbar
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          activeMenu={activeMenu}
-        />
+        <DashboardNavbar />
 
         {/* ── Main Content Area (Desktop-native) ── */}
         <main className="flex-1 flex flex-col">
@@ -1033,4 +999,4 @@ function DashboardPage() {
   )
 }
 
-export default DashboardPage
+export default DashboardLayout

@@ -38,17 +38,33 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import ThemeToggle from "@/components/shares/Theme-toggle"
 
 interface DashboardNavbarProps {
-  searchQuery: string
-  setSearchQuery: (query: string) => void
-  activeMenu: string
+  searchQuery?: string
+  setSearchQuery?: (query: string) => void
+  activeMenu?: string
 }
 
 export function DashboardNavbar({
-  searchQuery,
+  searchQuery = "",
   setSearchQuery,
-  activeMenu,
-}: DashboardNavbarProps) {
+  activeMenu: propActiveMenu,
+}: DashboardNavbarProps = {}) {
   const { user, logout } = useAuth()
+  const location = useLocation()
+
+  let activeMenu = propActiveMenu
+  if (!activeMenu) {
+    if (location.pathname === "/dashboard" || location.pathname === "/dashboard/") {
+      activeMenu = "dashboard"
+    } else if (location.pathname.startsWith("/dashboard/category")) {
+      activeMenu = "categories"
+    } else if (location.pathname.startsWith("/dashboard/product")) {
+      activeMenu = "products"
+    } else if (location.pathname.startsWith("/dashboard/user-management")) {
+      activeMenu = "customers"
+    } else {
+      activeMenu = "dashboard"
+    }
+  }
 
   // Notification state with unread tracking for transitions.dev notification-badge
   const [notifications, setNotifications] = useState([
@@ -145,7 +161,7 @@ export function DashboardNavbar({
           <Input
             placeholder="Search dashboard..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => setSearchQuery?.(e.target.value)}
             className="h-9 pl-8 text-xs bg-muted/40 rounded-lg border-border/60"
           />
         </div>
