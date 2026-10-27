@@ -9,7 +9,6 @@ import {
   UserCheck,
   Search,
   CheckCircle2,
-  AlertCircle,
   XCircle,
   Clock,
 } from "lucide-react"
@@ -38,6 +37,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
+import { PageContent } from "@/components/common/PageContent"
 
 const userColumnHelper = createColumnHelper<DataGridFeatures, UserItem>()
 
@@ -50,24 +50,12 @@ export default function DashboardUserManagementPage() {
     setRoleFilter,
     statusFilter,
     setStatusFilter,
-    stats,
-    // Dialogs
     isAddOpen,
     setIsAddOpen,
     editingUser,
     setEditingUser,
     deletingUser,
     setDeletingUser,
-    formData,
-    setFormData,
-    formError,
-    // Actions
-    openAddDialog,
-    openEditDialog,
-    openDeleteDialog,
-    handleAddUser,
-    handleUpdateUser,
-    handleDeleteUser,
   } = useUserManagement()
 
   const getRoleBadge = (role: UserItem["role"]) => {
@@ -222,7 +210,7 @@ export default function DashboardUserManagementPage() {
             <Button
               variant="ghost"
               size="icon-sm"
-              onClick={() => openEditDialog(row.original)}
+              onClick={() => setEditingUser(row.original)}
               className="cursor-pointer text-muted-foreground hover:text-foreground"
               title="Edit user"
             >
@@ -231,7 +219,7 @@ export default function DashboardUserManagementPage() {
             <Button
               variant="ghost"
               size="icon-sm"
-              onClick={() => openDeleteDialog(row.original)}
+              onClick={() => setDeletingUser(row.original)}
               className="cursor-pointer text-muted-foreground hover:text-destructive"
               title="Delete user"
             >
@@ -242,15 +230,15 @@ export default function DashboardUserManagementPage() {
         enableSorting: false,
       }),
     ],
-    []
+    [setEditingUser, setDeletingUser]
   )
 
   return (
-    <div className="space-y-6">
+    <PageContent>
       {/* ── Page Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
             User Management
           </h1>
           <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
@@ -258,7 +246,7 @@ export default function DashboardUserManagementPage() {
           </p>
         </div>
         <Button
-          onClick={openAddDialog}
+          onClick={() => setIsAddOpen(true)}
           className="gap-1.5 bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black cursor-pointer shrink-0"
         >
           <Plus className="size-4" />
@@ -267,8 +255,8 @@ export default function DashboardUserManagementPage() {
       </div>
 
       {/* ── Summary Stats ── */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="p-4 sm:p-5">
+      <div className="grid grid-cols-4 gap-4">
+        <Card className="p-5 flex flex-col justify-between h-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
             <CardTitle className="text-xs font-medium text-muted-foreground">
               Total Accounts
@@ -278,8 +266,8 @@ export default function DashboardUserManagementPage() {
             </div>
           </CardHeader>
           <CardContent className="p-0 pt-3">
-            <div className="text-xl font-bold text-foreground sm:text-2xl">
-              {stats.totalUsers}
+            <div className="text-2xl font-bold text-foreground">
+              {users.length}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
               Registered platform profiles
@@ -287,7 +275,7 @@ export default function DashboardUserManagementPage() {
           </CardContent>
         </Card>
 
-        <Card className="p-4 sm:p-5">
+        <Card className="p-5 flex flex-col justify-between h-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
             <CardTitle className="text-xs font-medium text-muted-foreground">
               Active Customers
@@ -297,8 +285,8 @@ export default function DashboardUserManagementPage() {
             </div>
           </CardHeader>
           <CardContent className="p-0 pt-3">
-            <div className="text-xl font-bold text-foreground sm:text-2xl">
-              {stats.activeUsers}
+            <div className="text-2xl font-bold text-foreground">
+              {users.filter((u) => u.status === "Active").length}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
               In good standing & verified
@@ -306,7 +294,7 @@ export default function DashboardUserManagementPage() {
           </CardContent>
         </Card>
 
-        <Card className="p-4 sm:p-5">
+        <Card className="p-5 flex flex-col justify-between h-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
             <CardTitle className="text-xs font-medium text-muted-foreground">
               Cumulative Spending
@@ -316,8 +304,8 @@ export default function DashboardUserManagementPage() {
             </div>
           </CardHeader>
           <CardContent className="p-0 pt-3">
-            <div className="text-xl font-bold text-foreground sm:text-2xl">
-              ${stats.totalSpending.toLocaleString()}
+            <div className="text-2xl font-bold text-foreground">
+              ${users.reduce((acc, u) => acc + u.totalSpent, 0).toLocaleString()}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
               Lifetime customer value
@@ -325,7 +313,7 @@ export default function DashboardUserManagementPage() {
           </CardContent>
         </Card>
 
-        <Card className="p-4 sm:p-5">
+        <Card className="p-5 flex flex-col justify-between h-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
             <CardTitle className="text-xs font-medium text-muted-foreground">
               Admins & Staff
@@ -335,8 +323,8 @@ export default function DashboardUserManagementPage() {
             </div>
           </CardHeader>
           <CardContent className="p-0 pt-3">
-            <div className="text-xl font-bold text-foreground sm:text-2xl">
-              {stats.adminStaffCount}
+            <div className="text-2xl font-bold text-foreground">
+              {users.filter((u) => u.role === "Admin" || u.role === "Staff").length}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
               Privileged system access
@@ -346,9 +334,9 @@ export default function DashboardUserManagementPage() {
       </div>
 
       {/* ── Filter Bar ── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/40 pb-4">
+      <div className="flex items-center justify-between gap-4 border-b border-border/40 pb-4">
         {/* Search */}
-        <div className="relative w-full md:w-80">
+        <div className="relative w-80">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
             placeholder="Search by name, email, or user ID..."
@@ -359,7 +347,7 @@ export default function DashboardUserManagementPage() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2">
           {/* Role Filter */}
           <div className="flex items-center gap-1 rounded-lg border border-border/60 bg-muted/40 p-1">
             {(["All", "Admin", "Staff", "Customer"] as const).map((role) => (
@@ -411,7 +399,7 @@ export default function DashboardUserManagementPage() {
         searchPlaceholder="Filter user rows..."
       />
 
-      {/* ── Dialog 1: Add User ── */}
+      {/* ── Dialog 1: Add User (UI Only) ── */}
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -421,41 +409,26 @@ export default function DashboardUserManagementPage() {
             </DialogDescription>
           </DialogHeader>
 
-          {formError && (
-            <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-2.5 text-xs text-destructive">
-              <AlertCircle className="size-4 shrink-0" />
-              <span>{formError}</span>
-            </div>
-          )}
-
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <Label htmlFor="user-name" className="text-xs font-semibold">
-                Full Name *
+                Full Name
               </Label>
               <Input
                 id="user-name"
                 placeholder="e.g. Alex Johnson"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
                 className="text-xs"
               />
             </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="user-email" className="text-xs font-semibold">
-                Email Address *
+                Email Address
               </Label>
               <Input
                 id="user-email"
                 type="email"
                 placeholder="e.g. alex.j@example.com"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
                 className="text-xs"
               />
             </div>
@@ -467,13 +440,6 @@ export default function DashboardUserManagementPage() {
                 </Label>
                 <select
                   id="user-role"
-                  value={formData.role}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      role: e.target.value as UserItem["role"],
-                    })
-                  }
                   className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-xs focus-visible:outline-none"
                 >
                   <option value="Customer">Customer</option>
@@ -488,13 +454,6 @@ export default function DashboardUserManagementPage() {
                 </Label>
                 <select
                   id="user-status"
-                  value={formData.status}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      status: e.target.value as UserItem["status"],
-                    })
-                  }
                   className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-xs focus-visible:outline-none"
                 >
                   <option value="Active">Active</option>
@@ -518,7 +477,7 @@ export default function DashboardUserManagementPage() {
             <Button
               type="button"
               size="sm"
-              onClick={handleAddUser}
+              onClick={() => setIsAddOpen(false)}
               className="bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black cursor-pointer"
             >
               Create Account
@@ -527,7 +486,7 @@ export default function DashboardUserManagementPage() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Dialog 2: Edit User ── */}
+      {/* ── Dialog 2: Edit User (UI Only) ── */}
       <Dialog
         open={!!editingUser}
         onOpenChange={(open) => !open && setEditingUser(null)}
@@ -540,39 +499,26 @@ export default function DashboardUserManagementPage() {
             </DialogDescription>
           </DialogHeader>
 
-          {formError && (
-            <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-2.5 text-xs text-destructive">
-              <AlertCircle className="size-4 shrink-0" />
-              <span>{formError}</span>
-            </div>
-          )}
-
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <Label htmlFor="edit-uname" className="text-xs font-semibold">
-                Full Name *
+                Full Name
               </Label>
               <Input
                 id="edit-uname"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
+                defaultValue={editingUser?.name}
                 className="text-xs"
               />
             </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="edit-uemail" className="text-xs font-semibold">
-                Email Address *
+                Email Address
               </Label>
               <Input
                 id="edit-uemail"
                 type="email"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
+                defaultValue={editingUser?.email}
                 className="text-xs"
               />
             </div>
@@ -584,13 +530,7 @@ export default function DashboardUserManagementPage() {
                 </Label>
                 <select
                   id="edit-urole"
-                  value={formData.role}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      role: e.target.value as UserItem["role"],
-                    })
-                  }
+                  defaultValue={editingUser?.role}
                   className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-xs focus-visible:outline-none"
                 >
                   <option value="Customer">Customer</option>
@@ -605,13 +545,7 @@ export default function DashboardUserManagementPage() {
                 </Label>
                 <select
                   id="edit-ustatus"
-                  value={formData.status}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      status: e.target.value as UserItem["status"],
-                    })
-                  }
+                  defaultValue={editingUser?.status}
                   className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-xs focus-visible:outline-none"
                 >
                   <option value="Active">Active</option>
@@ -635,7 +569,7 @@ export default function DashboardUserManagementPage() {
             <Button
               type="button"
               size="sm"
-              onClick={handleUpdateUser}
+              onClick={() => setEditingUser(null)}
               className="bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black cursor-pointer"
             >
               Save Changes
@@ -644,7 +578,7 @@ export default function DashboardUserManagementPage() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Dialog 3: Delete User ── */}
+      {/* ── Dialog 3: Delete User (UI Only) ── */}
       <Dialog
         open={!!deletingUser}
         onOpenChange={(open) => !open && setDeletingUser(null)}
@@ -675,7 +609,7 @@ export default function DashboardUserManagementPage() {
               type="button"
               variant="destructive"
               size="sm"
-              onClick={handleDeleteUser}
+              onClick={() => setDeletingUser(null)}
               className="cursor-pointer"
             >
               Delete
@@ -683,6 +617,6 @@ export default function DashboardUserManagementPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageContent>
   )
 }

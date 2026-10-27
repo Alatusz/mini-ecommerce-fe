@@ -41,6 +41,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
+import { PageContent } from "@/components/common/PageContent"
 
 const productColumnHelper = createColumnHelper<DataGridFeatures, ProductItem>()
 
@@ -53,24 +54,12 @@ export default function DashboardProductPage() {
     setCategoryFilter,
     stockFilter,
     setStockFilter,
-    stats,
-    // Dialogs
     isAddOpen,
     setIsAddOpen,
     editingProduct,
     setEditingProduct,
     deletingProduct,
     setDeletingProduct,
-    formData,
-    setFormData,
-    formError,
-    // Actions
-    openAddDialog,
-    openEditDialog,
-    openDeleteDialog,
-    handleAddProduct,
-    handleUpdateProduct,
-    handleDeleteProduct,
   } = useProduct()
 
   const getStockBadge = (status: ProductItem["status"]) => {
@@ -207,7 +196,7 @@ export default function DashboardProductPage() {
             <Button
               variant="ghost"
               size="icon-sm"
-              onClick={() => openEditDialog(row.original)}
+              onClick={() => setEditingProduct(row.original)}
               className="cursor-pointer text-muted-foreground hover:text-foreground"
               title="Edit product"
             >
@@ -216,7 +205,7 @@ export default function DashboardProductPage() {
             <Button
               variant="ghost"
               size="icon-sm"
-              onClick={() => openDeleteDialog(row.original)}
+              onClick={() => setDeletingProduct(row.original)}
               className="cursor-pointer text-muted-foreground hover:text-destructive"
               title="Delete product"
             >
@@ -227,15 +216,15 @@ export default function DashboardProductPage() {
         enableSorting: false,
       }),
     ],
-    []
+    [setEditingProduct, setDeletingProduct]
   )
 
   return (
-    <div className="space-y-6">
+    <PageContent>
       {/* ── Page Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
             Products Catalog
           </h1>
           <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
@@ -243,7 +232,7 @@ export default function DashboardProductPage() {
           </p>
         </div>
         <Button
-          onClick={openAddDialog}
+          onClick={() => setIsAddOpen(true)}
           className="gap-1.5 bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black cursor-pointer shrink-0"
         >
           <Plus className="size-4" />
@@ -252,8 +241,8 @@ export default function DashboardProductPage() {
       </div>
 
       {/* ── Summary Stats ── */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="p-4 sm:p-5">
+      <div className="grid grid-cols-4 gap-4">
+        <Card className="p-5 flex flex-col justify-between h-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
             <CardTitle className="text-xs font-medium text-muted-foreground">
               Total Products
@@ -263,8 +252,8 @@ export default function DashboardProductPage() {
             </div>
           </CardHeader>
           <CardContent className="p-0 pt-3">
-            <div className="text-xl font-bold text-foreground sm:text-2xl">
-              {stats.totalProducts}
+            <div className="text-2xl font-bold text-foreground">
+              {products.length}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
               SKUs across 6 departments
@@ -272,7 +261,7 @@ export default function DashboardProductPage() {
           </CardContent>
         </Card>
 
-        <Card className="p-4 sm:p-5">
+        <Card className="p-5 flex flex-col justify-between h-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
             <CardTitle className="text-xs font-medium text-muted-foreground">
               Total Inventory Value
@@ -282,8 +271,8 @@ export default function DashboardProductPage() {
             </div>
           </CardHeader>
           <CardContent className="p-0 pt-3">
-            <div className="text-xl font-bold text-foreground sm:text-2xl">
-              ${stats.totalInventoryValue.toLocaleString()}
+            <div className="text-2xl font-bold text-foreground">
+              ${products.reduce((acc, p) => acc + p.price * p.stock, 0).toLocaleString()}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
               Calculated at retail pricing
@@ -291,7 +280,7 @@ export default function DashboardProductPage() {
           </CardContent>
         </Card>
 
-        <Card className="p-4 sm:p-5">
+        <Card className="p-5 flex flex-col justify-between h-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
             <CardTitle className="text-xs font-medium text-muted-foreground">
               Stock Warnings
@@ -301,8 +290,8 @@ export default function DashboardProductPage() {
             </div>
           </CardHeader>
           <CardContent className="p-0 pt-3">
-            <div className="text-xl font-bold text-foreground sm:text-2xl">
-              {stats.lowStockCount} items
+            <div className="text-2xl font-bold text-foreground">
+              {products.filter((p) => p.status === "Low Stock" || p.status === "Out of Stock").length} items
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
               Require replenishment soon
@@ -310,7 +299,7 @@ export default function DashboardProductPage() {
           </CardContent>
         </Card>
 
-        <Card className="p-4 sm:p-5">
+        <Card className="p-5 flex flex-col justify-between h-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
             <CardTitle className="text-xs font-medium text-muted-foreground">
               Best Seller
@@ -320,20 +309,20 @@ export default function DashboardProductPage() {
             </div>
           </CardHeader>
           <CardContent className="p-0 pt-3">
-            <div className="text-base font-bold text-foreground truncate sm:text-lg">
-              {stats.topSellerName}
+            <div className="text-lg font-bold text-foreground truncate">
+              {products[0]?.name || "-"}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              {stats.topSellerSales} units purchased
+              {products[0]?.salesCount || 0} units purchased
             </p>
           </CardContent>
         </Card>
       </div>
 
       {/* ── Filter Bar ── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/40 pb-4">
+      <div className="flex items-center justify-between gap-4 border-b border-border/40 pb-4">
         {/* Search */}
-        <div className="relative w-full md:w-80">
+        <div className="relative w-80">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
             placeholder="Search by name, SKU, or category..."
@@ -344,9 +333,9 @@ export default function DashboardProductPage() {
         </div>
 
         {/* Filter Badges / Selectors */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2">
           {/* Category Filter */}
-          <div className="flex items-center gap-1 rounded-lg border border-border/60 bg-muted/40 p-1 overflow-x-auto max-w-full">
+          <div className="flex items-center gap-1 rounded-lg border border-border/60 bg-muted/40 p-1">
             {productCategories.slice(0, 5).map((cat) => (
               <button
                 key={cat}
@@ -396,7 +385,7 @@ export default function DashboardProductPage() {
         searchPlaceholder="Filter product rows..."
       />
 
-      {/* ── Dialog 1: Add Product ── */}
+      {/* ── Dialog 1: Add Product (UI Only) ── */}
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -406,25 +395,14 @@ export default function DashboardProductPage() {
             </DialogDescription>
           </DialogHeader>
 
-          {formError && (
-            <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-2.5 text-xs text-destructive">
-              <AlertCircle className="size-4 shrink-0" />
-              <span>{formError}</span>
-            </div>
-          )}
-
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <Label htmlFor="prod-name" className="text-xs font-semibold">
-                Product Title *
+                Product Title
               </Label>
               <Input
                 id="prod-name"
                 placeholder="e.g. Sony WH-1000XM5"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
                 className="text-xs"
               />
             </div>
@@ -432,15 +410,11 @@ export default function DashboardProductPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="prod-sku" className="text-xs font-semibold">
-                  SKU Code *
+                  SKU Code
                 </Label>
                 <Input
                   id="prod-sku"
                   placeholder="e.g. WH-XM5-BLK"
-                  value={formData.sku}
-                  onChange={(e) =>
-                    setFormData({ ...formData, sku: e.target.value })
-                  }
                   className="text-xs font-mono uppercase"
                 />
               </div>
@@ -451,10 +425,6 @@ export default function DashboardProductPage() {
                 </Label>
                 <select
                   id="prod-cat"
-                  value={formData.category}
-                  onChange={(e) =>
-                    setFormData({ ...formData, category: e.target.value })
-                  }
                   className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-xs focus-visible:outline-none"
                 >
                   {productCategories
@@ -478,10 +448,7 @@ export default function DashboardProductPage() {
                   type="number"
                   min="0"
                   step="0.01"
-                  value={formData.price}
-                  onChange={(e) =>
-                    setFormData({ ...formData, price: Number(e.target.value) })
-                  }
+                  placeholder="299.00"
                   className="text-xs"
                 />
               </div>
@@ -494,10 +461,7 @@ export default function DashboardProductPage() {
                   id="prod-stock"
                   type="number"
                   min="0"
-                  value={formData.stock}
-                  onChange={(e) =>
-                    setFormData({ ...formData, stock: Number(e.target.value) })
-                  }
+                  placeholder="50"
                   className="text-xs"
                 />
               </div>
@@ -517,7 +481,7 @@ export default function DashboardProductPage() {
             <Button
               type="button"
               size="sm"
-              onClick={handleAddProduct}
+              onClick={() => setIsAddOpen(false)}
               className="bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black cursor-pointer"
             >
               Create Product
@@ -526,7 +490,7 @@ export default function DashboardProductPage() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Dialog 2: Edit Product ── */}
+      {/* ── Dialog 2: Edit Product (UI Only) ── */}
       <Dialog
         open={!!editingProduct}
         onOpenChange={(open) => !open && setEditingProduct(null)}
@@ -539,24 +503,14 @@ export default function DashboardProductPage() {
             </DialogDescription>
           </DialogHeader>
 
-          {formError && (
-            <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-2.5 text-xs text-destructive">
-              <AlertCircle className="size-4 shrink-0" />
-              <span>{formError}</span>
-            </div>
-          )}
-
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <Label htmlFor="edit-pname" className="text-xs font-semibold">
-                Product Title *
+                Product Title
               </Label>
               <Input
                 id="edit-pname"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
+                defaultValue={editingProduct?.name}
                 className="text-xs"
               />
             </div>
@@ -564,14 +518,11 @@ export default function DashboardProductPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="edit-psku" className="text-xs font-semibold">
-                  SKU Code *
+                  SKU Code
                 </Label>
                 <Input
                   id="edit-psku"
-                  value={formData.sku}
-                  onChange={(e) =>
-                    setFormData({ ...formData, sku: e.target.value })
-                  }
+                  defaultValue={editingProduct?.sku}
                   className="text-xs font-mono uppercase"
                 />
               </div>
@@ -582,10 +533,7 @@ export default function DashboardProductPage() {
                 </Label>
                 <select
                   id="edit-pcat"
-                  value={formData.category}
-                  onChange={(e) =>
-                    setFormData({ ...formData, category: e.target.value })
-                  }
+                  defaultValue={editingProduct?.category}
                   className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-xs focus-visible:outline-none"
                 >
                   {productCategories
@@ -609,10 +557,7 @@ export default function DashboardProductPage() {
                   type="number"
                   min="0"
                   step="0.01"
-                  value={formData.price}
-                  onChange={(e) =>
-                    setFormData({ ...formData, price: Number(e.target.value) })
-                  }
+                  defaultValue={editingProduct?.price}
                   className="text-xs"
                 />
               </div>
@@ -625,10 +570,7 @@ export default function DashboardProductPage() {
                   id="edit-pstock"
                   type="number"
                   min="0"
-                  value={formData.stock}
-                  onChange={(e) =>
-                    setFormData({ ...formData, stock: Number(e.target.value) })
-                  }
+                  defaultValue={editingProduct?.stock}
                   className="text-xs"
                 />
               </div>
@@ -648,7 +590,7 @@ export default function DashboardProductPage() {
             <Button
               type="button"
               size="sm"
-              onClick={handleUpdateProduct}
+              onClick={() => setEditingProduct(null)}
               className="bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black cursor-pointer"
             >
               Save Changes
@@ -657,7 +599,7 @@ export default function DashboardProductPage() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Dialog 3: Delete Product ── */}
+      {/* ── Dialog 3: Delete Product (UI Only) ── */}
       <Dialog
         open={!!deletingProduct}
         onOpenChange={(open) => !open && setDeletingProduct(null)}
@@ -688,7 +630,7 @@ export default function DashboardProductPage() {
               type="button"
               variant="destructive"
               size="sm"
-              onClick={handleDeleteProduct}
+              onClick={() => setDeletingProduct(null)}
               className="cursor-pointer"
             >
               Delete
@@ -696,6 +638,6 @@ export default function DashboardProductPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageContent>
   )
 }
