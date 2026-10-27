@@ -110,3 +110,35 @@ export const productCategories = [
   "Gaming",
   "Accessories",
 ]
+
+let productStore: ProductItem[] = [...initialProducts]
+
+export const getStoredProducts = (): ProductItem[] => {
+  return [...productStore]
+}
+
+export const getProductById = (id: string): ProductItem | undefined => {
+  return productStore.find((p) => p.id === id)
+}
+
+export const addProductToStore = (product: ProductItem): void => {
+  productStore = [product, ...productStore]
+}
+
+export const updateProductInStore = (
+  id: string,
+  updated: Partial<ProductItem>
+): ProductItem | null => {
+  const index = productStore.findIndex((p) => p.id === id)
+  if (index === -1) return null
+  const newItem = { ...productStore[index], ...updated }
+  productStore[index] = newItem
+  return newItem
+}
+
+export const deleteProductFromStore = (id: string): boolean => {
+  const initialLen = productStore.length
+  productStore = productStore.filter((p) => p.id !== id)
+  return productStore.length < initialLen
+}
+

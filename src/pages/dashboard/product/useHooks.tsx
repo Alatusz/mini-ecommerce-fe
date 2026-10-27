@@ -1,6 +1,7 @@
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import {
-  initialProducts,
+  getStoredProducts,
+  deleteProductFromStore,
   productCategories,
   type ProductItem,
 } from "./common/mockProduct"
@@ -9,31 +10,36 @@ export type { ProductItem }
 export { productCategories }
 
 export function useProduct() {
-  const [products, setProducts] = useState<ProductItem[]>(initialProducts)
+  const [products, setProducts] = useState<ProductItem[]>(getStoredProducts)
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("All")
   const [stockFilter, setStockFilter] = useState("All")
 
-  // Dialog UI states
-  const [isAddOpen, setIsAddOpen] = useState(false)
-  const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null)
+  // Delete modal state
   const [deletingProduct, setDeletingProduct] = useState<ProductItem | null>(null)
+
+  const refreshProducts = useCallback(() => {
+    setProducts(getStoredProducts())
+  }, [])
+
+  const handleDeleteProduct = (id: string) => {
+    deleteProductFromStore(id)
+    refreshProducts()
+    setDeletingProduct(null)
+  }
 
   return {
     products,
     setProducts,
+    refreshProducts,
     searchQuery,
     setSearchQuery,
     categoryFilter,
     setCategoryFilter,
     stockFilter,
     setStockFilter,
-    // Dialogs
-    isAddOpen,
-    setIsAddOpen,
-    editingProduct,
-    setEditingProduct,
     deletingProduct,
     setDeletingProduct,
+    handleDeleteProduct,
   }
 }

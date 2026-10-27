@@ -1,13 +1,9 @@
 import { useMemo } from "react"
+import { Link } from "react-router-dom"
 import {
-  Package,
   Plus,
   Pencil,
   Trash2,
-  DollarSign,
-  AlertTriangle,
-  TrendingUp,
-  Search,
   CheckCircle2,
   AlertCircle,
   XCircle,
@@ -20,19 +16,10 @@ import {
 } from "@/components/common/data-grid"
 import {
   useProduct,
-  productCategories,
   type ProductItem,
 } from "./useHooks"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Dialog,
   DialogContent,
@@ -48,18 +35,9 @@ const productColumnHelper = createColumnHelper<DataGridFeatures, ProductItem>()
 export default function DashboardProductPage() {
   const {
     products,
-    searchQuery,
-    setSearchQuery,
-    categoryFilter,
-    setCategoryFilter,
-    stockFilter,
-    setStockFilter,
-    isAddOpen,
-    setIsAddOpen,
-    editingProduct,
-    setEditingProduct,
     deletingProduct,
     setDeletingProduct,
+    handleDeleteProduct,
   } = useProduct()
 
   const getStockBadge = (status: ProductItem["status"]) => {
@@ -100,29 +78,6 @@ export default function DashboardProductPage() {
   // TanStack Table columns
   const columns = useMemo(
     () => [
-      productColumnHelper.display({
-        id: "select",
-        header: ({ table }) => (
-          <input
-            type="checkbox"
-            checked={table.getIsAllPageRowsSelected()}
-            onChange={table.getToggleAllPageRowsSelectedHandler()}
-            className="size-4 rounded accent-black dark:accent-white cursor-pointer"
-            aria-label="Select all rows"
-          />
-        ),
-        cell: ({ row }) => (
-          <input
-            type="checkbox"
-            checked={row.getIsSelected()}
-            onChange={row.getToggleSelectedHandler()}
-            className="size-4 rounded accent-black dark:accent-white cursor-pointer"
-            aria-label={`Select row ${row.original.name}`}
-          />
-        ),
-        enableSorting: false,
-        enableHiding: false,
-      }),
       productColumnHelper.accessor("name", {
         header: "Product",
         cell: (info) => (
@@ -137,9 +92,6 @@ export default function DashboardProductPage() {
             <div className="flex flex-col min-w-0">
               <span className="font-semibold text-xs sm:text-sm text-foreground truncate">
                 {info.getValue()}
-              </span>
-              <span className="text-[10px] text-muted-foreground font-mono">
-                {info.row.original.id}
               </span>
             </div>
           </div>
@@ -170,38 +122,32 @@ export default function DashboardProductPage() {
         ),
       }),
       productColumnHelper.accessor("stock", {
-        header: "Stock Level",
+        header: "Stock Units",
         cell: (info) => (
-          <div className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-foreground">
-              {info.getValue()} units
-            </span>
-            {getStockBadge(info.row.original.status)}
-          </div>
-        ),
-      }),
-      productColumnHelper.accessor("salesCount", {
-        header: "Sales",
-        cell: (info) => (
-          <span className="text-xs text-muted-foreground">
-            {info.getValue()} sold
+          <span className="text-xs font-medium text-foreground">
+            {info.getValue().toLocaleString()} units
           </span>
         ),
+      }),
+      productColumnHelper.accessor("status", {
+        header: "Stock Status",
+        cell: (info) => getStockBadge(info.getValue()),
       }),
       productColumnHelper.display({
         id: "actions",
         header: () => <div className="text-right">Actions</div>,
         cell: ({ row }) => (
           <div className="flex items-center justify-end gap-1">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => setEditingProduct(row.original)}
-              className="cursor-pointer text-muted-foreground hover:text-foreground"
-              title="Edit product"
-            >
-              <Pencil className="size-3.5" />
-            </Button>
+            <Link to={`/dashboard/product/edit/${row.original.id}`}>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="cursor-pointer text-muted-foreground hover:text-foreground"
+                title="Edit product"
+              >
+                <Pencil className="size-3.5" />
+              </Button>
+            </Link>
             <Button
               variant="ghost"
               size="icon-sm"
@@ -216,7 +162,7 @@ export default function DashboardProductPage() {
         enableSorting: false,
       }),
     ],
-    [setEditingProduct, setDeletingProduct]
+    [setDeletingProduct]
   )
 
   return (
@@ -231,153 +177,18 @@ export default function DashboardProductPage() {
             Manage inventory stocks, pricing structures, and merchandise across your store.
           </p>
         </div>
-        <Button
-          onClick={() => setIsAddOpen(true)}
-          className="gap-1.5 bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black cursor-pointer shrink-0"
-        >
-          <Plus className="size-4" />
-          <span>Add Product</span>
-        </Button>
-      </div>
-
-      {/* ── Summary Stats ── */}
-      <div className="grid grid-cols-4 gap-4">
-        <Card className="p-5 flex flex-col justify-between h-full">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
-            <CardTitle className="text-xs font-medium text-muted-foreground">
-              Total Products
-            </CardTitle>
-            <div className="flex size-8 items-center justify-center rounded-lg bg-muted">
-              <Package className="size-4 text-primary" />
-            </div>
-          </CardHeader>
-          <CardContent className="p-0 pt-3">
-            <div className="text-2xl font-bold text-foreground">
-              {products.length}
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              SKUs across 6 departments
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="p-5 flex flex-col justify-between h-full">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
-            <CardTitle className="text-xs font-medium text-muted-foreground">
-              Total Inventory Value
-            </CardTitle>
-            <div className="flex size-8 items-center justify-center rounded-lg bg-muted">
-              <DollarSign className="size-4 text-emerald-600 dark:text-emerald-400" />
-            </div>
-          </CardHeader>
-          <CardContent className="p-0 pt-3">
-            <div className="text-2xl font-bold text-foreground">
-              ${products.reduce((acc, p) => acc + p.price * p.stock, 0).toLocaleString()}
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Calculated at retail pricing
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="p-5 flex flex-col justify-between h-full">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
-            <CardTitle className="text-xs font-medium text-muted-foreground">
-              Stock Warnings
-            </CardTitle>
-            <div className="flex size-8 items-center justify-center rounded-lg bg-muted">
-              <AlertTriangle className="size-4 text-amber-600 dark:text-amber-400" />
-            </div>
-          </CardHeader>
-          <CardContent className="p-0 pt-3">
-            <div className="text-2xl font-bold text-foreground">
-              {products.filter((p) => p.status === "Low Stock" || p.status === "Out of Stock").length} items
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Require replenishment soon
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="p-5 flex flex-col justify-between h-full">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
-            <CardTitle className="text-xs font-medium text-muted-foreground">
-              Best Seller
-            </CardTitle>
-            <div className="flex size-8 items-center justify-center rounded-lg bg-muted">
-              <TrendingUp className="size-4 text-blue-600 dark:text-blue-400" />
-            </div>
-          </CardHeader>
-          <CardContent className="p-0 pt-3">
-            <div className="text-lg font-bold text-foreground truncate">
-              {products[0]?.name || "-"}
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {products[0]?.salesCount || 0} units purchased
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* ── Filter Bar ── */}
-      <div className="flex items-center justify-between gap-4 border-b border-border/40 pb-4">
-        {/* Search */}
-        <div className="relative w-80">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by name, SKU, or category..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-9 pl-8 text-xs bg-muted/40 rounded-lg border-border/60"
-          />
-        </div>
-
-        {/* Filter Badges / Selectors */}
-        <div className="flex items-center gap-2">
-          {/* Category Filter */}
-          <div className="flex items-center gap-1 rounded-lg border border-border/60 bg-muted/40 p-1">
-            {productCategories.slice(0, 5).map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => setCategoryFilter(cat)}
-                className={`cursor-pointer rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors shrink-0 ${
-                  categoryFilter === cat
-                    ? "bg-black text-white dark:bg-white dark:text-black"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-
-          {/* Stock Filter */}
-          <div className="flex items-center gap-1 rounded-lg border border-border/60 bg-muted/40 p-1">
-            {(["All", "In Stock", "Low Stock", "Out of Stock"] as const).map(
-              (stock) => (
-                <button
-                  key={stock}
-                  type="button"
-                  onClick={() => setStockFilter(stock)}
-                  className={`cursor-pointer rounded-md px-2 py-1 text-[11px] font-semibold transition-colors shrink-0 ${
-                    stockFilter === stock
-                      ? "bg-background text-foreground shadow-xs"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {stock}
-                </button>
-              )
-            )}
-          </div>
-        </div>
+        <Link to="/dashboard/product/create">
+          <Button
+            className="gap-1.5 bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black cursor-pointer shrink-0"
+          >
+            <Plus className="size-4" />
+            <span>Add Product</span>
+          </Button>
+        </Link>
       </div>
 
       {/* ── TanStack DataGrid ── */}
       <DataGrid
-        title="Products Inventory"
-        description="Comprehensive product inventory table with multi-column sorting and filtering."
         data={products}
         columns={columns}
         urlSync={true}
@@ -385,221 +196,7 @@ export default function DashboardProductPage() {
         searchPlaceholder="Filter product rows..."
       />
 
-      {/* ── Dialog 1: Add Product (UI Only) ── */}
-      <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add New Product</DialogTitle>
-            <DialogDescription>
-              Create a new item in your inventory catalog.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="prod-name" className="text-xs font-semibold">
-                Product Title
-              </Label>
-              <Input
-                id="prod-name"
-                placeholder="e.g. Sony WH-1000XM5"
-                className="text-xs"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="prod-sku" className="text-xs font-semibold">
-                  SKU Code
-                </Label>
-                <Input
-                  id="prod-sku"
-                  placeholder="e.g. WH-XM5-BLK"
-                  className="text-xs font-mono uppercase"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="prod-cat" className="text-xs font-semibold">
-                  Category
-                </Label>
-                <select
-                  id="prod-cat"
-                  className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-xs focus-visible:outline-none"
-                >
-                  {productCategories
-                    .filter((c) => c !== "All")
-                    .map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="prod-price" className="text-xs font-semibold">
-                  Price ($)
-                </Label>
-                <Input
-                  id="prod-price"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder="299.00"
-                  className="text-xs"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="prod-stock" className="text-xs font-semibold">
-                  Stock Units
-                </Label>
-                <Input
-                  id="prod-stock"
-                  type="number"
-                  min="0"
-                  placeholder="50"
-                  className="text-xs"
-                />
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setIsAddOpen(false)}
-              className="cursor-pointer"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => setIsAddOpen(false)}
-              className="bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black cursor-pointer"
-            >
-              Create Product
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* ── Dialog 2: Edit Product (UI Only) ── */}
-      <Dialog
-        open={!!editingProduct}
-        onOpenChange={(open) => !open && setEditingProduct(null)}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Product</DialogTitle>
-            <DialogDescription>
-              Update pricing, inventory levels, and classification.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-pname" className="text-xs font-semibold">
-                Product Title
-              </Label>
-              <Input
-                id="edit-pname"
-                defaultValue={editingProduct?.name}
-                className="text-xs"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-psku" className="text-xs font-semibold">
-                  SKU Code
-                </Label>
-                <Input
-                  id="edit-psku"
-                  defaultValue={editingProduct?.sku}
-                  className="text-xs font-mono uppercase"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-pcat" className="text-xs font-semibold">
-                  Category
-                </Label>
-                <select
-                  id="edit-pcat"
-                  defaultValue={editingProduct?.category}
-                  className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-xs focus-visible:outline-none"
-                >
-                  {productCategories
-                    .filter((c) => c !== "All")
-                    .map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-pprice" className="text-xs font-semibold">
-                  Price ($)
-                </Label>
-                <Input
-                  id="edit-pprice"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  defaultValue={editingProduct?.price}
-                  className="text-xs"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-pstock" className="text-xs font-semibold">
-                  Stock Units
-                </Label>
-                <Input
-                  id="edit-pstock"
-                  type="number"
-                  min="0"
-                  defaultValue={editingProduct?.stock}
-                  className="text-xs"
-                />
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setEditingProduct(null)}
-              className="cursor-pointer"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => setEditingProduct(null)}
-              className="bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black cursor-pointer"
-            >
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* ── Dialog 3: Delete Product (UI Only) ── */}
+      {/* ── Dialog: Delete Product Confirmation ── */}
       <Dialog
         open={!!deletingProduct}
         onOpenChange={(open) => !open && setDeletingProduct(null)}
@@ -630,7 +227,11 @@ export default function DashboardProductPage() {
               type="button"
               variant="destructive"
               size="sm"
-              onClick={() => setDeletingProduct(null)}
+              onClick={() => {
+                if (deletingProduct) {
+                  handleDeleteProduct(deletingProduct.id)
+                }
+              }}
               className="cursor-pointer"
             >
               Delete
