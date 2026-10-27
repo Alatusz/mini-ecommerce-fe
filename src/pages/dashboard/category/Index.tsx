@@ -9,7 +9,6 @@ import {
   FolderTree,
   Sparkles,
   Layers,
-  AlertCircle,
   Search,
 } from "lucide-react"
 
@@ -38,6 +37,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
+import { PageContent } from "@/components/common/PageContent"
 
 const categoryColumnHelper = createColumnHelper<DataGridFeatures, CategoryItem>()
 
@@ -48,24 +48,12 @@ export default function DashboardCategoryPage() {
     setViewMode,
     searchQuery,
     setSearchQuery,
-    stats,
-    // Dialogs
     isAddOpen,
     setIsAddOpen,
     editingCategory,
     setEditingCategory,
     deletingCategory,
     setDeletingCategory,
-    formData,
-    setFormData,
-    formError,
-    // Actions
-    openAddDialog,
-    openEditDialog,
-    openDeleteDialog,
-    handleAddCategory,
-    handleUpdateCategory,
-    handleDeleteCategory,
   } = useCategory()
 
   // Columns for TanStack Table DataGrid
@@ -168,7 +156,7 @@ export default function DashboardCategoryPage() {
             <Button
               variant="ghost"
               size="icon-sm"
-              onClick={() => openEditDialog(row.original)}
+              onClick={() => setEditingCategory(row.original)}
               className="cursor-pointer text-muted-foreground hover:text-foreground"
               title="Edit category"
             >
@@ -177,7 +165,7 @@ export default function DashboardCategoryPage() {
             <Button
               variant="ghost"
               size="icon-sm"
-              onClick={() => openDeleteDialog(row.original)}
+              onClick={() => setDeletingCategory(row.original)}
               className="cursor-pointer text-muted-foreground hover:text-destructive"
               title="Delete category"
             >
@@ -188,15 +176,15 @@ export default function DashboardCategoryPage() {
         enableSorting: false,
       }),
     ],
-    []
+    [setEditingCategory, setDeletingCategory]
   )
 
   return (
-    <div className="space-y-6">
+    <PageContent>
       {/* ── Page Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
             Product Categories
           </h1>
           <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
@@ -204,7 +192,7 @@ export default function DashboardCategoryPage() {
           </p>
         </div>
         <Button
-          onClick={openAddDialog}
+          onClick={() => setIsAddOpen(true)}
           className="gap-1.5 bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black cursor-pointer shrink-0"
         >
           <Plus className="size-4" />
@@ -213,8 +201,8 @@ export default function DashboardCategoryPage() {
       </div>
 
       {/* ── Summary Stats ── */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="p-4 sm:p-5">
+      <div className="grid grid-cols-4 gap-4">
+        <Card className="p-5 flex flex-col justify-between h-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
             <CardTitle className="text-xs font-medium text-muted-foreground">
               Total Categories
@@ -224,8 +212,8 @@ export default function DashboardCategoryPage() {
             </div>
           </CardHeader>
           <CardContent className="p-0 pt-3">
-            <div className="text-xl font-bold text-foreground sm:text-2xl">
-              {stats.totalCategories}
+            <div className="text-2xl font-bold text-foreground">
+              {categories.length}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
               Active taxonomy groups
@@ -233,7 +221,7 @@ export default function DashboardCategoryPage() {
           </CardContent>
         </Card>
 
-        <Card className="p-4 sm:p-5">
+        <Card className="p-5 flex flex-col justify-between h-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
             <CardTitle className="text-xs font-medium text-muted-foreground">
               Assigned Products
@@ -243,8 +231,8 @@ export default function DashboardCategoryPage() {
             </div>
           </CardHeader>
           <CardContent className="p-0 pt-3">
-            <div className="text-xl font-bold text-foreground sm:text-2xl">
-              {stats.totalItems}
+            <div className="text-2xl font-bold text-foreground">
+              {categories.reduce((acc, c) => acc + c.itemCount, 0)}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
               Live items across store
@@ -252,7 +240,7 @@ export default function DashboardCategoryPage() {
           </CardContent>
         </Card>
 
-        <Card className="p-4 sm:p-5">
+        <Card className="p-5 flex flex-col justify-between h-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
             <CardTitle className="text-xs font-medium text-muted-foreground">
               Active Status
@@ -262,8 +250,8 @@ export default function DashboardCategoryPage() {
             </div>
           </CardHeader>
           <CardContent className="p-0 pt-3">
-            <div className="text-xl font-bold text-foreground sm:text-2xl">
-              {stats.activeCount} / {stats.totalCategories}
+            <div className="text-2xl font-bold text-foreground">
+              {categories.filter((c) => c.status !== "Archived").length}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
               Visible on customer storefront
@@ -271,7 +259,7 @@ export default function DashboardCategoryPage() {
           </CardContent>
         </Card>
 
-        <Card className="p-4 sm:p-5">
+        <Card className="p-5 flex flex-col justify-between h-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
             <CardTitle className="text-xs font-medium text-muted-foreground">
               Top Category
@@ -281,20 +269,20 @@ export default function DashboardCategoryPage() {
             </div>
           </CardHeader>
           <CardContent className="p-0 pt-3">
-            <div className="text-base font-bold text-foreground truncate sm:text-lg">
-              {stats.topCategoryName}
+            <div className="text-lg font-bold text-foreground truncate">
+              {categories[0]?.name || "-"}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              {stats.topCategoryCount} products indexed
+              {categories[0]?.itemCount || 0} products indexed
             </p>
           </CardContent>
         </Card>
       </div>
 
       {/* ── Toolbar: Search & View Mode Switcher ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/40 pb-4">
+      <div className="flex items-center justify-between gap-3 border-b border-border/40 pb-4">
         {/* Search */}
-        <div className="relative w-full sm:w-72">
+        <div className="relative w-72">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
             placeholder="Search category name, slug..."
@@ -305,7 +293,7 @@ export default function DashboardCategoryPage() {
         </div>
 
         {/* View Mode Toggle */}
-        <div className="flex items-center gap-1 self-end sm:self-auto rounded-lg border border-border/60 bg-muted/40 p-1">
+        <div className="flex items-center gap-1 rounded-lg border border-border/60 bg-muted/40 p-1">
           <Button
             type="button"
             variant="ghost"
@@ -350,11 +338,11 @@ export default function DashboardCategoryPage() {
           searchPlaceholder="Filter table rows..."
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           {categories.map((cat) => (
             <Card
               key={cat.id}
-              className="p-5 flex flex-col justify-between hover:border-foreground/30 transition-colors"
+              className="p-5 flex flex-col justify-between hover:border-foreground/30 transition-colors h-full"
             >
               <div>
                 <div className="flex items-center justify-between">
@@ -363,7 +351,7 @@ export default function DashboardCategoryPage() {
                       <Tags className="size-4 text-foreground" />
                     </div>
                     <div>
-                      <span className="font-bold text-sm sm:text-base block">
+                      <span className="font-bold text-sm block">
                         {cat.name}
                       </span>
                       <span className="text-[10px] text-muted-foreground font-mono">
@@ -389,7 +377,7 @@ export default function DashboardCategoryPage() {
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    onClick={() => openEditDialog(cat)}
+                    onClick={() => setEditingCategory(cat)}
                     className="cursor-pointer text-muted-foreground hover:text-foreground"
                     title="Edit category"
                   >
@@ -398,7 +386,7 @@ export default function DashboardCategoryPage() {
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    onClick={() => openDeleteDialog(cat)}
+                    onClick={() => setDeletingCategory(cat)}
                     className="cursor-pointer text-muted-foreground hover:text-destructive"
                     title="Delete category"
                   >
@@ -411,7 +399,7 @@ export default function DashboardCategoryPage() {
         </div>
       )}
 
-      {/* ── Dialog 1: Add Category ── */}
+      {/* ── Dialog 1: Add Category (UI Only) ── */}
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -421,25 +409,14 @@ export default function DashboardCategoryPage() {
             </DialogDescription>
           </DialogHeader>
 
-          {formError && (
-            <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-2.5 text-xs text-destructive">
-              <AlertCircle className="size-4 shrink-0" />
-              <span>{formError}</span>
-            </div>
-          )}
-
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <Label htmlFor="add-name" className="text-xs font-semibold">
-                Category Name *
+                Category Name
               </Label>
               <Input
                 id="add-name"
                 placeholder="e.g. Smart Watches"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
                 className="text-xs"
               />
             </div>
@@ -450,11 +427,7 @@ export default function DashboardCategoryPage() {
               </Label>
               <Input
                 id="add-slug"
-                placeholder="e.g. smart-watches (auto-generated if empty)"
-                value={formData.slug}
-                onChange={(e) =>
-                  setFormData({ ...formData, slug: e.target.value })
-                }
+                placeholder="e.g. smart-watches"
                 className="text-xs font-mono"
               />
             </div>
@@ -466,10 +439,6 @@ export default function DashboardCategoryPage() {
               <Textarea
                 id="add-desc"
                 placeholder="Brief summary of products in this category..."
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
                 className="text-xs resize-none"
                 rows={3}
               />
@@ -489,7 +458,7 @@ export default function DashboardCategoryPage() {
             <Button
               type="button"
               size="sm"
-              onClick={handleAddCategory}
+              onClick={() => setIsAddOpen(false)}
               className="bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black cursor-pointer"
             >
               Create Category
@@ -498,7 +467,7 @@ export default function DashboardCategoryPage() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Dialog 2: Edit Category ── */}
+      {/* ── Dialog 2: Edit Category (UI Only) ── */}
       <Dialog
         open={!!editingCategory}
         onOpenChange={(open) => !open && setEditingCategory(null)}
@@ -511,24 +480,14 @@ export default function DashboardCategoryPage() {
             </DialogDescription>
           </DialogHeader>
 
-          {formError && (
-            <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-2.5 text-xs text-destructive">
-              <AlertCircle className="size-4 shrink-0" />
-              <span>{formError}</span>
-            </div>
-          )}
-
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <Label htmlFor="edit-name" className="text-xs font-semibold">
-                Category Name *
+                Category Name
               </Label>
               <Input
                 id="edit-name"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
+                defaultValue={editingCategory?.name}
                 className="text-xs"
               />
             </div>
@@ -539,10 +498,7 @@ export default function DashboardCategoryPage() {
               </Label>
               <Input
                 id="edit-slug"
-                value={formData.slug}
-                onChange={(e) =>
-                  setFormData({ ...formData, slug: e.target.value })
-                }
+                defaultValue={editingCategory?.slug}
                 className="text-xs font-mono"
               />
             </div>
@@ -553,10 +509,7 @@ export default function DashboardCategoryPage() {
               </Label>
               <Textarea
                 id="edit-desc"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
+                defaultValue={editingCategory?.description}
                 className="text-xs resize-none"
                 rows={3}
               />
@@ -576,7 +529,7 @@ export default function DashboardCategoryPage() {
             <Button
               type="button"
               size="sm"
-              onClick={handleUpdateCategory}
+              onClick={() => setEditingCategory(null)}
               className="bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black cursor-pointer"
             >
               Save Changes
@@ -585,7 +538,7 @@ export default function DashboardCategoryPage() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Dialog 3: Delete Confirmation ── */}
+      {/* ── Dialog 3: Delete Confirmation (UI Only) ── */}
       <Dialog
         open={!!deletingCategory}
         onOpenChange={(open) => !open && setDeletingCategory(null)}
@@ -616,7 +569,7 @@ export default function DashboardCategoryPage() {
               type="button"
               variant="destructive"
               size="sm"
-              onClick={handleDeleteCategory}
+              onClick={() => setDeletingCategory(null)}
               className="cursor-pointer"
             >
               Delete
@@ -624,6 +577,6 @@ export default function DashboardCategoryPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageContent>
   )
 }

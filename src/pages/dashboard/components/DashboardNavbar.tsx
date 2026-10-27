@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom"
 import {
   Search,
   Bell,
@@ -37,6 +37,14 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import ThemeToggle from "@/components/shares/Theme-toggle"
 
+interface NotificationItem {
+  id: string
+  title: string
+  desc: string
+  time: string
+  read: boolean
+}
+
 interface DashboardNavbarProps {
   searchQuery?: string
   setSearchQuery?: (query: string) => void
@@ -67,7 +75,7 @@ export function DashboardNavbar({
   }
 
   // Notification state with unread tracking for transitions.dev notification-badge
-  const [notifications, setNotifications] = useState([
+  const [notifications, setNotifications] = useState<NotificationItem[]>([
     {
       id: "1",
       title: "New order received",
