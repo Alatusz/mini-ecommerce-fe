@@ -63,6 +63,8 @@ export function DashboardNavbar({
   if (!activeMenu) {
     if (location.pathname === "/dashboard" || location.pathname === "/dashboard/") {
       activeMenu = "dashboard"
+    } else if (location.pathname.startsWith("/dashboard/order")) {
+      activeMenu = "orders"
     } else if (location.pathname.startsWith("/dashboard/category")) {
       activeMenu = "categories"
     } else if (location.pathname.startsWith("/dashboard/product")) {
@@ -154,7 +156,19 @@ export function DashboardNavbar({
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
-            {location.pathname === "/dashboard/category/create" ? (
+            {location.pathname.startsWith("/dashboard/order/edit") ? (
+              <>
+                <BreadcrumbItem>
+                  <BreadcrumbLink render={<Link to="/dashboard/order" />}>
+                    Orders Management
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Edit Order</BreadcrumbPage>
+                </BreadcrumbItem>
+              </>
+            ) : location.pathname === "/dashboard/category/create" ? (
               <>
                 <BreadcrumbItem>
                   <BreadcrumbLink render={<Link to="/dashboard/category" />}>
