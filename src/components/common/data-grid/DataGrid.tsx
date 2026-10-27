@@ -121,11 +121,11 @@ export function DataGrid<TData extends RowData>({
   return (
     <div className={`flex flex-col gap-4 ${className}`}>
       {/* ── Toolbar: Header, Global Search, Column Visibility & Actions ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-3">
         {(title || description) && (
           <div>
             {title && (
-              <h2 className="text-base sm:text-lg font-bold text-foreground">
+              <h2 className="text-lg font-bold text-foreground">
                 {title}
               </h2>
             )}
@@ -137,10 +137,10 @@ export function DataGrid<TData extends RowData>({
           </div>
         )}
 
-        <div className="flex items-center gap-2 flex-wrap ml-auto">
+        <div className="flex items-center gap-2 ml-auto">
           {/* Global Search Input */}
           {enableSearch && (
-            <div className="relative w-full sm:w-64">
+            <div className="relative w-64">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input
                 placeholder={searchPlaceholder}
@@ -172,7 +172,7 @@ export function DataGrid<TData extends RowData>({
                   className="h-9 gap-1.5 text-xs cursor-pointer border-border/70"
                 >
                   <SlidersHorizontal className="size-3.5" />
-                  <span className="hidden sm:inline">Columns</span>
+                  <span>Columns</span>
                 </Button>
               </DropdownMenuTrigger>
 
@@ -230,7 +230,7 @@ export function DataGrid<TData extends RowData>({
                             ? "descending"
                             : "none"
                         }
-                        className={`h-10 px-3 sm:px-4 text-left font-medium text-foreground whitespace-nowrap select-none ${
+                        className={`h-10 px-4 text-left font-medium text-foreground whitespace-nowrap select-none ${
                           canSort ? "cursor-pointer hover:bg-muted/70 transition-colors" : ""
                         }`}
                         onClick={header.column.getToggleSortingHandler()}
@@ -281,7 +281,7 @@ export function DataGrid<TData extends RowData>({
                         <td
                           key={cell.id}
                           role="cell"
-                          className="px-3 sm:px-4 py-3 align-middle text-foreground whitespace-nowrap"
+                          className="px-4 py-3 align-middle text-foreground whitespace-nowrap"
                         >
                           {/* Render cell using TanStack V9 FlexRender */}
                           <table.FlexRender cell={cell} />
@@ -313,7 +313,7 @@ export function DataGrid<TData extends RowData>({
         </div>
 
         {/* ── Footer: Granular Reactive Subscription & Pagination ── */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-border/50 px-4 py-3 text-xs bg-muted/15">
+        <div className="flex items-center justify-between gap-3 border-t border-border/50 px-4 py-3 text-xs bg-muted/15">
           {/* TanStack Table Subscribe for Reactive Row Selection Counts */}
           {enableRowSelection ? (
             <table.Subscribe
@@ -347,7 +347,7 @@ export function DataGrid<TData extends RowData>({
 
           {/* Pagination Controls */}
           {enablePagination && (
-            <div className="flex items-center gap-3 sm:gap-6 ml-auto flex-wrap">
+            <div className="flex items-center gap-6 ml-auto">
               {/* Page Size Selector */}
               <div className="flex items-center gap-1.5">
                 <span className="text-muted-foreground">Rows per page:</span>
