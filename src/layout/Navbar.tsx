@@ -68,6 +68,12 @@ function Navbar() {
           >
             สินค้าทั้งหมด
           </Link>
+          <Link
+            to="/my-orders"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            คำสั่งซื้อของฉัน
+          </Link>
         </div>
       </div>
 
@@ -223,10 +229,12 @@ function Navbar() {
                   โปรไฟล์ของฉัน
                 </DropdownMenuItem>
 
-                <DropdownMenuItem>
-                  <ShoppingBag />
-                  ประวัติการสั่งซื้อ
-                </DropdownMenuItem>
+                <Link to="/my-orders">
+                  <DropdownMenuItem className="cursor-pointer">
+                    <ShoppingBag />
+                    ประวัติการสั่งซื้อ
+                  </DropdownMenuItem>
+                </Link>
 
                 {user.role === "admin" && (
                   <Link to="/dashboard">
