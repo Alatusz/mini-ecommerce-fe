@@ -7,6 +7,7 @@ import ProductListPage from "@/pages/products/Index"
 import CartPage from "@/pages/default-user/cart/Index"
 import CheckoutPage from "@/pages/default-user/checkout/Index"
 import ProductDetailPage from "@/pages/default-user/product-detail/Index"
+import UserProfilePage from "@/pages/default-user/profile/Index"
 import MyOrdersPage from "@/pages/default-user/my-orders/Index"
 import DashboardLayout from "@/pages/dashboard/Index"
 import DashboardPage from "@/pages/dashboard/default/Index"
@@ -30,13 +31,14 @@ const NotFoundPage = () => (
 export function App() {
   return (
     <Routes>
-      {/* หน้าแรก, หน้ารายการสินค้า, ตะกร้าสินค้า, หน้าชำระเงิน, ประวัติคำสั่งซื้อ */}
+      {/* หน้าแรก, หน้ารายการสินค้า, ตะกร้าสินค้า, หน้าชำระเงิน, ประวัติคำสั่งซื้อ, โปรไฟล์ */}
       <Route path="/" element={<MainLayout />}>
         <Route index element={<HomePage />} />
         <Route path="products" element={<ProductListPage />} />
         <Route path="products/:id" element={<ProductDetailPage />} />
         <Route path="cart" element={<CartPage />} />
         <Route path="checkout" element={<CheckoutPage />} />
+        <Route path="profile" element={<UserProfilePage />} />
         <Route path="my-orders" element={<MyOrdersPage />} />
       </Route>
 
