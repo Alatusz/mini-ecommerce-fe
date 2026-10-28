@@ -1,5 +1,7 @@
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useParams } from "react-router-dom"
+import { mockProductList } from "@/pages/products/mockProductList"
+import { mockProducts } from "@/pages/home/mockLandingPage"
 
 export interface ColorOption {
   id: string
@@ -32,6 +34,15 @@ export const storageOptions: StorageOption[] = [
 export function useProductDetail() {
   const { id } = useParams<{ id: string }>()
 
+  const product = useMemo(() => {
+    if (!id) return null
+    return (
+      mockProductList.find((p) => p.id === id) ||
+      mockProducts.find((p) => p.id === id) ||
+      null
+    )
+  }, [id])
+
   // Active state: purple and 1TB by default to match attachment design
   const [selectedColor, setSelectedColor] = useState<ColorOption>(colorOptions[1])
   const [selectedStorage, setSelectedStorage] = useState<StorageOption>(storageOptions[3])
@@ -40,13 +51,23 @@ export function useProductDetail() {
   const [isMoreDesc, setIsMoreDesc] = useState<boolean>(false)
   const [isAddedToCart, setIsAddedToCart] = useState<boolean>(false)
 
-  // 4 thumbnails matching the attachment
-  const thumbnails = [
-    selectedColor.image,
-    "/images/thumb-front.png",
-    "/images/thumb-back.png",
-    "/images/thumb-side.png",
-  ]
+  // Thumbnails matching product image or attachment design
+  const thumbnails = useMemo(() => {
+    if (product?.image && !product.image.includes("detail-")) {
+      return [
+        product.image,
+        "/images/thumb-front.png",
+        "/images/thumb-back.png",
+        "/images/thumb-side.png",
+      ]
+    }
+    return [
+      selectedColor.image,
+      "/images/thumb-front.png",
+      "/images/thumb-back.png",
+      "/images/thumb-side.png",
+    ]
+  }, [product, selectedColor.image])
 
   const handleSelectColor = (color: ColorOption) => {
     setSelectedColor(color)
@@ -68,8 +89,20 @@ export function useProductDetail() {
     setIsDetailsExpanded((prev) => !prev)
   }
 
+  const productName = product?.name || "Apple iPhone 14 Pro Max"
+  const currentPrice = product?.price || selectedStorage.price
+  const currentOriginalPrice =
+    product?.originalPrice ||
+    (product?.price ? Math.round(product.price * 1.15) : selectedStorage.originalPrice)
+  const isThaiPrice = !!product?.price && product.price > 2000
+
   return {
     id,
+    product,
+    productName,
+    currentPrice,
+    currentOriginalPrice,
+    isThaiPrice,
     selectedColor,
     selectedStorage,
     activeImageIndex,
@@ -78,7 +111,7 @@ export function useProductDetail() {
     isAddedToCart,
     isDetailsExpanded,
     thumbnails,
-    currentImage: thumbnails[activeImageIndex] || selectedColor.image,
+    currentImage: thumbnails[activeImageIndex] || thumbnails[0],
     handleSelectColor,
     setSelectedStorage,
     setActiveImageIndex,
