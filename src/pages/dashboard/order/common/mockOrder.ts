@@ -1,3 +1,12 @@
+export interface OrderProduct {
+  id: string
+  name: string
+  image: string
+  price: number
+  quantity: number
+  variant?: string
+}
+
 export interface OrderItem {
   id: string
   orderNumber: string
@@ -11,6 +20,10 @@ export interface OrderItem {
   status: "Pending" | "Processing" | "Shipped" | "Completed" | "Cancelled"
   date: string
   paymentMethod: "Credit Card" | "PayPal" | "Cash on Delivery" | "Bank Transfer"
+  items?: OrderProduct[]
+  trackingNumber?: string
+  carrier?: string
+  shippingAddress?: string
 }
 
 export const initialOrders: OrderItem[] = [
@@ -27,6 +40,35 @@ export const initialOrders: OrderItem[] = [
     status: "Completed",
     date: "25 Oct 2026, 14:20",
     paymentMethod: "Credit Card",
+    trackingNumber: "TH-FLASH-892104",
+    carrier: "Flash Express",
+    shippingAddress: "123 Sukhumvit Road, Khlong Toei, Bangkok 10110",
+    items: [
+      {
+        id: "p-1",
+        name: "iPhone 16 Pro Max",
+        image: "/images/hero-iphone.png",
+        price: 1199.0,
+        quantity: 1,
+        variant: "Space Black • 256GB",
+      },
+      {
+        id: "p-2",
+        name: "AirPods Pro 2nd Gen",
+        image: "/images/hero-airpods.png",
+        price: 249.0,
+        quantity: 1,
+        variant: "White • MagSafe USB-C",
+      },
+      {
+        id: "p-3",
+        name: "Apple Watch Ultra 2",
+        image: "/images/cart-watch.png",
+        price: 978.0,
+        quantity: 1,
+        variant: "Titanium Case • Ocean Band",
+      },
+    ],
   },
   {
     id: "ord-2",
@@ -41,6 +83,19 @@ export const initialOrders: OrderItem[] = [
     status: "Processing",
     date: "25 Oct 2026, 13:45",
     paymentMethod: "PayPal",
+    trackingNumber: "TH-KERRY-772183",
+    carrier: "Kerry Express",
+    shippingAddress: "45/2 Nimmanahaeminda Rd, Suthep, Chiang Mai 50200",
+    items: [
+      {
+        id: "p-4",
+        name: "MacBook Pro 16-inch M3",
+        image: "/images/hero-macbook.png",
+        price: 1399.0,
+        quantity: 1,
+        variant: "Space Gray • 18GB RAM • 512GB SSD",
+      },
+    ],
   },
   {
     id: "ord-3",
@@ -55,6 +110,27 @@ export const initialOrders: OrderItem[] = [
     status: "Completed",
     date: "25 Oct 2026, 11:15",
     paymentMethod: "Credit Card",
+    trackingNumber: "TH-EMS-391847",
+    carrier: "Thailand Post (EMS)",
+    shippingAddress: "88 Silom Road, Bang Rak, Bangkok 10500",
+    items: [
+      {
+        id: "p-5",
+        name: "PlayStation 5 Slim Edition",
+        image: "/images/hero-ps5.png",
+        price: 499.0,
+        quantity: 1,
+        variant: "Digital Edition • 1TB",
+      },
+      {
+        id: "p-6",
+        name: "DualSense Wireless Controller",
+        image: "/images/showcase-gadgets.png",
+        price: 449.0,
+        quantity: 1,
+        variant: "Midnight Black",
+      },
+    ],
   },
   {
     id: "ord-4",
@@ -69,6 +145,18 @@ export const initialOrders: OrderItem[] = [
     status: "Pending",
     date: "25 Oct 2026, 09:30",
     paymentMethod: "Cash on Delivery",
+    carrier: "Flash Express",
+    shippingAddress: "99 Thonglor Soi 10, Watthana, Bangkok 10110",
+    items: [
+      {
+        id: "p-7",
+        name: "Apple Watch Series 9 GPS",
+        image: "/images/cart-watch.png",
+        price: 399.0,
+        quantity: 1,
+        variant: "Midnight Aluminum • 45mm",
+      },
+    ],
   },
   {
     id: "ord-5",
@@ -80,9 +168,38 @@ export const initialOrders: OrderItem[] = [
     },
     itemsCount: 4,
     total: 3120.0,
-    status: "Completed",
+    status: "Shipped",
     date: "24 Oct 2026, 18:50",
     paymentMethod: "Credit Card",
+    trackingNumber: "TH-FLASH-559102",
+    carrier: "Flash Express",
+    shippingAddress: "12 Vibhavadi Rangsit Rd, Chatuchak, Bangkok 10900",
+    items: [
+      {
+        id: "p-4",
+        name: "MacBook Pro 16-inch M3",
+        image: "/images/hero-macbook.png",
+        price: 2499.0,
+        quantity: 1,
+        variant: "Silver • 36GB RAM",
+      },
+      {
+        id: "p-2",
+        name: "AirPods Pro 2nd Gen",
+        image: "/images/hero-airpods.png",
+        price: 249.0,
+        quantity: 1,
+        variant: "White",
+      },
+      {
+        id: "p-8",
+        name: "Smart Gadgets Accessories Kit",
+        image: "/images/showcase-gadgets.png",
+        price: 186.0,
+        quantity: 2,
+        variant: "Pro Bundle",
+      },
+    ],
   },
   {
     id: "ord-6",
@@ -97,6 +214,17 @@ export const initialOrders: OrderItem[] = [
     status: "Cancelled",
     date: "24 Oct 2026, 15:10",
     paymentMethod: "Credit Card",
+    shippingAddress: "77 Sathorn Tai Road, Thung Maha Mek, Sathon, Bangkok 10120",
+    items: [
+      {
+        id: "p-9",
+        name: "iPad Air 11-inch M2",
+        image: "/images/showcase-ipad.png",
+        price: 549.0,
+        quantity: 1,
+        variant: "Starlight • 128GB Wi-Fi",
+      },
+    ],
   },
   {
     id: "ord-7",
@@ -111,6 +239,27 @@ export const initialOrders: OrderItem[] = [
     status: "Completed",
     date: "23 Oct 2026, 16:35",
     paymentMethod: "Bank Transfer",
+    trackingNumber: "TH-KERRY-119284",
+    carrier: "Kerry Express",
+    shippingAddress: "55 Asoke-Dindaeng Rd, Din Daeng, Bangkok 10400",
+    items: [
+      {
+        id: "p-1",
+        name: "iPhone 16 Pro Max",
+        image: "/images/hero-iphone.png",
+        price: 1199.0,
+        quantity: 1,
+        variant: "Desert Titanium • 256GB",
+      },
+      {
+        id: "p-5",
+        name: "PlayStation 5 Slim Edition",
+        image: "/images/hero-ps5.png",
+        price: 499.0,
+        quantity: 1,
+        variant: "Standard Disc Edition",
+      },
+    ],
   },
   {
     id: "ord-8",
@@ -125,6 +274,27 @@ export const initialOrders: OrderItem[] = [
     status: "Processing",
     date: "23 Oct 2026, 10:05",
     paymentMethod: "PayPal",
+    trackingNumber: "TH-FLASH-401928",
+    carrier: "Flash Express",
+    shippingAddress: "302 Phahonyothin Rd, Phaya Thai, Bangkok 10400",
+    items: [
+      {
+        id: "p-2",
+        name: "AirPods Pro 2nd Gen",
+        image: "/images/hero-airpods.png",
+        price: 249.0,
+        quantity: 2,
+        variant: "White",
+      },
+      {
+        id: "p-8",
+        name: "Smart Gadget Hub",
+        image: "/images/showcase-gadgets.png",
+        price: 329.0,
+        quantity: 1,
+        variant: "Space Gray",
+      },
+    ],
   },
 ]
 

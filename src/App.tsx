@@ -8,6 +8,7 @@ import CartPage from "@/pages/default-user/cart/Index"
 import CheckoutPage from "@/pages/default-user/checkout/Index"
 import ProductDetailPage from "@/pages/default-user/product-detail/Index"
 import UserProfilePage from "@/pages/default-user/profile/Index"
+import MyOrdersPage from "@/pages/default-user/my-orders/Index"
 import DashboardLayout from "@/pages/dashboard/Index"
 import DashboardPage from "@/pages/dashboard/default/Index"
 import DashboardCategoryPage from "@/pages/dashboard/category/Index"
@@ -38,6 +39,7 @@ export function App() {
         <Route path="cart" element={<CartPage />} />
         <Route path="checkout" element={<CheckoutPage />} />
         <Route path="profile" element={<UserProfilePage />} />
+        <Route path="my-orders" element={<MyOrdersPage />} />
       </Route>
 
       {/* หน้าจัดการระบบ Dashboard */}
