@@ -218,12 +218,14 @@ function Navbar() {
               <DropdownMenuSeparator />
 
               <DropdownMenuGroup>
-                <DropdownMenuItem>
-                  <UserIcon />
-                  โปรไฟล์ของฉัน
-                </DropdownMenuItem>
+                <Link to="/profile">
+                  <DropdownMenuItem className="cursor-pointer">
+                    <UserIcon />
+                    โปรไฟล์ของฉัน
+                  </DropdownMenuItem>
+                </Link>
 
-                <DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer">
                   <ShoppingBag />
                   ประวัติการสั่งซื้อ
                 </DropdownMenuItem>
