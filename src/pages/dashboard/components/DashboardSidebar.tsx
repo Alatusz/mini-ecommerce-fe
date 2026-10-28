@@ -53,6 +53,8 @@ export function DashboardSidebar({
   if (!activeMenu) {
     if (location.pathname === "/dashboard" || location.pathname === "/dashboard/") {
       activeMenu = "dashboard"
+    } else if (location.pathname.startsWith("/dashboard/order")) {
+      activeMenu = "orders"
     } else if (location.pathname.startsWith("/dashboard/category")) {
       activeMenu = "categories"
     } else if (location.pathname.startsWith("/dashboard/product")) {
@@ -107,16 +109,18 @@ export function DashboardSidebar({
               </SidebarMenuItem>
 
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={activeMenu === "orders"}
-                  onClick={() => setActiveMenu?.("orders")}
-                  tooltip="Orders Management"
-                  className="cursor-pointer"
-                >
-                  <ShoppingBag className="size-4" />
-                  <span>Orders</span>
-                  <SidebarMenuBadge>5</SidebarMenuBadge>
-                </SidebarMenuButton>
+                <Link to="/dashboard/order" className="w-full">
+                  <SidebarMenuButton
+                    isActive={activeMenu === "orders"}
+                    onClick={() => setActiveMenu?.("orders")}
+                    tooltip="Orders Management"
+                    className="cursor-pointer"
+                  >
+                    <ShoppingBag className="size-4" />
+                    <span>Orders</span>
+                    <SidebarMenuBadge>8</SidebarMenuBadge>
+                  </SidebarMenuButton>
+                </Link>
               </SidebarMenuItem>
 
               <SidebarMenuItem>
