@@ -230,11 +230,6 @@ function Navbar() {
                     โปรไฟล์ของฉัน
                   </DropdownMenuItem>
                 </Link>
-
-                <DropdownMenuItem className="cursor-pointer">
-                  <ShoppingBag />
-                  ประวัติการสั่งซื้อ
-                </DropdownMenuItem>
                 <Link to="/my-orders">
                   <DropdownMenuItem className="cursor-pointer">
                     <ShoppingBag />
