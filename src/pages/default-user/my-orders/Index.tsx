@@ -339,17 +339,27 @@ export default function MyOrdersPage() {
                           className="py-3 first:pt-0 last:pb-0 flex items-center justify-between gap-4"
                         >
                           <div className="flex items-center gap-3 min-w-0">
-                            <div className="size-14 rounded-xl bg-muted/40 p-1.5 border border-border/40 flex items-center justify-center shrink-0 overflow-hidden">
+                            <Link
+                              to={`/products/${item.id}`}
+                              className="size-14 rounded-xl bg-muted/40 p-1.5 border border-border/40 flex items-center justify-center shrink-0 overflow-hidden hover:border-foreground/30 transition-colors"
+                              title={item.name}
+                            >
                               <img
                                 src={item.image}
                                 alt={item.name}
                                 className="max-h-full max-w-full object-contain"
                               />
-                            </div>
+                            </Link>
                             <div className="min-w-0">
-                              <h4 className="text-xs sm:text-sm font-semibold text-foreground truncate">
-                                {item.name}
-                              </h4>
+                              <Link
+                                to={`/products/${item.id}`}
+                                className="hover:underline transition-colors"
+                                title={item.name}
+                              >
+                                <h4 className="text-xs sm:text-sm font-semibold text-foreground truncate">
+                                  {item.name}
+                                </h4>
+                              </Link>
                               {item.variant && (
                                 <p className="text-[11px] text-muted-foreground mt-0.5">
                                   {item.variant}
@@ -537,15 +547,25 @@ export default function MyOrdersPage() {
                   {selectedOrder.items?.map((item) => (
                     <div key={item.id} className="p-3 flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="size-11 rounded-lg bg-muted/40 p-1 border border-border/40 flex items-center justify-center shrink-0">
+                        <Link
+                          to={`/products/${item.id}`}
+                          className="size-11 rounded-lg bg-muted/40 p-1 border border-border/40 flex items-center justify-center shrink-0 hover:border-foreground/30 transition-colors"
+                          title={item.name}
+                        >
                           <img
                             src={item.image}
                             alt={item.name}
                             className="max-h-full max-w-full object-contain"
                           />
-                        </div>
+                        </Link>
                         <div className="min-w-0">
-                          <p className="font-semibold text-foreground truncate">{item.name}</p>
+                          <Link
+                            to={`/products/${item.id}`}
+                            className="hover:underline transition-colors"
+                            title={item.name}
+                          >
+                            <p className="font-semibold text-foreground truncate">{item.name}</p>
+                          </Link>
                           {item.variant && (
                             <p className="text-[11px] text-muted-foreground">{item.variant}</p>
                           )}
