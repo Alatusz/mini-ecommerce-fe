@@ -59,6 +59,8 @@ export function DashboardSidebar({
       activeMenu = "categories"
     } else if (location.pathname.startsWith("/dashboard/product")) {
       activeMenu = "products"
+    } else if (location.pathname.startsWith("/dashboard/coupon")) {
+      activeMenu = "coupons"
     } else if (location.pathname.startsWith("/dashboard/user-management")) {
       activeMenu = "customers"
     } else {
@@ -192,16 +194,18 @@ export function DashboardSidebar({
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={activeMenu === "coupons"}
-                  onClick={() => setActiveMenu?.("coupons")}
-                  tooltip="Coupons & Discounts"
-                  className="cursor-pointer"
-                >
-                  <TicketPercent className="size-4" />
-                  <span>Coupons & Promo</span>
-                  <SidebarMenuBadge>3</SidebarMenuBadge>
-                </SidebarMenuButton>
+                <Link to="/dashboard/coupon" className="w-full">
+                  <SidebarMenuButton
+                    isActive={activeMenu === "coupons"}
+                    onClick={() => setActiveMenu?.("coupons")}
+                    tooltip="Coupons & Discounts"
+                    className="cursor-pointer"
+                  >
+                    <TicketPercent className="size-4" />
+                    <span>Coupons & Promo</span>
+                    <SidebarMenuBadge>6</SidebarMenuBadge>
+                  </SidebarMenuButton>
+                </Link>
               </SidebarMenuItem>
 
               <SidebarMenuItem>

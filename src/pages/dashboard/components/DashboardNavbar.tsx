@@ -69,6 +69,8 @@ export function DashboardNavbar({
       activeMenu = "categories"
     } else if (location.pathname.startsWith("/dashboard/product")) {
       activeMenu = "products"
+    } else if (location.pathname.startsWith("/dashboard/coupon")) {
+      activeMenu = "coupons"
     } else if (location.pathname.startsWith("/dashboard/user-management")) {
       activeMenu = "customers"
     } else {
@@ -214,6 +216,30 @@ export function DashboardNavbar({
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
                   <BreadcrumbPage>Edit Product</BreadcrumbPage>
+                </BreadcrumbItem>
+              </>
+            ) : location.pathname === "/dashboard/coupon/create" ? (
+              <>
+                <BreadcrumbItem>
+                  <BreadcrumbLink render={<Link to="/dashboard/coupon" />}>
+                    Coupons & Discounts
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Create Coupon</BreadcrumbPage>
+                </BreadcrumbItem>
+              </>
+            ) : location.pathname.startsWith("/dashboard/coupon/edit") ? (
+              <>
+                <BreadcrumbItem>
+                  <BreadcrumbLink render={<Link to="/dashboard/coupon" />}>
+                    Coupons & Discounts
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Edit Coupon</BreadcrumbPage>
                 </BreadcrumbItem>
               </>
             ) : (
