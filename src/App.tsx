@@ -23,6 +23,7 @@ import DashboardOrderEditPage from "@/pages/dashboard/order/edit/Index"
 import DashboardCouponPage from "@/pages/dashboard/coupon/Index"
 import DashboardCouponCreatePage from "@/pages/dashboard/coupon/create/Index"
 import DashboardCouponEditPage from "@/pages/dashboard/coupon/edit/Index"
+import DashboardSettingsPage from "@/pages/dashboard/settings/Index"
 
 const NotFoundPage = () => (
   <div className="p-6 text-xl text-red-500">404 - ไม่พบหน้า</div>
@@ -67,6 +68,7 @@ export function App() {
           path="user-management"
           element={<DashboardUserManagementPage />}
         />
+        <Route path="settings" element={<DashboardSettingsPage />} />
       </Route>
 
       {/* เข้าสู่ระบบ */}

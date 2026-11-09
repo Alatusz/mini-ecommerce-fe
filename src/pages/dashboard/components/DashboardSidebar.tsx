@@ -63,6 +63,8 @@ export function DashboardSidebar({
       activeMenu = "coupons"
     } else if (location.pathname.startsWith("/dashboard/user-management")) {
       activeMenu = "customers"
+    } else if (location.pathname.startsWith("/dashboard/settings")) {
+      activeMenu = "settings"
     } else {
       activeMenu = "dashboard"
     }
@@ -299,15 +301,17 @@ export function DashboardSidebar({
               </SidebarMenuItem>
 
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={activeMenu === "settings"}
-                  onClick={() => setActiveMenu?.("settings")}
-                  tooltip="Store Settings"
-                  className="cursor-pointer"
-                >
-                  <Settings className="size-4" />
-                  <span>Settings</span>
-                </SidebarMenuButton>
+                <Link to="/dashboard/settings" className="w-full">
+                  <SidebarMenuButton
+                    isActive={activeMenu === "settings"}
+                    onClick={() => setActiveMenu?.("settings")}
+                    tooltip="Store Settings"
+                    className="cursor-pointer"
+                  >
+                    <Settings className="size-4" />
+                    <span>Settings</span>
+                  </SidebarMenuButton>
+                </Link>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
