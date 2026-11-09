@@ -14,16 +14,12 @@ import {
   Bell,
   Settings,
   Store,
-  LogOut,
 } from "lucide-react"
 
 import Logo from "@/assets/alatusz-logo.svg"
-import { useAuth } from "@/context/AuthContext"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -45,13 +41,15 @@ export function DashboardSidebar({
   activeMenu: propActiveMenu,
   setActiveMenu,
 }: DashboardSidebarProps = {}) {
-  const { user, logout } = useAuth()
   const location = useLocation()
 
   // Derive active menu from URL path if not explicitly provided
   let activeMenu = propActiveMenu
   if (!activeMenu) {
-    if (location.pathname === "/dashboard" || location.pathname === "/dashboard/") {
+    if (
+      location.pathname === "/dashboard" ||
+      location.pathname === "/dashboard/"
+    ) {
       activeMenu = "dashboard"
     } else if (location.pathname.startsWith("/dashboard/order")) {
       activeMenu = "orders"
@@ -76,13 +74,13 @@ export function DashboardSidebar({
           <img
             src={Logo}
             alt="Mini Ecommerce"
-            className="size-8 rounded-md object-contain shrink-0"
+            className="size-8 shrink-0 rounded-md object-contain"
           />
-          <div className="flex flex-col min-w-0 group-data-[collapsible=icon]:hidden">
-            <span className="text-sm font-bold text-sidebar-foreground truncate">
+          <div className="flex min-w-0 flex-col group-data-[collapsible=icon]:hidden">
+            <span className="truncate text-sm font-bold text-sidebar-foreground">
               Mini Ecommerce
             </span>
-            <span className="text-[11px] text-muted-foreground font-medium">
+            <span className="text-[11px] font-medium text-muted-foreground">
               Admin Console
             </span>
           </div>
@@ -291,7 +289,10 @@ export function DashboardSidebar({
             <SidebarMenu>
               <SidebarMenuItem>
                 <Link to="/" className="w-full">
-                  <SidebarMenuButton tooltip="Back to Storefront" className="cursor-pointer">
+                  <SidebarMenuButton
+                    tooltip="Back to Storefront"
+                    className="cursor-pointer"
+                  >
                     <Store className="size-4" />
                     <span>View Storefront</span>
                   </SidebarMenuButton>
@@ -313,37 +314,6 @@ export function DashboardSidebar({
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-
-      {/* ── Footer: Admin Profile ── */}
-      <SidebarFooter className="border-t border-sidebar-border p-2">
-        <div className="flex items-center justify-between p-2 rounded-lg bg-sidebar-accent/50">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <Avatar size="sm">
-              <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
-                {user?.email?.charAt(0).toUpperCase() || "A"}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col min-w-0 group-data-[collapsible=icon]:hidden">
-              <span className="text-xs font-semibold truncate text-sidebar-foreground">
-                {user?.email || "admin@example.com"}
-              </span>
-              <span className="text-[10px] text-muted-foreground uppercase font-mono">
-                {user?.role || "Administrator"}
-              </span>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={logout}
-            title="Log out"
-            className="text-muted-foreground hover:text-destructive p-1 rounded transition-colors group-data-[collapsible=icon]:hidden cursor-pointer"
-          >
-            <LogOut className="size-4" />
-          </button>
-        </div>
-      </SidebarFooter>
-
       <SidebarRail />
     </Sidebar>
   )
