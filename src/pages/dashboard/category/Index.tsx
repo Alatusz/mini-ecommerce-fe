@@ -8,7 +8,7 @@ import { Link } from "react-router-dom"
 import { Plus, Tags, Package, AlertTriangle, EyeOff } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { StatCard } from "@/components/common/StatCard"
 import { PageContent } from "@/components/common/PageContent"
 import { useCategory } from "./useHooks"
 import { CategoryTable } from "./common/CategoryTable"
@@ -26,15 +26,9 @@ export default function DashboardCategoryPage() {
     handleStatusChange,
   } = useCategory()
 
-  const activeCount = categories.filter(
-    (c) => (c.status || "active").toLowerCase() === "active"
-  ).length
-  const draftCount = categories.filter(
-    (c) => (c.status || "").toLowerCase() === "draft"
-  ).length
-  const archivedCount = categories.filter(
-    (c) => (c.status || "").toLowerCase() === "archived"
-  ).length
+  const activeCount = categories.filter((c) => c.status === "active").length
+  const draftCount = categories.filter((c) => c.status === "draft").length
+  const archivedCount = categories.filter((c) => c.status === "archived").length
   const totalProducts = categories.reduce(
     (sum, c) => sum + (c.productCount ?? c.itemCount ?? 0),
     0
@@ -67,87 +61,38 @@ export default function DashboardCategoryPage() {
 
       {/* ── KPI Strip (4 Monochrome-Icon Cards) ── */}
       <div className="grid grid-cols-4 gap-4">
-        <Card className="flex flex-col justify-between border-border/60 bg-card p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Total Categories
-            </span>
-            <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
-              <Tags className="size-3.5 text-muted-foreground" />
-            </div>
-          </div>
-          <div className="pt-2.5">
-            <div className="text-2xl font-semibold tracking-tight text-foreground tabular-nums">
-              {total}
-            </div>
-            <div className="mt-1 text-xs text-muted-foreground tabular-nums">
-              {activeCount} active · {archivedCount} archived
-            </div>
-          </div>
-        </Card>
+        <StatCard
+          title="Total Categories"
+          value={total}
+          icon={<Tags className="size-3.5" />}
+          description={`${activeCount} active · ${archivedCount} archived`}
+        />
 
-        <Card className="flex flex-col justify-between border-border/60 bg-card p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Assigned Products
-            </span>
-            <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
-              <Package className="size-3.5 text-muted-foreground" />
-            </div>
-          </div>
-          <div className="pt-2.5">
-            <div className="text-2xl font-semibold tracking-tight text-foreground tabular-nums">
-              {totalProducts.toLocaleString()}
-            </div>
-            <div className="mt-1 text-xs text-muted-foreground tabular-nums">
-              {avgProducts} avg / category
-            </div>
-          </div>
-        </Card>
+        <StatCard
+          title="Assigned Products"
+          value={totalProducts.toLocaleString()}
+          icon={<Package className="size-3.5" />}
+          description={`${avgProducts} avg / category`}
+        />
 
-        <Card className="flex flex-col justify-between border-border/60 bg-card p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Empty Categories
-            </span>
-            <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
-              <AlertTriangle className="size-3.5 text-muted-foreground" />
-            </div>
-          </div>
-          <div className="pt-2.5">
-            <div
-              className={`text-2xl font-semibold tracking-tight tabular-nums ${
-                emptyCount > 0
-                  ? "text-amber-600 dark:text-amber-400"
-                  : "text-foreground"
-              }`}
-            >
-              {emptyCount}
-            </div>
-            <div className="mt-1 text-xs text-muted-foreground tabular-nums">
-              {emptyCount > 0 ? "0 products assigned" : "All populated"}
-            </div>
-          </div>
-        </Card>
+        <StatCard
+          title="Empty Categories"
+          value={emptyCount}
+          icon={<AlertTriangle className="size-3.5" />}
+          valueClassName={
+            emptyCount > 0
+              ? "text-amber-600 dark:text-amber-400"
+              : "text-foreground"
+          }
+          description={emptyCount > 0 ? "0 products assigned" : "All populated"}
+        />
 
-        <Card className="flex flex-col justify-between border-border/60 bg-card p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Drafts & Hidden
-            </span>
-            <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
-              <EyeOff className="size-3.5 text-muted-foreground" />
-            </div>
-          </div>
-          <div className="pt-2.5">
-            <div className="text-2xl font-semibold tracking-tight text-foreground tabular-nums">
-              {draftCount + archivedCount}
-            </div>
-            <div className="mt-1 text-xs text-muted-foreground tabular-nums">
-              {draftCount} draft · {archivedCount} archived
-            </div>
-          </div>
-        </Card>
+        <StatCard
+          title="Drafts & Hidden"
+          value={draftCount + archivedCount}
+          icon={<EyeOff className="size-3.5" />}
+          description={`${draftCount} draft · ${archivedCount} archived`}
+        />
       </div>
 
       {/* ── TanStack DataGrid Table ── */}

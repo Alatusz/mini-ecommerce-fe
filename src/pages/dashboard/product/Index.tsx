@@ -24,7 +24,7 @@ import {
 } from "@/components/common/data-grid"
 import { useProduct, type ProductItem } from "./useHooks"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { StatCard } from "@/components/common/StatCard"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -221,93 +221,43 @@ export default function DashboardProductPage() {
 
       {/* ── 4 KPI Cards (Monochrome Icons + Tabular Numbers) ── */}
       <div className="grid grid-cols-4 gap-4">
-        <Card className="flex flex-col justify-between border-border/60 bg-card p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Total SKUs
-            </span>
-            <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
-              <Package className="size-3.5 text-muted-foreground" />
-            </div>
-          </div>
-          <div className="pt-2.5">
-            <div className="text-2xl font-semibold tracking-tight tabular-nums text-foreground">
-              {products.length}
-            </div>
-            <div className="mt-1 text-xs tabular-nums text-muted-foreground">
-              {inStockCount} in stock
-            </div>
-          </div>
-        </Card>
+        <StatCard
+          title="Total SKUs"
+          value={products.length}
+          icon={<Package className="size-3.5" />}
+          description={`${inStockCount} in stock`}
+        />
 
-        <Card className="flex flex-col justify-between border-border/60 bg-card p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Inventory Volume
-            </span>
-            <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
-              <Layers className="size-3.5 text-muted-foreground" />
-            </div>
-          </div>
-          <div className="pt-2.5">
-            <div className="text-2xl font-semibold tracking-tight tabular-nums text-foreground">
-              {totalUnits.toLocaleString()}
-            </div>
-            <div className="mt-1 text-xs tabular-nums text-muted-foreground">
-              units on hand
-            </div>
-          </div>
-        </Card>
+        <StatCard
+          title="Inventory Volume"
+          value={totalUnits.toLocaleString()}
+          icon={<Layers className="size-3.5" />}
+          description="units on hand"
+        />
 
-        <Card className="flex flex-col justify-between border-border/60 bg-card p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Low Stock
-            </span>
-            <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
-              <AlertTriangle className="size-3.5 text-muted-foreground" />
-            </div>
-          </div>
-          <div className="pt-2.5">
-            <div
-              className={`text-2xl font-semibold tracking-tight tabular-nums ${
-                lowStockCount > 0
-                  ? "text-amber-600 dark:text-amber-400"
-                  : "text-foreground"
-              }`}
-            >
-              {lowStockCount}
-            </div>
-            <div className="mt-1 text-xs tabular-nums text-muted-foreground">
-              below threshold
-            </div>
-          </div>
-        </Card>
+        <StatCard
+          title="Low Stock"
+          value={lowStockCount}
+          icon={<AlertTriangle className="size-3.5" />}
+          valueClassName={
+            lowStockCount > 0
+              ? "text-amber-600 dark:text-amber-400"
+              : "text-foreground"
+          }
+          description="below threshold"
+        />
 
-        <Card className="flex flex-col justify-between border-border/60 bg-card p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Out of Stock
-            </span>
-            <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
-              <XCircle className="size-3.5 text-muted-foreground" />
-            </div>
-          </div>
-          <div className="pt-2.5">
-            <div
-              className={`text-2xl font-semibold tracking-tight tabular-nums ${
-                outOfStockCount > 0
-                  ? "text-red-600 dark:text-red-400"
-                  : "text-foreground"
-              }`}
-            >
-              {outOfStockCount}
-            </div>
-            <div className="mt-1 text-xs tabular-nums text-muted-foreground">
-              0 units available
-            </div>
-          </div>
-        </Card>
+        <StatCard
+          title="Out of Stock"
+          value={outOfStockCount}
+          icon={<XCircle className="size-3.5" />}
+          valueClassName={
+            outOfStockCount > 0
+              ? "text-red-600 dark:text-red-400"
+              : "text-foreground"
+          }
+          description="0 units available"
+        />
       </div>
 
       {/* ── TanStack DataGrid ── */}

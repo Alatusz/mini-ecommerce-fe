@@ -24,7 +24,7 @@ import {
 } from "@/components/common/data-grid"
 import { useUserManagement, type UserItem } from "./useHooks"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { StatCard } from "@/components/common/StatCard"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -273,83 +273,39 @@ export default function DashboardUserManagementPage() {
 
       {/* ── 4 KPI Cards (Monochrome Icons + Tabular Numbers) ── */}
       <div className="grid grid-cols-4 gap-4">
-        <Card className="flex flex-col justify-between border-border/60 bg-card p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Total Accounts
-            </span>
-            <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
-              <Users className="size-3.5 text-muted-foreground" />
-            </div>
-          </div>
-          <div className="pt-2.5">
-            <div className="text-2xl font-semibold tracking-tight tabular-nums text-foreground">
-              {users.length}
-            </div>
-            <div className="mt-1 text-xs tabular-nums text-muted-foreground">
-              {suspendedCount > 0 ? `${suspendedCount} suspended` : "0 suspended"}
-            </div>
-          </div>
-        </Card>
+        <StatCard
+          title="Total Accounts"
+          value={users.length}
+          icon={<Users className="size-3.5" />}
+          description={
+            suspendedCount > 0 ? `${suspendedCount} suspended` : "0 suspended"
+          }
+        />
 
-        <Card className="flex flex-col justify-between border-border/60 bg-card p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Active Users
-            </span>
-            <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
-              <UserCheck className="size-3.5 text-muted-foreground" />
-            </div>
-          </div>
-          <div className="pt-2.5">
-            <div className="text-2xl font-semibold tracking-tight tabular-nums text-foreground">
-              {activeCount}
-            </div>
-            <div className="mt-1 text-xs tabular-nums text-muted-foreground">
-              {users.length > 0
-                ? `${Math.round((activeCount / users.length) * 100)}% of base`
-                : "—"}
-            </div>
-          </div>
-        </Card>
+        <StatCard
+          title="Active Users"
+          value={activeCount}
+          icon={<UserCheck className="size-3.5" />}
+          description={
+            users.length > 0
+              ? `${Math.round((activeCount / users.length) * 100)}% of base`
+              : "—"
+          }
+        />
 
-        <Card className="flex flex-col justify-between border-border/60 bg-card p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Total LTV
-            </span>
-            <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
-              <DollarSign className="size-3.5 text-muted-foreground" />
-            </div>
-          </div>
-          <div className="pt-2.5">
-            <div className="text-2xl font-semibold tracking-tight tabular-nums text-foreground">
-              ${totalSpent.toLocaleString()}
-            </div>
-            <div className="mt-1 text-xs tabular-nums text-muted-foreground">
-              ${avgSpent.toLocaleString()} avg / user
-            </div>
-          </div>
-        </Card>
+        <StatCard
+          title="Total LTV"
+          value={`$${totalSpent.toLocaleString()}`}
+          icon={<DollarSign className="size-3.5" />}
+          description={`$${avgSpent.toLocaleString()} avg / user`}
+        />
 
-        <Card className="flex flex-col justify-between border-border/60 bg-card p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Admins & Staff
-            </span>
-            <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
-              <ShieldCheck className="size-3.5 text-muted-foreground" />
-            </div>
-          </div>
-          <div className="pt-2.5">
-            <div className="text-2xl font-semibold tracking-tight tabular-nums text-foreground">
-              {staffCount}
-            </div>
-            <div className="mt-1 text-xs tabular-nums text-muted-foreground">
-              internal access
-            </div>
-          </div>
-        </Card>
+        <StatCard
+          title="Admins & Staff"
+          value={staffCount}
+          icon={<ShieldCheck className="size-3.5" />}
+          description="internal access"
+        />
       </div>
 
       {/* ── Calm Segmented Filter Bar ── */}

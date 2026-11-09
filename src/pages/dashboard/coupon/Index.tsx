@@ -28,7 +28,7 @@ import {
 import { useCoupon } from "./useHooks"
 import type { CouponItem } from "./common/mockCoupon"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { StatCard } from "@/components/common/StatCard"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -258,81 +258,33 @@ export default function DashboardCouponPage() {
 
       {/* ── 4 KPI Cards (Monochrome Icons + Tabular Numbers) ── */}
       <div className="grid grid-cols-4 gap-4">
-        <Card className="flex flex-col justify-between border-border/60 bg-card p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Total Vouchers
-            </span>
-            <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
-              <Tag className="size-3.5 text-muted-foreground" />
-            </div>
-          </div>
-          <div className="pt-2.5">
-            <div className="text-2xl font-semibold tracking-tight tabular-nums text-foreground">
-              {stats.total}
-            </div>
-            <div className="mt-1 text-xs tabular-nums text-muted-foreground">
-              {stats.expired} expired
-            </div>
-          </div>
-        </Card>
+        <StatCard
+          title="Total Vouchers"
+          value={stats.total}
+          icon={<Tag className="size-3.5" />}
+          description={`${stats.expired} expired`}
+        />
 
-        <Card className="flex flex-col justify-between border-border/60 bg-card p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Active
-            </span>
-            <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
-              <CheckCircle2 className="size-3.5 text-muted-foreground" />
-            </div>
-          </div>
-          <div className="pt-2.5">
-            <div className="text-2xl font-semibold tracking-tight tabular-nums text-foreground">
-              {stats.active}
-            </div>
-            <div className="mt-1 text-xs tabular-nums text-muted-foreground">
-              redeemable now
-            </div>
-          </div>
-        </Card>
+        <StatCard
+          title="Active"
+          value={stats.active}
+          icon={<CheckCircle2 className="size-3.5" />}
+          description="redeemable now"
+        />
 
-        <Card className="flex flex-col justify-between border-border/60 bg-card p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Scheduled
-            </span>
-            <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
-              <Clock className="size-3.5 text-muted-foreground" />
-            </div>
-          </div>
-          <div className="pt-2.5">
-            <div className="text-2xl font-semibold tracking-tight tabular-nums text-foreground">
-              {stats.scheduled}
-            </div>
-            <div className="mt-1 text-xs tabular-nums text-muted-foreground">
-              upcoming
-            </div>
-          </div>
-        </Card>
+        <StatCard
+          title="Scheduled"
+          value={stats.scheduled}
+          icon={<Clock className="size-3.5" />}
+          description="upcoming"
+        />
 
-        <Card className="flex flex-col justify-between border-border/60 bg-card p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Redemptions
-            </span>
-            <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
-              <TrendingUp className="size-3.5 text-muted-foreground" />
-            </div>
-          </div>
-          <div className="pt-2.5">
-            <div className="text-2xl font-semibold tracking-tight tabular-nums text-foreground">
-              {stats.totalRedemptions.toLocaleString()}
-            </div>
-            <div className="mt-1 text-xs tabular-nums text-muted-foreground">
-              all campaigns
-            </div>
-          </div>
-        </Card>
+        <StatCard
+          title="Redemptions"
+          value={stats.totalRedemptions.toLocaleString()}
+          icon={<TrendingUp className="size-3.5" />}
+          description="all campaigns"
+        />
       </div>
 
       {/* ── Calm Segmented Filter Bar ── */}

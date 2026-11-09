@@ -2,6 +2,7 @@ import { useMemo } from "react"
 import { Link } from "react-router-dom"
 import { Tags, Pencil, Trash2, MoreHorizontal } from "lucide-react"
 import { cn } from "cn"
+import { capitalizeFirstLetter } from "@/lib/capitalizeFirstLetter"
 
 import {
   DataGrid,
@@ -83,14 +84,9 @@ export function CategoryTable({
                 <Tags className="size-3.5 text-muted-foreground" />
               )}
             </div>
-            <div className="flex min-w-0 flex-col">
-              <span className="truncate text-xs font-medium text-foreground">
-                {info.getValue()}
-              </span>
-              <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
-                {info.row.original.id}
-              </span>
-            </div>
+            <span className="truncate text-xs font-medium text-foreground">
+              {info.getValue()}
+            </span>
           </div>
         ),
       }),
@@ -128,12 +124,16 @@ export function CategoryTable({
         cell: (info) => {
           const rawStatus = (info.getValue() || "active").toLowerCase()
           const config = statusConfig[rawStatus] || statusConfig.active
+          const productCount =
+            info.row.original.productCount ?? info.row.original.itemCount ?? 0
+          const hasProducts = productCount > 0
 
           return (
             <Select
               value={rawStatus}
               onValueChange={(val) => {
                 if (val && val !== rawStatus) {
+                  if (hasProducts && val !== "active") return
                   onStatusChange?.(info.row.original.id, val)
                 }
               }}
@@ -149,27 +149,40 @@ export function CategoryTable({
                 <span
                   className={cn("size-1.5 shrink-0 rounded-full", config.dot)}
                 />
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder="Status">
+                  {(val) => capitalizeFirstLetter(String(val ?? rawStatus))}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent align="start" className="min-w-[125px]">
-                <SelectItem value="active" className="cursor-pointer text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="size-1.5 rounded-full bg-emerald-500" />
-                    <span>Active</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="archived" className="cursor-pointer text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="size-1.5 rounded-full bg-zinc-400" />
-                    <span>Archived</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="draft" className="cursor-pointer text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="size-1.5 rounded-full bg-amber-500" />
-                    <span>Draft</span>
-                  </div>
-                </SelectItem>
+                {(["active", "archived", "draft"] as const).map((st) => {
+                  const isBlocked = hasProducts && st !== "active"
+                  return (
+                    <SelectItem
+                      key={st}
+                      value={st}
+                      disabled={isBlocked}
+                      className={cn(
+                        "cursor-pointer text-xs",
+                        isBlocked && "cursor-not-allowed opacity-50"
+                      )}
+                      title={
+                        isBlocked
+                          ? `Cannot set to ${st} because ${productCount} product(s) are assigned`
+                          : undefined
+                      }
+                    >
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={cn(
+                            "size-1.5 rounded-full",
+                            statusConfig[st]?.dot
+                          )}
+                        />
+                        <span>{capitalizeFirstLetter(st)}</span>
+                      </div>
+                    </SelectItem>
+                  )
+                })}
               </SelectContent>
             </Select>
           )
@@ -178,42 +191,61 @@ export function CategoryTable({
       categoryColumnHelper.display({
         id: "actions",
         header: "Actions",
-        cell: ({ row }) => (
-          <div className="flex items-center">
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    className="size-7 cursor-pointer text-muted-foreground hover:text-foreground"
-                    title="Actions"
+        cell: ({ row }) => {
+          const productCount =
+            row.original.productCount ?? row.original.itemCount ?? 0
+          const hasProducts = productCount > 0
+
+          return (
+            <div className="flex items-center">
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      className="size-7 cursor-pointer text-muted-foreground hover:text-foreground"
+                      title="Actions"
+                    >
+                      <MoreHorizontal className="size-4" />
+                      <span className="sr-only">Actions</span>
+                    </Button>
+                  }
+                />
+                <DropdownMenuContent align="start" className="w-36">
+                  <Link to={`/dashboard/category/edit/${row.original.id}`}>
+                    <DropdownMenuItem className="cursor-pointer gap-2">
+                      <Pencil className="size-3.5 text-muted-foreground" />
+                      <span>Edit</span>
+                    </DropdownMenuItem>
+                  </Link>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    variant="destructive"
+                    disabled={hasProducts}
+                    onClick={() => {
+                      if (!hasProducts) {
+                        onDelete(row.original)
+                      }
+                    }}
+                    className={cn(
+                      "cursor-pointer gap-2",
+                      hasProducts && "cursor-not-allowed opacity-50"
+                    )}
+                    title={
+                      hasProducts
+                        ? `Cannot delete category because ${productCount} product(s) are assigned`
+                        : "Delete category"
+                    }
                   >
-                    <MoreHorizontal className="size-4" />
-                    <span className="sr-only">Actions</span>
-                  </Button>
-                }
-              />
-              <DropdownMenuContent align="start" className="w-36">
-                <Link to={`/dashboard/category/edit/${row.original.id}`}>
-                  <DropdownMenuItem className="cursor-pointer gap-2">
-                    <Pencil className="size-3.5 text-muted-foreground" />
-                    <span>Edit</span>
+                    <Trash2 className="size-3.5" />
+                    <span>Delete</span>
                   </DropdownMenuItem>
-                </Link>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  variant="destructive"
-                  onClick={() => onDelete(row.original)}
-                  className="cursor-pointer gap-2"
-                >
-                  <Trash2 className="size-3.5" />
-                  <span>Delete</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        ),
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )
+        },
         enableSorting: false,
       }),
     ],

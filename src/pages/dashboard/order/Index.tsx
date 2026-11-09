@@ -23,7 +23,7 @@ import {
 } from "@/components/common/data-grid"
 import { useOrder, type OrderItem } from "./useHooks"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { StatCard } from "@/components/common/StatCard"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -222,87 +222,38 @@ export default function DashboardOrderPage() {
 
       {/* ── 4 KPI Cards (Monochrome Icons + Tabular Numbers) ── */}
       <div className="grid grid-cols-4 gap-4">
-        <Card className="flex flex-col justify-between border-border/60 bg-card p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Total Orders
-            </span>
-            <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
-              <ShoppingBag className="size-3.5 text-muted-foreground" />
-            </div>
-          </div>
-          <div className="pt-2.5">
-            <div className="text-2xl font-semibold tracking-tight tabular-nums text-foreground">
-              {orders.length}
-            </div>
-            <div className="mt-1 text-xs tabular-nums text-muted-foreground">
-              {completedCount} completed
-            </div>
-          </div>
-        </Card>
+        <StatCard
+          title="Total Orders"
+          value={orders.length}
+          icon={<ShoppingBag className="size-3.5" />}
+          description={`${completedCount} completed`}
+        />
 
-        <Card className="flex flex-col justify-between border-border/60 bg-card p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Gross Volume
-            </span>
-            <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
-              <DollarSign className="size-3.5 text-muted-foreground" />
-            </div>
-          </div>
-          <div className="pt-2.5">
-            <div className="text-2xl font-semibold tracking-tight tabular-nums text-foreground">
-              ${totalRevenue.toLocaleString()}
-            </div>
-            <div className="mt-1 text-xs tabular-nums text-muted-foreground">
-              ${avgOrder.toLocaleString()} avg order
-            </div>
-          </div>
-        </Card>
+        <StatCard
+          title="Gross Volume"
+          value={`$${totalRevenue.toLocaleString()}`}
+          icon={<DollarSign className="size-3.5" />}
+          description={`$${avgOrder.toLocaleString()} avg order`}
+        />
 
-        <Card className="flex flex-col justify-between border-border/60 bg-card p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Pending Action
-            </span>
-            <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
-              <Clock className="size-3.5 text-muted-foreground" />
-            </div>
-          </div>
-          <div className="pt-2.5">
-            <div
-              className={`text-2xl font-semibold tracking-tight tabular-nums ${
-                pendingCount > 0
-                  ? "text-amber-600 dark:text-amber-400"
-                  : "text-foreground"
-              }`}
-            >
-              {pendingCount}
-            </div>
-            <div className="mt-1 text-xs tabular-nums text-muted-foreground">
-              awaiting confirmation
-            </div>
-          </div>
-        </Card>
+        <StatCard
+          title="Pending Action"
+          value={pendingCount}
+          icon={<Clock className="size-3.5" />}
+          valueClassName={
+            pendingCount > 0
+              ? "text-amber-600 dark:text-amber-400"
+              : "text-foreground"
+          }
+          description="awaiting confirmation"
+        />
 
-        <Card className="flex flex-col justify-between border-border/60 bg-card p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              In Fulfillment
-            </span>
-            <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
-              <Truck className="size-3.5 text-muted-foreground" />
-            </div>
-          </div>
-          <div className="pt-2.5">
-            <div className="text-2xl font-semibold tracking-tight tabular-nums text-foreground">
-              {processingCount + shippedCount}
-            </div>
-            <div className="mt-1 text-xs tabular-nums text-muted-foreground">
-              {processingCount} processing · {shippedCount} shipped
-            </div>
-          </div>
-        </Card>
+        <StatCard
+          title="In Fulfillment"
+          value={processingCount + shippedCount}
+          icon={<Truck className="size-3.5" />}
+          description={`${processingCount} processing · ${shippedCount} shipped`}
+        />
       </div>
 
       {/* ── TanStack DataGrid ── */}

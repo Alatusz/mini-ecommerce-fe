@@ -26,6 +26,7 @@ import {
 } from "recharts"
 
 import { useDashboardDefault, type OrderItem } from "./useHooks"
+import { StatCard } from "@/components/common/StatCard"
 import {
   Card,
   CardHeader,
@@ -140,24 +141,13 @@ export default function DashboardPage() {
       {/* ── 1. KPI Cards Row (Calm monochrome icon squares + tabular numbers + 1-word baseline) ── */}
       <div className="grid grid-cols-4 gap-4">
         {metrics.map((metric, idx) => (
-          <Card
+          <StatCard
             key={metric.title}
-            className="flex h-full flex-col justify-between border-border/60 bg-card p-4 shadow-2xs"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-muted-foreground">
-                {metric.title}
-              </span>
-              <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
-                {getMetricIcon(idx)}
-              </div>
-            </div>
-
-            <div className="pt-2.5">
-              <div className="text-2xl font-semibold tracking-tight tabular-nums text-foreground">
-                {metric.value}
-              </div>
-              <div className="mt-1 flex items-center gap-1.5 text-xs tabular-nums">
+            title={metric.title}
+            value={metric.value}
+            icon={getMetricIcon(idx)}
+            description={
+              <div className="flex items-center gap-1.5">
                 <span className="inline-flex items-center font-medium text-emerald-600 dark:text-emerald-400">
                   <ArrowUpRight className="mr-0.5 size-3" />
                   {metric.change}
@@ -166,8 +156,8 @@ export default function DashboardPage() {
                   {metric.description}
                 </span>
               </div>
-            </div>
-          </Card>
+            }
+          />
         ))}
       </div>
 
