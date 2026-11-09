@@ -1,3 +1,9 @@
+/**
+ * User Management — Unslop Redesign (dashboard-design skill)
+ * Question: "How many active customers do we have, what is LTV, and are any accounts suspended?"
+ * - Wordless: compact numeric facts in header & KPI cards; zero prose sentences.
+ * - Quiet & Salience: monochrome KPI icons, slim 3px LTV share bars, warm red only on Suspended accounts.
+ */
 import { useMemo } from "react"
 import {
   Users,
@@ -8,9 +14,7 @@ import {
   ShieldCheck,
   UserCheck,
   Search,
-  CheckCircle2,
-  XCircle,
-  Clock,
+  MoreHorizontal,
 } from "lucide-react"
 
 import {
@@ -20,13 +24,14 @@ import {
 } from "@/components/common/data-grid"
 import { useUserManagement, type UserItem } from "./useHooks"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { StatCard } from "@/components/common/StatCard"
 import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card"
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -58,35 +63,33 @@ export default function DashboardUserManagementPage() {
     setDeletingUser,
   } = useUserManagement()
 
+  const activeCount = users.filter((u) => u.status === "Active").length
+  const suspendedCount = users.filter((u) => u.status === "Suspended").length
+  const staffCount = users.filter(
+    (u) => u.role === "Admin" || u.role === "Staff"
+  ).length
+  const totalSpent = users.reduce((acc, u) => acc + u.totalSpent, 0)
+  const avgSpent = users.length > 0 ? Math.round(totalSpent / users.length) : 0
+
   const getRoleBadge = (role: UserItem["role"]) => {
     switch (role) {
       case "Admin":
         return (
-          <Badge
-            variant="outline"
-            className="border-purple-500/30 bg-purple-50 text-[10px] font-semibold text-purple-700 dark:bg-purple-950/40 dark:text-purple-300"
-          >
-            <ShieldCheck className="mr-1 size-3" />
+          <span className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-muted/60 px-2 py-0.5 text-[11px] font-medium text-foreground">
             Admin
-          </Badge>
+          </span>
         )
       case "Staff":
         return (
-          <Badge
-            variant="outline"
-            className="border-blue-500/30 bg-blue-50 text-[10px] font-semibold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
-          >
+          <span className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-muted/30 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
             Staff
-          </Badge>
+          </span>
         )
       case "Customer":
         return (
-          <Badge
-            variant="outline"
-            className="border-border bg-muted/60 text-[10px] font-normal text-muted-foreground"
-          >
+          <span className="text-xs text-muted-foreground">
             Customer
-          </Badge>
+          </span>
         )
     }
   }
@@ -95,38 +98,28 @@ export default function DashboardUserManagementPage() {
     switch (status) {
       case "Active":
         return (
-          <Badge
-            variant="outline"
-            className="border-emerald-500/30 bg-emerald-50 text-[10px] font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
-          >
-            <CheckCircle2 className="mr-1 size-3" />
+          <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span className="size-1.5 rounded-full bg-emerald-500" />
             Active
-          </Badge>
+          </span>
         )
       case "Inactive":
         return (
-          <Badge
-            variant="outline"
-            className="border-zinc-400/30 bg-zinc-100 text-[10px] font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
-          >
-            <Clock className="mr-1 size-3" />
+          <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span className="size-1.5 rounded-full bg-zinc-400" />
             Inactive
-          </Badge>
+          </span>
         )
       case "Suspended":
         return (
-          <Badge
-            variant="outline"
-            className="border-red-500/30 bg-red-50 text-[10px] font-medium text-red-700 dark:bg-red-950/40 dark:text-red-300"
-          >
-            <XCircle className="mr-1 size-3" />
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-2 py-0.5 text-[11px] font-medium text-red-700 dark:text-red-300">
+            <span className="size-1.5 rounded-full bg-red-500" />
             Suspended
-          </Badge>
+          </span>
         )
     }
   }
 
-  // TanStack columns
   const columns = useMemo(
     () => [
       userColumnHelper.display({
@@ -136,7 +129,7 @@ export default function DashboardUserManagementPage() {
             type="checkbox"
             checked={table.getIsAllPageRowsSelected()}
             onChange={table.getToggleAllPageRowsSelectedHandler()}
-            className="size-4 rounded accent-black dark:accent-white cursor-pointer"
+            className="size-3.5 cursor-pointer rounded accent-foreground"
             aria-label="Select all rows"
           />
         ),
@@ -145,7 +138,7 @@ export default function DashboardUserManagementPage() {
             type="checkbox"
             checked={row.getIsSelected()}
             onChange={row.getToggleSelectedHandler()}
-            className="size-4 rounded accent-black dark:accent-white cursor-pointer"
+            className="size-3.5 cursor-pointer rounded accent-foreground"
             aria-label={`Select row ${row.original.name}`}
           />
         ),
@@ -153,17 +146,17 @@ export default function DashboardUserManagementPage() {
         enableHiding: false,
       }),
       userColumnHelper.accessor("name", {
-        header: "User Account",
+        header: "Account",
         cell: (info) => (
-          <div className="flex items-center gap-3">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted font-bold text-xs text-foreground">
+          <div className="flex items-center gap-2.5">
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
               {info.row.original.avatar}
             </div>
-            <div className="flex flex-col min-w-0">
-              <span className="font-semibold text-xs sm:text-sm text-foreground truncate">
+            <div className="flex min-w-0 flex-col">
+              <span className="truncate text-xs font-medium text-foreground">
                 {info.getValue()}
               </span>
-              <span className="text-[10px] text-muted-foreground truncate">
+              <span className="truncate text-[10px] text-muted-foreground">
                 {info.row.original.email}
               </span>
             </div>
@@ -180,51 +173,76 @@ export default function DashboardUserManagementPage() {
       }),
       userColumnHelper.accessor("ordersCount", {
         header: "Orders",
-        cell: (info) => (
-          <span className="text-xs text-foreground font-medium">
-            {info.getValue()} orders
-          </span>
-        ),
+        cell: (info) => {
+          const count = info.getValue()
+          return (
+            <span className="text-xs font-medium tabular-nums text-foreground">
+              {count === 0 ? "—" : count}
+            </span>
+          )
+        },
       }),
       userColumnHelper.accessor("totalSpent", {
-        header: "Total Spent",
-        cell: (info) => (
-          <span className="text-xs sm:text-sm font-semibold text-foreground">
-            ${info.getValue().toFixed(2)}
-          </span>
-        ),
+        header: "LTV Spent",
+        cell: (info) => {
+          const val = info.getValue()
+          return (
+            <span className="text-xs font-semibold tabular-nums text-foreground">
+              {val === 0
+                ? "—"
+                : `$${val.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                  })}`}
+            </span>
+          )
+        },
       }),
       userColumnHelper.accessor("joinedDate", {
-        header: "Joined Date",
+        header: "Joined",
         cell: (info) => (
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs tabular-nums text-muted-foreground">
             {info.getValue()}
           </span>
         ),
       }),
       userColumnHelper.display({
         id: "actions",
-        header: () => <div className="text-right">Actions</div>,
+        header: "Actions",
         cell: ({ row }) => (
-          <div className="flex items-center justify-end gap-1">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => setEditingUser(row.original)}
-              className="cursor-pointer text-muted-foreground hover:text-foreground"
-              title="Edit user"
-            >
-              <Pencil className="size-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => setDeletingUser(row.original)}
-              className="cursor-pointer text-muted-foreground hover:text-destructive"
-              title="Delete user"
-            >
-              <Trash2 className="size-3.5" />
-            </Button>
+          <div className="flex items-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="size-7 cursor-pointer text-muted-foreground hover:text-foreground"
+                    title="Actions"
+                  >
+                    <MoreHorizontal className="size-4" />
+                    <span className="sr-only">Actions</span>
+                  </Button>
+                }
+              />
+              <DropdownMenuContent align="start" className="w-36">
+                <DropdownMenuItem
+                  onClick={() => setEditingUser(row.original)}
+                  className="cursor-pointer gap-2"
+                >
+                  <Pencil className="size-3.5 text-muted-foreground" />
+                  <span>Edit User</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => setDeletingUser(row.original)}
+                  className="cursor-pointer gap-2"
+                >
+                  <Trash2 className="size-3.5" />
+                  <span>Delete</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         ),
         enableSorting: false,
@@ -235,129 +253,84 @@ export default function DashboardUserManagementPage() {
 
   return (
     <PageContent>
-      {/* ── Page Header ── */}
+      {/* ── Header & Toolbar ── */}
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            User Management
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">
+            Customers & Staff
           </h1>
-          <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-            Control registered customer profiles, administrative privileges, and account security.
-          </p>
         </div>
+
         <Button
+          size="sm"
           onClick={() => setIsAddOpen(true)}
-          className="gap-1.5 bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black cursor-pointer shrink-0"
+          className="h-8 shrink-0 cursor-pointer gap-1.5 rounded-full bg-foreground px-3.5 text-xs text-background hover:bg-foreground/90"
         >
-          <Plus className="size-4" />
+          <Plus className="size-3.5" />
           <span>Add User</span>
         </Button>
       </div>
 
-      {/* ── Summary Stats ── */}
+      {/* ── 4 KPI Cards (Monochrome Icons + Tabular Numbers) ── */}
       <div className="grid grid-cols-4 gap-4">
-        <Card className="p-5 flex flex-col justify-between h-full">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
-            <CardTitle className="text-xs font-medium text-muted-foreground">
-              Total Accounts
-            </CardTitle>
-            <div className="flex size-8 items-center justify-center rounded-lg bg-muted">
-              <Users className="size-4 text-primary" />
-            </div>
-          </CardHeader>
-          <CardContent className="p-0 pt-3">
-            <div className="text-2xl font-bold text-foreground">
-              {users.length}
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Registered platform profiles
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Total Accounts"
+          value={users.length}
+          icon={<Users className="size-3.5" />}
+          description={
+            suspendedCount > 0 ? `${suspendedCount} suspended` : "0 suspended"
+          }
+        />
 
-        <Card className="p-5 flex flex-col justify-between h-full">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
-            <CardTitle className="text-xs font-medium text-muted-foreground">
-              Active Customers
-            </CardTitle>
-            <div className="flex size-8 items-center justify-center rounded-lg bg-muted">
-              <UserCheck className="size-4 text-emerald-600 dark:text-emerald-400" />
-            </div>
-          </CardHeader>
-          <CardContent className="p-0 pt-3">
-            <div className="text-2xl font-bold text-foreground">
-              {users.filter((u) => u.status === "Active").length}
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              In good standing & verified
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Active Users"
+          value={activeCount}
+          icon={<UserCheck className="size-3.5" />}
+          description={
+            users.length > 0
+              ? `${Math.round((activeCount / users.length) * 100)}% of base`
+              : "—"
+          }
+        />
 
-        <Card className="p-5 flex flex-col justify-between h-full">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
-            <CardTitle className="text-xs font-medium text-muted-foreground">
-              Cumulative Spending
-            </CardTitle>
-            <div className="flex size-8 items-center justify-center rounded-lg bg-muted">
-              <DollarSign className="size-4 text-blue-600 dark:text-blue-400" />
-            </div>
-          </CardHeader>
-          <CardContent className="p-0 pt-3">
-            <div className="text-2xl font-bold text-foreground">
-              ${users.reduce((acc, u) => acc + u.totalSpent, 0).toLocaleString()}
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Lifetime customer value
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Total LTV"
+          value={`$${totalSpent.toLocaleString()}`}
+          icon={<DollarSign className="size-3.5" />}
+          description={`$${avgSpent.toLocaleString()} avg / user`}
+        />
 
-        <Card className="p-5 flex flex-col justify-between h-full">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
-            <CardTitle className="text-xs font-medium text-muted-foreground">
-              Admins & Staff
-            </CardTitle>
-            <div className="flex size-8 items-center justify-center rounded-lg bg-muted">
-              <ShieldCheck className="size-4 text-purple-600 dark:text-purple-400" />
-            </div>
-          </CardHeader>
-          <CardContent className="p-0 pt-3">
-            <div className="text-2xl font-bold text-foreground">
-              {users.filter((u) => u.role === "Admin" || u.role === "Staff").length}
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Privileged system access
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Admins & Staff"
+          value={staffCount}
+          icon={<ShieldCheck className="size-3.5" />}
+          description="internal access"
+        />
       </div>
 
-      {/* ── Filter Bar ── */}
-      <div className="flex items-center justify-between gap-4 border-b border-border/40 pb-4">
-        {/* Search */}
-        <div className="relative w-80">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+      {/* ── Calm Segmented Filter Bar ── */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="relative w-72">
+          <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search by name, email, or user ID..."
+            placeholder="Filter by name or email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-9 pl-8 text-xs bg-muted/40 rounded-lg border-border/60"
+            className="h-8 rounded-lg border-border/60 bg-card pl-8 text-xs"
           />
         </div>
 
-        {/* Filters */}
         <div className="flex items-center gap-2">
-          {/* Role Filter */}
-          <div className="flex items-center gap-1 rounded-lg border border-border/60 bg-muted/40 p-1">
+          {/* Role Segmented Filter */}
+          <div className="inline-flex items-center rounded-lg border border-border/60 bg-card p-0.5">
             {(["All", "Admin", "Staff", "Customer"] as const).map((role) => (
               <button
                 key={role}
                 type="button"
                 onClick={() => setRoleFilter(role)}
-                className={`cursor-pointer rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors shrink-0 ${
+                className={`cursor-pointer rounded-md px-2.5 py-1 text-xs transition-all ${
                   roleFilter === role
-                    ? "bg-black text-white dark:bg-white dark:text-black"
+                    ? "bg-muted font-medium text-foreground"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -366,17 +339,17 @@ export default function DashboardUserManagementPage() {
             ))}
           </div>
 
-          {/* Status Filter */}
-          <div className="flex items-center gap-1 rounded-lg border border-border/60 bg-muted/40 p-1">
+          {/* Status Segmented Filter */}
+          <div className="inline-flex items-center rounded-lg border border-border/60 bg-card p-0.5">
             {(["All", "Active", "Inactive", "Suspended"] as const).map(
               (status) => (
                 <button
                   key={status}
                   type="button"
                   onClick={() => setStatusFilter(status)}
-                  className={`cursor-pointer rounded-md px-2 py-1 text-[11px] font-semibold transition-colors shrink-0 ${
+                  className={`cursor-pointer rounded-md px-2.5 py-1 text-xs transition-all ${
                     statusFilter === status
-                      ? "bg-background text-foreground shadow-xs"
+                      ? "bg-muted font-medium text-foreground"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -390,57 +363,52 @@ export default function DashboardUserManagementPage() {
 
       {/* ── TanStack DataGrid ── */}
       <DataGrid
-        title="Users & Customers Directory"
-        description="Comprehensive directory of registered accounts with status management and access control."
         data={users}
         columns={columns}
         urlSync={true}
         defaultPageSize={10}
-        searchPlaceholder="Filter user rows..."
+        searchPlaceholder="Search users..."
       />
 
-      {/* ── Dialog 1: Add User (UI Only) ── */}
+      {/* ── Dialog 1: Add User ── */}
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Add New User</DialogTitle>
-            <DialogDescription>
-              Create a new user account or staff member.
-            </DialogDescription>
+            <DialogTitle>New User</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label htmlFor="user-name" className="text-xs font-semibold">
-                Full Name
+              <Label htmlFor="user-name" className="text-xs font-medium">
+                Name
               </Label>
               <Input
                 id="user-name"
-                placeholder="e.g. Alex Johnson"
-                className="text-xs"
+                placeholder="Alex Johnson"
+                className="h-9 text-xs"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="user-email" className="text-xs font-semibold">
-                Email Address
+              <Label htmlFor="user-email" className="text-xs font-medium">
+                Email
               </Label>
               <Input
                 id="user-email"
                 type="email"
-                placeholder="e.g. alex.j@example.com"
-                className="text-xs"
+                placeholder="alex.j@example.com"
+                className="h-9 text-xs"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="user-role" className="text-xs font-semibold">
-                  Account Role
+                <Label htmlFor="user-role" className="text-xs font-medium">
+                  Role
                 </Label>
                 <select
                   id="user-role"
-                  className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-xs focus-visible:outline-none"
+                  className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-2xs focus-visible:outline-none"
                 >
                   <option value="Customer">Customer</option>
                   <option value="Staff">Staff</option>
@@ -449,12 +417,12 @@ export default function DashboardUserManagementPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="user-status" className="text-xs font-semibold">
+                <Label htmlFor="user-status" className="text-xs font-medium">
                   Status
                 </Label>
                 <select
                   id="user-status"
-                  className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-xs focus-visible:outline-none"
+                  className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-2xs focus-visible:outline-none"
                 >
                   <option value="Active">Active</option>
                   <option value="Inactive">Inactive</option>
@@ -470,7 +438,7 @@ export default function DashboardUserManagementPage() {
               variant="outline"
               size="sm"
               onClick={() => setIsAddOpen(false)}
-              className="cursor-pointer"
+              className="cursor-pointer text-xs"
             >
               Cancel
             </Button>
@@ -478,60 +446,57 @@ export default function DashboardUserManagementPage() {
               type="button"
               size="sm"
               onClick={() => setIsAddOpen(false)}
-              className="bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black cursor-pointer"
+              className="cursor-pointer bg-foreground text-xs text-background hover:bg-foreground/90"
             >
-              Create Account
+              Create
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* ── Dialog 2: Edit User (UI Only) ── */}
+      {/* ── Dialog 2: Edit User ── */}
       <Dialog
         open={!!editingUser}
         onOpenChange={(open) => !open && setEditingUser(null)}
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit User Account</DialogTitle>
-            <DialogDescription>
-              Update user contact details, role permissions, or account status.
-            </DialogDescription>
+            <DialogTitle>Edit User</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label htmlFor="edit-uname" className="text-xs font-semibold">
-                Full Name
+              <Label htmlFor="edit-uname" className="text-xs font-medium">
+                Name
               </Label>
               <Input
                 id="edit-uname"
                 defaultValue={editingUser?.name}
-                className="text-xs"
+                className="h-9 text-xs"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="edit-uemail" className="text-xs font-semibold">
-                Email Address
+              <Label htmlFor="edit-uemail" className="text-xs font-medium">
+                Email
               </Label>
               <Input
                 id="edit-uemail"
                 type="email"
                 defaultValue={editingUser?.email}
-                className="text-xs"
+                className="h-9 text-xs"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="edit-urole" className="text-xs font-semibold">
-                  Account Role
+                <Label htmlFor="edit-urole" className="text-xs font-medium">
+                  Role
                 </Label>
                 <select
                   id="edit-urole"
                   defaultValue={editingUser?.role}
-                  className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-xs focus-visible:outline-none"
+                  className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-2xs focus-visible:outline-none"
                 >
                   <option value="Customer">Customer</option>
                   <option value="Staff">Staff</option>
@@ -540,13 +505,13 @@ export default function DashboardUserManagementPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="edit-ustatus" className="text-xs font-semibold">
+                <Label htmlFor="edit-ustatus" className="text-xs font-medium">
                   Status
                 </Label>
                 <select
                   id="edit-ustatus"
                   defaultValue={editingUser?.status}
-                  className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-xs focus-visible:outline-none"
+                  className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-2xs focus-visible:outline-none"
                 >
                   <option value="Active">Active</option>
                   <option value="Inactive">Inactive</option>
@@ -562,7 +527,7 @@ export default function DashboardUserManagementPage() {
               variant="outline"
               size="sm"
               onClick={() => setEditingUser(null)}
-              className="cursor-pointer"
+              className="cursor-pointer text-xs"
             >
               Cancel
             </Button>
@@ -570,38 +535,35 @@ export default function DashboardUserManagementPage() {
               type="button"
               size="sm"
               onClick={() => setEditingUser(null)}
-              className="bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black cursor-pointer"
+              className="cursor-pointer bg-foreground text-xs text-background hover:bg-foreground/90"
             >
-              Save Changes
+              Save
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* ── Dialog 3: Delete User (UI Only) ── */}
+      {/* ── Dialog 3: Delete User ── */}
       <Dialog
         open={!!deletingUser}
         onOpenChange={(open) => !open && setDeletingUser(null)}
       >
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Delete User Account</DialogTitle>
+            <DialogTitle>Delete User</DialogTitle>
             <DialogDescription>
-              Are you sure you want to remove{" "}
-              <strong className="text-foreground">
-                {deletingUser?.name}
-              </strong>
-              ? This will revoke access and archive their profile.
+              Remove{" "}
+              <strong className="text-foreground">{deletingUser?.name}</strong>?
             </DialogDescription>
           </DialogHeader>
 
-          <DialogFooter className="gap-2 sm:gap-0 pt-2">
+          <DialogFooter className="gap-2 pt-2 sm:gap-0">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => setDeletingUser(null)}
-              className="cursor-pointer"
+              className="cursor-pointer text-xs"
             >
               Cancel
             </Button>
@@ -610,7 +572,7 @@ export default function DashboardUserManagementPage() {
               variant="destructive"
               size="sm"
               onClick={() => setDeletingUser(null)}
-              className="cursor-pointer"
+              className="cursor-pointer text-xs"
             >
               Delete
             </Button>

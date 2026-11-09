@@ -8,7 +8,7 @@ export function DashboardLayout() {
     <SidebarProvider defaultOpen={true}>
       <DashboardSidebar />
 
-      <SidebarInset className="min-w-[1200px] h-svh overflow-y-auto overflow-x-auto">
+      <SidebarInset className="min-w-[1200px] h-svh overflow-y-auto overflow-x-auto bg-zinc-50/50 dark:bg-zinc-950">
         {/* ── Top Dashboard Navbar ── */}
         <DashboardNavbar />
 

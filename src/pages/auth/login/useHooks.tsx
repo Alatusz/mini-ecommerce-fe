@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { login } from "@/services/auth.services"
-import { toast } from "@/components/ui/toast"
+import { showToast } from "@/lib/toast"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/context/AuthContext"
 
@@ -41,16 +41,12 @@ export function useLogin() {
         role: res.data.role,
       })
 
-      toast.add({
-        type: "success",
-        description: "User logged in successfully",
-      })
+      showToast.success("User logged in successfully")
       navigate("/")
     } catch (error: any) {
-      toast.add({
-        type: "error",
-        description: error.response?.data?.message || "Failed to login user",
-      })
+      showToast.error(
+        error.response?.data?.message || "Failed to login user",
+      )
     }
   }
 

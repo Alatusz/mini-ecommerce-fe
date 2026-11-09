@@ -1,210 +1,116 @@
-import { useMemo } from "react"
+/**
+ * Categories Dashboard — Unslop Redesign (dashboard-design skill)
+ * Question: "Are all categories populated and published, or are any empty/draft?"
+ * - Wordless: compact numeric facts in header & KPI cards; zero prose sentences.
+ * - Quiet: monochrome KPI icons; warm amber only when empty/draft categories need attention.
+ */
 import { Link } from "react-router-dom"
-import {
-  Tags,
-  Plus,
-  Pencil,
-  Trash2,
-} from "lucide-react"
+import { Plus, Tags, Package, AlertTriangle, EyeOff } from "lucide-react"
 
-import {
-  DataGrid,
-  createColumnHelper,
-  type DataGridFeatures,
-} from "@/components/common/data-grid"
-import { useCategory, type CategoryItem } from "./useHooks"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog"
+import { StatCard } from "@/components/common/StatCard"
 import { PageContent } from "@/components/common/PageContent"
-
-const categoryColumnHelper = createColumnHelper<
-  DataGridFeatures,
-  CategoryItem
->()
+import { useCategory } from "./useHooks"
+import { CategoryTable } from "./common/CategoryTable"
+import { CategoryDeleteDialog } from "./common/CategoryDeleteDialog"
 
 export default function DashboardCategoryPage() {
   const {
     categories,
+    total,
+    isLoading,
     deletingCategory,
     setDeletingCategory,
     handleDeleteCategory,
+    isDeleting,
+    handleStatusChange,
   } = useCategory()
 
-  // Columns for TanStack Table DataGrid
-  const columns = useMemo(
-    () => [
-      categoryColumnHelper.accessor("name", {
-        header: "Category Name",
-        cell: (info) => (
-          <div className="flex items-center gap-3">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted/60 p-1 border border-border/40 overflow-hidden">
-              {info.row.original.image ? (
-                <img
-                  src={info.row.original.image}
-                  alt={info.getValue()}
-                  className="max-h-full max-w-full object-contain"
-                />
-              ) : (
-                <Tags className="size-4 text-foreground" />
-              )}
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span className="text-xs font-semibold text-foreground sm:text-sm truncate">
-                {info.getValue()}
-              </span>
-              <span className="text-[10px] text-muted-foreground font-mono">
-                {info.row.original.id}
-              </span>
-            </div>
-          </div>
-        ),
-      }),
-      categoryColumnHelper.accessor("slug", {
-        header: "Slug / Route",
-        cell: (info) => (
-          <span className="font-mono text-xs text-muted-foreground font-semibold">
-            /{info.getValue()}
-          </span>
-        ),
-      }),
-      categoryColumnHelper.accessor("itemCount", {
-        header: "Catalog Items",
-        cell: (info) => (
-          <span className="text-xs font-medium text-foreground">
-            {info.getValue()} products
-          </span>
-        ),
-      }),
-      categoryColumnHelper.accessor("status", {
-        header: "Status",
-        cell: (info) => {
-          const status = info.getValue() || "Active"
-          return (
-            <Badge
-              variant="outline"
-              className={
-                status === "Active"
-                  ? "border-emerald-500/30 bg-emerald-50 text-[10px] text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
-                  : "border-zinc-400/30 bg-zinc-100 text-[10px] text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
-              }
-            >
-              {status}
-            </Badge>
-          )
-        },
-      }),
-      categoryColumnHelper.display({
-        id: "actions",
-        header: () => <div className="text-right">Actions</div>,
-        cell: ({ row }) => (
-          <div className="flex items-center justify-end gap-1">
-            <Link to={`/dashboard/category/edit/${row.original.id}`}>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                className="cursor-pointer text-muted-foreground hover:text-foreground"
-                title="Edit category page"
-              >
-                <Pencil className="size-3.5" />
-              </Button>
-            </Link>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => setDeletingCategory(row.original)}
-              className="cursor-pointer text-muted-foreground hover:text-destructive"
-              title="Delete category"
-            >
-              <Trash2 className="size-3.5" />
-            </Button>
-          </div>
-        ),
-        enableSorting: false,
-      }),
-    ],
-    [setDeletingCategory]
+  const activeCount = categories.filter((c) => c.status === "active").length
+  const draftCount = categories.filter((c) => c.status === "draft").length
+  const archivedCount = categories.filter((c) => c.status === "archived").length
+  const totalProducts = categories.reduce(
+    (sum, c) => sum + (c.productCount ?? c.itemCount ?? 0),
+    0
   )
+  const emptyCount = categories.filter(
+    (c) => (c.productCount ?? c.itemCount ?? 0) === 0
+  ).length
+  const avgProducts = total > 0 ? (totalProducts / total).toFixed(1) : "—"
 
   return (
     <PageContent>
-      {/* ── Page Header with Add Action ── */}
+      {/* ── Header & Toolbar ── */}
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Product Categories
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">
+            Categories
           </h1>
-          <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-            Manage product collections, taxonomy hierarchies, and storefront routing slugs.
-          </p>
         </div>
+
         <Link to="/dashboard/category/create">
-          <Button className="gap-1.5 bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black cursor-pointer shrink-0">
-            <Plus className="size-4" />
+          <Button
+            size="sm"
+            className="h-8 shrink-0 cursor-pointer gap-1.5 rounded-full bg-foreground px-3.5 text-xs text-background hover:bg-foreground/90"
+          >
+            <Plus className="size-3.5" />
             <span>Add Category</span>
           </Button>
         </Link>
       </div>
 
-      {/* ── TanStack DataGrid ── */}
-      <DataGrid
+      {/* ── KPI Strip (4 Monochrome-Icon Cards) ── */}
+      <div className="grid grid-cols-4 gap-4">
+        <StatCard
+          title="Total Categories"
+          value={total}
+          icon={<Tags className="size-3.5" />}
+          description={`${activeCount} active · ${archivedCount} archived`}
+        />
+
+        <StatCard
+          title="Assigned Products"
+          value={totalProducts.toLocaleString()}
+          icon={<Package className="size-3.5" />}
+          description={`${avgProducts} avg / category`}
+        />
+
+        <StatCard
+          title="Empty Categories"
+          value={emptyCount}
+          icon={<AlertTriangle className="size-3.5" />}
+          valueClassName={
+            emptyCount > 0
+              ? "text-amber-600 dark:text-amber-400"
+              : "text-foreground"
+          }
+          description={emptyCount > 0 ? "0 products assigned" : "All populated"}
+        />
+
+        <StatCard
+          title="Drafts & Hidden"
+          value={draftCount + archivedCount}
+          icon={<EyeOff className="size-3.5" />}
+          description={`${draftCount} draft · ${archivedCount} archived`}
+        />
+      </div>
+
+      {/* ── TanStack DataGrid Table ── */}
+      <CategoryTable
         data={categories}
-        columns={columns}
-        urlSync={true}
-        defaultPageSize={10}
-        searchPlaceholder="Filter category rows..."
+        onDelete={setDeletingCategory}
+        onStatusChange={handleStatusChange}
+        isLoading={isLoading}
       />
 
       {/* ── Delete Confirmation Dialog ── */}
-      <Dialog
+      <CategoryDeleteDialog
+        category={deletingCategory}
         open={!!deletingCategory}
-        onOpenChange={(open) => !open && setDeletingCategory(null)}
-      >
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Delete Category</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete{" "}
-              <strong className="text-foreground">
-                {deletingCategory?.name}
-              </strong>
-              ? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-
-          <DialogFooter className="gap-2 pt-2 sm:gap-0">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setDeletingCategory(null)}
-              className="cursor-pointer"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              onClick={() => {
-                if (deletingCategory) {
-                  handleDeleteCategory(deletingCategory.id)
-                }
-              }}
-              className="cursor-pointer"
-            >
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        onClose={() => setDeletingCategory(null)}
+        onConfirm={handleDeleteCategory}
+        isDeleting={isDeleting}
+      />
     </PageContent>
   )
 }

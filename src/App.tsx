@@ -49,15 +49,24 @@ export function App() {
         <Route path="order" element={<DashboardOrderPage />} />
         <Route path="order/edit/:id" element={<DashboardOrderEditPage />} />
         <Route path="category" element={<DashboardCategoryPage />} />
-        <Route path="category/create" element={<DashboardCategoryCreatePage />} />
-        <Route path="category/edit/:id" element={<DashboardCategoryEditPage />} />
+        <Route
+          path="category/create"
+          element={<DashboardCategoryCreatePage />}
+        />
+        <Route
+          path="category/edit/:id"
+          element={<DashboardCategoryEditPage />}
+        />
         <Route path="product" element={<DashboardProductPage />} />
         <Route path="product/create" element={<DashboardProductCreatePage />} />
         <Route path="product/edit/:id" element={<DashboardProductEditPage />} />
         <Route path="coupon" element={<DashboardCouponPage />} />
         <Route path="coupon/create" element={<DashboardCouponCreatePage />} />
         <Route path="coupon/edit/:id" element={<DashboardCouponEditPage />} />
-        <Route path="user-management" element={<DashboardUserManagementPage />} />
+        <Route
+          path="user-management"
+          element={<DashboardUserManagementPage />}
+        />
       </Route>
 
       {/* เข้าสู่ระบบ */}
