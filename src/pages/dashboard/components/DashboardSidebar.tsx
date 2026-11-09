@@ -25,7 +25,6 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
@@ -120,7 +119,6 @@ export function DashboardSidebar({
                   >
                     <ShoppingBag className="size-4" />
                     <span>Orders</span>
-                    <SidebarMenuBadge>8</SidebarMenuBadge>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
@@ -135,7 +133,6 @@ export function DashboardSidebar({
                   >
                     <Package className="size-4" />
                     <span>Products</span>
-                    <SidebarMenuBadge>18</SidebarMenuBadge>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
@@ -150,7 +147,6 @@ export function DashboardSidebar({
                   >
                     <Tags className="size-4" />
                     <span>Categories</span>
-                    <SidebarMenuBadge>8</SidebarMenuBadge>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
@@ -165,7 +161,6 @@ export function DashboardSidebar({
                   >
                     <Users className="size-4" />
                     <span>Customers</span>
-                    <SidebarMenuBadge>8</SidebarMenuBadge>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
@@ -179,7 +174,6 @@ export function DashboardSidebar({
                 >
                   <Star className="size-4" />
                   <span>Reviews</span>
-                  <SidebarMenuBadge>12</SidebarMenuBadge>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -203,7 +197,6 @@ export function DashboardSidebar({
                   >
                     <TicketPercent className="size-4" />
                     <span>Coupons & Promo</span>
-                    <SidebarMenuBadge>6</SidebarMenuBadge>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
@@ -275,7 +268,6 @@ export function DashboardSidebar({
                 >
                   <Bell className="size-4" />
                   <span>Notifications</span>
-                  <SidebarMenuBadge>3</SidebarMenuBadge>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
