@@ -60,25 +60,25 @@ export const areaChartData: SalesDataPoint[] = [
 ]
 
 export const pieChartData: CategoryDataPoint[] = [
-  { category: "Smartphones", sales: 21730, percentage: 45, color: "#18181b" },
-  { category: "Audio", sales: 12070, percentage: 25, color: "#52525b" },
-  { category: "Wearables", sales: 9650, percentage: 20, color: "#71717a" },
-  { category: "Accessories", sales: 4840, percentage: 10, color: "#a1a1aa" },
+  { category: "Smartphones", sales: 21730, percentage: 45, color: "#3e63dd" },
+  { category: "Audio", sales: 12070, percentage: 25, color: "#64748b" },
+  { category: "Wearables", sales: 9650, percentage: 20, color: "#94a3b8" },
+  { category: "Accessories", sales: 4840, percentage: 10, color: "#cbd5e1" },
 ]
 
 export const areaChartConfig: ChartConfig = {
   revenue: {
     label: "Revenue ($)",
     theme: {
-      light: "#18181b",
-      dark: "#f4f4f5",
+      light: "#3e63dd",
+      dark: "#5b7cfa",
     },
   },
   orders: {
     label: "Orders",
     theme: {
-      light: "#71717a",
-      dark: "#a1a1aa",
+      light: "#94a3b8",
+      dark: "#64748b",
     },
   },
 }
@@ -119,32 +119,32 @@ export const pieChartConfig: ChartConfig = {
 
 export const initialMetrics: MetricData[] = [
   {
-    title: "Total Revenue",
-    value: "$48,290.50",
-    change: "+12.5%",
+    title: "Revenue",
+    value: "$48,290",
+    change: "+14.2%",
     isPositive: true,
-    description: "Compared to last month",
+    description: "vs last mo",
   },
   {
-    title: "Total Orders",
+    title: "Orders",
     value: "1,248",
-    change: "+8.2%",
+    change: "+27.3%",
     isPositive: true,
-    description: "Compared to last week",
+    description: "vs last mo",
   },
   {
-    title: "Active Customers",
+    title: "Customers",
     value: "3,842",
     change: "+18.4%",
     isPositive: true,
-    description: "New accounts this month",
+    description: "vs last mo",
   },
   {
-    title: "Conversion Rate",
+    title: "Conversion",
     value: "3.42%",
     change: "+0.6%",
     isPositive: true,
-    description: "Average across online visits",
+    description: "vs target 3.0%",
   },
 ]
 

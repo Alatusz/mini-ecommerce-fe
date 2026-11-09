@@ -1,1 +1,7 @@
-export const QUERY_KEYS = { AUTH: "auth", PRODUCTS: "products" }
+export const QUERY_KEYS = {
+  AUTH: "auth",
+  DASHBOARD: {
+    CATEGORIES_LIST: "CATEGORIES_LIST",
+    PRODUCTS: "PRODUCTS_LIST",
+  },
+}

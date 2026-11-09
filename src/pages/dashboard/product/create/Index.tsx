@@ -1,4 +1,11 @@
+/**
+ * Create Product — Unslop Redesign (dashboard-design skill)
+ * - Wordless: crisp labels and tabular numeric inputs; zero filler prose.
+ * - Selection: soft tinted fill with faint ring.
+ */
+import { Link } from "react-router-dom"
 import {
+  ArrowLeft,
   Check,
   AlertCircle,
   Loader2,
@@ -26,19 +33,38 @@ export default function DashboardProductCreatePage() {
 
   return (
     <PageContent>
-      <div className="max-w-2xl mx-auto pt-2">
-        {/* ── Clean & Minimal Form Card ── */}
-        <Card className="border-border/60 shadow-2xs">
+      <div className="mx-auto max-w-2xl space-y-4 pt-1">
+        {/* ── Header ── */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">
+              New Product
+            </h1>
+          </div>
+          <Link to="/dashboard/product">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 cursor-pointer gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="size-3.5" />
+              <span>Products</span>
+            </Button>
+          </Link>
+        </div>
+
+        {/* ── Form Card ── */}
+        <Card className="border-border/60 bg-card shadow-2xs">
           <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Product Title */}
               <div className="space-y-1.5">
-                <Label htmlFor="prod-name" className="text-xs font-semibold text-foreground">
-                  Product Title <span className="text-destructive">*</span>
+                <Label htmlFor="prod-name" className="text-xs font-medium text-foreground">
+                  Name <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="prod-name"
-                  placeholder="e.g. Sony WH-1000XM5 Wireless Headphones"
+                  placeholder="Sony WH-1000XM5 Wireless Headphones"
                   value={formData.name}
                   onChange={(e) => handleNameChange(e.target.value)}
                   autoFocus
@@ -46,14 +72,10 @@ export default function DashboardProductCreatePage() {
                     errors.name ? "border-destructive focus-visible:ring-destructive" : ""
                   }`}
                 />
-                {errors.name ? (
+                {errors.name && (
                   <p className="flex items-center gap-1 text-[11px] text-destructive">
                     <AlertCircle className="size-3" />
                     {errors.name}
-                  </p>
-                ) : (
-                  <p className="text-[11px] text-muted-foreground">
-                    The customer-facing merchandise name displayed across catalog and checkout.
                   </p>
                 )}
               </div>
@@ -61,15 +83,15 @@ export default function DashboardProductCreatePage() {
               {/* SKU & Category (2 cols) */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="prod-sku" className="text-xs font-semibold text-foreground">
-                    SKU Code <span className="text-destructive">*</span>
+                  <Label htmlFor="prod-sku" className="text-xs font-medium text-foreground">
+                    SKU <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="prod-sku"
-                    placeholder="e.g. WH-1000XM5-BLK"
+                    placeholder="WH-1000XM5-BLK"
                     value={formData.sku}
                     onChange={(e) => handleFieldChange("sku", e.target.value.toUpperCase())}
-                    className={`h-9 font-mono text-xs uppercase ${
+                    className={`h-9 font-mono text-xs uppercase tabular-nums ${
                       errors.sku ? "border-destructive focus-visible:ring-destructive" : ""
                     }`}
                   />
@@ -82,14 +104,14 @@ export default function DashboardProductCreatePage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="prod-cat" className="text-xs font-semibold text-foreground">
+                  <Label htmlFor="prod-cat" className="text-xs font-medium text-foreground">
                     Category
                   </Label>
                   <select
                     id="prod-cat"
                     value={formData.category}
                     onChange={(e) => handleFieldChange("category", e.target.value)}
-                    className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-xs focus-visible:outline-none"
+                    className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-2xs focus-visible:outline-none"
                   >
                     {productCategories
                       .filter((c) => c !== "All")
@@ -105,7 +127,7 @@ export default function DashboardProductCreatePage() {
               {/* Price & Stock (2 cols) */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="prod-price" className="text-xs font-semibold text-foreground">
+                  <Label htmlFor="prod-price" className="text-xs font-medium text-foreground">
                     Price ($) <span className="text-destructive">*</span>
                   </Label>
                   <Input
@@ -116,7 +138,7 @@ export default function DashboardProductCreatePage() {
                     placeholder="299.00"
                     value={formData.price}
                     onChange={(e) => handleFieldChange("price", e.target.value)}
-                    className={`h-9 text-xs ${
+                    className={`h-9 text-xs tabular-nums ${
                       errors.price ? "border-destructive focus-visible:ring-destructive" : ""
                     }`}
                   />
@@ -129,8 +151,8 @@ export default function DashboardProductCreatePage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="prod-stock" className="text-xs font-semibold text-foreground">
-                    Stock Units <span className="text-destructive">*</span>
+                  <Label htmlFor="prod-stock" className="text-xs font-medium text-foreground">
+                    Stock (units) <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="prod-stock"
@@ -139,7 +161,7 @@ export default function DashboardProductCreatePage() {
                     placeholder="50"
                     value={formData.stock}
                     onChange={(e) => handleFieldChange("stock", e.target.value)}
-                    className={`h-9 text-xs ${
+                    className={`h-9 text-xs tabular-nums ${
                       errors.stock ? "border-destructive focus-visible:ring-destructive" : ""
                     }`}
                   />
@@ -154,11 +176,11 @@ export default function DashboardProductCreatePage() {
 
               {/* Product Image */}
               <div className="space-y-1.5">
-                <Label htmlFor="prod-image" className="text-xs font-semibold text-foreground">
-                  Image Path / URL <span className="text-muted-foreground font-normal">(Optional)</span>
+                <Label htmlFor="prod-image" className="text-xs font-medium text-foreground">
+                  Image URL <span className="font-normal text-muted-foreground">(optional)</span>
                 </Label>
                 <div className="flex items-center gap-3">
-                  <div className="size-9 rounded-lg border border-border/60 bg-muted/40 p-1 flex items-center justify-center shrink-0 overflow-hidden">
+                  <div className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border/60 bg-muted/40 p-1">
                     {formData.image ? (
                       <img
                         src={formData.image}
@@ -171,88 +193,63 @@ export default function DashboardProductCreatePage() {
                   </div>
                   <Input
                     id="prod-image"
-                    placeholder="e.g. /images/hero-airpods.png"
+                    placeholder="/images/hero-airpods.png"
                     value={formData.image}
                     onChange={(e) => handleFieldChange("image", e.target.value)}
-                    className="h-9 text-xs"
+                    className="h-9 font-mono text-xs"
                   />
                 </div>
-                <p className="text-[11px] text-muted-foreground">
-                  Thumbnail asset for storefront catalog grids and order receipts.
-                </p>
               </div>
 
               {/* Status Segmented Selection */}
               <div className="space-y-1.5 pt-1">
-                <Label className="text-xs font-semibold text-foreground">
-                  Inventory Status
+                <Label className="text-xs font-medium text-foreground">
+                  Status
                 </Label>
                 <div className="grid grid-cols-3 gap-3 pt-0.5">
-                  <button
-                    type="button"
-                    onClick={() => handleFieldChange("status", "In Stock")}
-                    className={`flex flex-col items-start gap-1 p-3 rounded-lg border text-left cursor-pointer transition-all ${
-                      formData.status === "In Stock"
-                        ? "border-primary bg-primary/5 ring-1 ring-primary/20 text-foreground"
-                        : "border-border/60 hover:bg-muted/40 text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="size-2 rounded-full bg-emerald-500" />
-                      <span className="text-xs font-semibold text-foreground">In Stock</span>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground">
-                      Available for purchase
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleFieldChange("status", "Low Stock")}
-                    className={`flex flex-col items-start gap-1 p-3 rounded-lg border text-left cursor-pointer transition-all ${
-                      formData.status === "Low Stock"
-                        ? "border-primary bg-primary/5 ring-1 ring-primary/20 text-foreground"
-                        : "border-border/60 hover:bg-muted/40 text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="size-2 rounded-full bg-amber-500" />
-                      <span className="text-xs font-semibold text-foreground">Low Stock</span>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground">
-                      Running low on inventory
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleFieldChange("status", "Out of Stock")}
-                    className={`flex flex-col items-start gap-1 p-3 rounded-lg border text-left cursor-pointer transition-all ${
-                      formData.status === "Out of Stock"
-                        ? "border-primary bg-primary/5 ring-1 ring-primary/20 text-foreground"
-                        : "border-border/60 hover:bg-muted/40 text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="size-2 rounded-full bg-red-500" />
-                      <span className="text-xs font-semibold text-foreground">Out of Stock</span>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground">
-                      Sold out or disabled
-                    </span>
-                  </button>
+                  {(
+                    [
+                      { value: "In Stock", dot: "bg-emerald-500", tag: "Available" },
+                      { value: "Low Stock", dot: "bg-amber-500", tag: "< 10 units" },
+                      { value: "Out of Stock", dot: "bg-red-500", tag: "0 units" },
+                    ] as const
+                  ).map((opt) => {
+                    const selected = formData.status === opt.value
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => handleFieldChange("status", opt.value)}
+                        className={`flex cursor-pointer items-center justify-between rounded-lg border px-3 py-2.5 text-left transition-all ${
+                          selected
+                            ? "border-primary/40 bg-primary/5 text-foreground ring-1 ring-primary/20"
+                            : "border-border/60 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className={`size-2 rounded-full ${opt.dot}`} />
+                          <span className="text-xs font-medium text-foreground">
+                            {opt.value}
+                          </span>
+                        </div>
+                        <span className="text-[11px] tabular-nums text-muted-foreground">
+                          {opt.tag}
+                        </span>
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
 
               {/* Bottom Action Footer */}
-              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-border/40">
+              <div className="flex items-center justify-end gap-2 border-t border-border/40 pt-4">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={handleCancel}
                   disabled={isSubmitting}
-                  className="cursor-pointer text-xs"
+                  className="h-8 cursor-pointer text-xs"
                 >
                   Cancel
                 </Button>
@@ -260,14 +257,14 @@ export default function DashboardProductCreatePage() {
                   type="submit"
                   size="sm"
                   disabled={isSubmitting}
-                  className="gap-1.5 bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black cursor-pointer text-xs"
+                  className="h-8 cursor-pointer gap-1.5 bg-foreground px-3.5 text-xs text-background hover:bg-foreground/90"
                 >
                   {isSubmitting ? (
                     <Loader2 className="size-3.5 animate-spin" />
                   ) : (
                     <Check className="size-3.5" />
                   )}
-                  <span>{isSubmitting ? "Creating..." : "Create Product"}</span>
+                  <span>{isSubmitting ? "Saving..." : "Create"}</span>
                 </Button>
               </div>
             </form>

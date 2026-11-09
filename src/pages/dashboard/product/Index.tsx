@@ -1,12 +1,20 @@
+/**
+ * Products Catalog — Unslop Redesign (dashboard-design skill)
+ * Question: "Which SKUs are low or out of stock and need restocking?"
+ * - Wordless: compact numeric facts in header & KPI cards; zero prose sentences.
+ * - Quiet & Salience: healthy "In Stock" is calm; "Low Stock" (amber) & "Out of Stock" (red) stand out.
+ */
 import { useMemo } from "react"
 import { Link } from "react-router-dom"
 import {
   Plus,
   Pencil,
   Trash2,
-  CheckCircle2,
-  AlertCircle,
+  Package,
+  Layers,
+  AlertTriangle,
   XCircle,
+  MoreHorizontal,
 } from "lucide-react"
 
 import {
@@ -14,12 +22,16 @@ import {
   createColumnHelper,
   type DataGridFeatures,
 } from "@/components/common/data-grid"
-import {
-  useProduct,
-  type ProductItem,
-} from "./useHooks"
+import { useProduct, type ProductItem } from "./useHooks"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { Card } from "@/components/ui/card"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   Dialog,
   DialogContent,
@@ -40,67 +52,62 @@ export default function DashboardProductPage() {
     handleDeleteProduct,
   } = useProduct()
 
+  const inStockCount = products.filter((p) => p.status === "In Stock").length
+  const lowStockCount = products.filter((p) => p.status === "Low Stock").length
+  const outOfStockCount = products.filter(
+    (p) => p.status === "Out of Stock"
+  ).length
+  const totalUnits = products.reduce((sum, p) => sum + p.stock, 0)
+
   const getStockBadge = (status: ProductItem["status"]) => {
     switch (status) {
       case "In Stock":
         return (
-          <Badge
-            variant="outline"
-            className="border-emerald-500/30 bg-emerald-50 text-[10px] text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
-          >
-            <CheckCircle2 className="mr-1 size-3" />
+          <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span className="size-1.5 rounded-full bg-emerald-500" />
             In Stock
-          </Badge>
+          </span>
         )
       case "Low Stock":
         return (
-          <Badge
-            variant="outline"
-            className="border-amber-500/30 bg-amber-50 text-[10px] text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
-          >
-            <AlertCircle className="mr-1 size-3" />
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:text-amber-300">
+            <span className="size-1.5 rounded-full bg-amber-500" />
             Low Stock
-          </Badge>
+          </span>
         )
       case "Out of Stock":
         return (
-          <Badge
-            variant="outline"
-            className="border-red-500/30 bg-red-50 text-[10px] text-red-700 dark:bg-red-950/40 dark:text-red-300"
-          >
-            <XCircle className="mr-1 size-3" />
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-2 py-0.5 text-[11px] font-medium text-red-700 dark:text-red-300">
+            <span className="size-1.5 rounded-full bg-red-500" />
             Out of Stock
-          </Badge>
+          </span>
         )
     }
   }
 
-  // TanStack Table columns
   const columns = useMemo(
     () => [
       productColumnHelper.accessor("name", {
         header: "Product",
         cell: (info) => (
           <div className="flex items-center gap-3">
-            <div className="size-10 rounded-lg bg-muted p-1 border border-border/40 flex items-center justify-center shrink-0">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border/40 bg-muted/50 p-1">
               <img
                 src={info.row.original.image}
                 alt={info.getValue()}
                 className="max-h-full max-w-full object-contain"
               />
             </div>
-            <div className="flex flex-col min-w-0">
-              <span className="font-semibold text-xs sm:text-sm text-foreground truncate">
-                {info.getValue()}
-              </span>
-            </div>
+            <span className="truncate text-xs font-medium text-foreground">
+              {info.getValue()}
+            </span>
           </div>
         ),
       }),
       productColumnHelper.accessor("sku", {
         header: "SKU",
         cell: (info) => (
-          <span className="font-mono text-xs text-muted-foreground font-semibold">
+          <span className="font-mono text-xs tabular-nums text-muted-foreground">
             {info.getValue()}
           </span>
         ),
@@ -108,55 +115,81 @@ export default function DashboardProductPage() {
       productColumnHelper.accessor("category", {
         header: "Category",
         cell: (info) => (
-          <Badge variant="secondary" className="text-xs font-normal">
+          <span className="text-xs text-muted-foreground">
             {info.getValue()}
-          </Badge>
+          </span>
         ),
       }),
       productColumnHelper.accessor("price", {
         header: "Price",
         cell: (info) => (
-          <span className="text-xs sm:text-sm font-bold text-foreground">
-            ${info.getValue().toFixed(2)}
+          <span className="text-xs font-semibold tabular-nums text-foreground">
+            ${info.getValue().toLocaleString("en-US", { minimumFractionDigits: 2 })}
           </span>
         ),
       }),
       productColumnHelper.accessor("stock", {
-        header: "Stock Units",
-        cell: (info) => (
-          <span className="text-xs font-medium text-foreground">
-            {info.getValue().toLocaleString()} units
-          </span>
-        ),
+        header: "Stock",
+        cell: (info) => {
+          const stock = info.getValue()
+          const status = info.row.original.status
+
+          return (
+            <span
+              className={`text-xs tabular-nums ${
+                status === "Out of Stock"
+                  ? "font-semibold text-red-600 dark:text-red-400"
+                  : status === "Low Stock"
+                    ? "font-semibold text-amber-600 dark:text-amber-400"
+                    : "font-medium text-foreground"
+              }`}
+            >
+              {stock.toLocaleString()} units
+            </span>
+          )
+        },
       }),
       productColumnHelper.accessor("status", {
-        header: "Stock Status",
+        header: "Status",
         cell: (info) => getStockBadge(info.getValue()),
       }),
       productColumnHelper.display({
         id: "actions",
-        header: () => <div className="text-right">Actions</div>,
+        header: "Actions",
         cell: ({ row }) => (
-          <div className="flex items-center justify-end gap-1">
-            <Link to={`/dashboard/product/edit/${row.original.id}`}>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                className="cursor-pointer text-muted-foreground hover:text-foreground"
-                title="Edit product"
-              >
-                <Pencil className="size-3.5" />
-              </Button>
-            </Link>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => setDeletingProduct(row.original)}
-              className="cursor-pointer text-muted-foreground hover:text-destructive"
-              title="Delete product"
-            >
-              <Trash2 className="size-3.5" />
-            </Button>
+          <div className="flex items-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="size-7 cursor-pointer text-muted-foreground hover:text-foreground"
+                    title="Actions"
+                  >
+                    <MoreHorizontal className="size-4" />
+                    <span className="sr-only">Actions</span>
+                  </Button>
+                }
+              />
+              <DropdownMenuContent align="start" className="w-36">
+                <Link to={`/dashboard/product/edit/${row.original.id}`}>
+                  <DropdownMenuItem className="cursor-pointer gap-2">
+                    <Pencil className="size-3.5 text-muted-foreground" />
+                    <span>Edit</span>
+                  </DropdownMenuItem>
+                </Link>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => setDeletingProduct(row.original)}
+                  className="cursor-pointer gap-2"
+                >
+                  <Trash2 className="size-3.5" />
+                  <span>Delete</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         ),
         enableSorting: false,
@@ -167,24 +200,114 @@ export default function DashboardProductPage() {
 
   return (
     <PageContent>
-      {/* ── Page Header ── */}
+      {/* ── Header & Toolbar ── */}
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Products Catalog
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">
+            Products
           </h1>
-          <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-            Manage inventory stocks, pricing structures, and merchandise across your store.
-          </p>
         </div>
+
         <Link to="/dashboard/product/create">
           <Button
-            className="gap-1.5 bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black cursor-pointer shrink-0"
+            size="sm"
+            className="h-8 shrink-0 cursor-pointer gap-1.5 rounded-full bg-foreground px-3.5 text-xs text-background hover:bg-foreground/90"
           >
-            <Plus className="size-4" />
+            <Plus className="size-3.5" />
             <span>Add Product</span>
           </Button>
         </Link>
+      </div>
+
+      {/* ── 4 KPI Cards (Monochrome Icons + Tabular Numbers) ── */}
+      <div className="grid grid-cols-4 gap-4">
+        <Card className="flex flex-col justify-between border-border/60 bg-card p-4 shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground">
+              Total SKUs
+            </span>
+            <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
+              <Package className="size-3.5 text-muted-foreground" />
+            </div>
+          </div>
+          <div className="pt-2.5">
+            <div className="text-2xl font-semibold tracking-tight tabular-nums text-foreground">
+              {products.length}
+            </div>
+            <div className="mt-1 text-xs tabular-nums text-muted-foreground">
+              {inStockCount} in stock
+            </div>
+          </div>
+        </Card>
+
+        <Card className="flex flex-col justify-between border-border/60 bg-card p-4 shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground">
+              Inventory Volume
+            </span>
+            <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
+              <Layers className="size-3.5 text-muted-foreground" />
+            </div>
+          </div>
+          <div className="pt-2.5">
+            <div className="text-2xl font-semibold tracking-tight tabular-nums text-foreground">
+              {totalUnits.toLocaleString()}
+            </div>
+            <div className="mt-1 text-xs tabular-nums text-muted-foreground">
+              units on hand
+            </div>
+          </div>
+        </Card>
+
+        <Card className="flex flex-col justify-between border-border/60 bg-card p-4 shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground">
+              Low Stock
+            </span>
+            <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
+              <AlertTriangle className="size-3.5 text-muted-foreground" />
+            </div>
+          </div>
+          <div className="pt-2.5">
+            <div
+              className={`text-2xl font-semibold tracking-tight tabular-nums ${
+                lowStockCount > 0
+                  ? "text-amber-600 dark:text-amber-400"
+                  : "text-foreground"
+              }`}
+            >
+              {lowStockCount}
+            </div>
+            <div className="mt-1 text-xs tabular-nums text-muted-foreground">
+              below threshold
+            </div>
+          </div>
+        </Card>
+
+        <Card className="flex flex-col justify-between border-border/60 bg-card p-4 shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground">
+              Out of Stock
+            </span>
+            <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
+              <XCircle className="size-3.5 text-muted-foreground" />
+            </div>
+          </div>
+          <div className="pt-2.5">
+            <div
+              className={`text-2xl font-semibold tracking-tight tabular-nums ${
+                outOfStockCount > 0
+                  ? "text-red-600 dark:text-red-400"
+                  : "text-foreground"
+              }`}
+            >
+              {outOfStockCount}
+            </div>
+            <div className="mt-1 text-xs tabular-nums text-muted-foreground">
+              0 units available
+            </div>
+          </div>
+        </Card>
       </div>
 
       {/* ── TanStack DataGrid ── */}
@@ -193,7 +316,7 @@ export default function DashboardProductPage() {
         columns={columns}
         urlSync={true}
         defaultPageSize={10}
-        searchPlaceholder="Filter product rows..."
+        searchPlaceholder="Search products or SKU..."
       />
 
       {/* ── Dialog: Delete Product Confirmation ── */}
@@ -205,15 +328,15 @@ export default function DashboardProductPage() {
           <DialogHeader>
             <DialogTitle>Delete Product</DialogTitle>
             <DialogDescription>
-              Are you sure you want to remove{" "}
+              Remove{" "}
               <strong className="text-foreground">
                 {deletingProduct?.name}
-              </strong>{" "}
-              from the store catalog?
+              </strong>
+              ?
             </DialogDescription>
           </DialogHeader>
 
-          <DialogFooter className="gap-2 sm:gap-0 pt-2">
+          <DialogFooter className="gap-2 pt-2 sm:gap-0">
             <Button
               type="button"
               variant="outline"

@@ -1,13 +1,19 @@
+/**
+ * Orders Management — Unslop Redesign (dashboard-design skill)
+ * Question: "Which orders are pending fulfillment and what is current GMV?"
+ * - Wordless: compact numeric facts in header & KPI cards; zero prose sentences.
+ * - Quiet & Salience: healthy statuses are calm; Pending (amber) & Cancelled (red) stand out.
+ */
 import { useMemo } from "react"
 import { Link } from "react-router-dom"
 import {
   Pencil,
   Trash2,
-  CheckCircle2,
+  ShoppingBag,
+  DollarSign,
   Clock,
-  AlertCircle,
-  XCircle,
   Truck,
+  MoreHorizontal,
 } from "lucide-react"
 
 import {
@@ -17,7 +23,14 @@ import {
 } from "@/components/common/data-grid"
 import { useOrder, type OrderItem } from "./useHooks"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { Card } from "@/components/ui/card"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   Dialog,
   DialogContent,
@@ -38,68 +51,60 @@ export default function DashboardOrderPage() {
     handleDeleteOrder,
   } = useOrder()
 
+  const completedCount = orders.filter((o) => o.status === "Completed").length
+  const pendingCount = orders.filter((o) => o.status === "Pending").length
+  const processingCount = orders.filter((o) => o.status === "Processing").length
+  const shippedCount = orders.filter((o) => o.status === "Shipped").length
+  const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0)
+  const avgOrder =
+    orders.length > 0 ? Math.round(totalRevenue / orders.length) : 0
+
   const getStatusBadge = (status: OrderItem["status"]) => {
     switch (status) {
       case "Completed":
         return (
-          <Badge
-            variant="outline"
-            className="border-emerald-500/30 bg-emerald-50 text-[10px] font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
-          >
-            <CheckCircle2 className="mr-1 size-3" />
+          <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span className="size-1.5 rounded-full bg-emerald-500" />
             Completed
-          </Badge>
+          </span>
         )
       case "Processing":
         return (
-          <Badge
-            variant="outline"
-            className="border-blue-500/30 bg-blue-50 text-[10px] font-medium text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
-          >
-            <Clock className="mr-1 size-3" />
+          <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span className="size-1.5 rounded-full bg-zinc-400" />
             Processing
-          </Badge>
+          </span>
         )
       case "Shipped":
         return (
-          <Badge
-            variant="outline"
-            className="border-purple-500/30 bg-purple-50 text-[10px] font-medium text-purple-700 dark:bg-purple-950/40 dark:text-purple-300"
-          >
-            <Truck className="mr-1 size-3" />
+          <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span className="size-1.5 rounded-full bg-[#3e63dd]" />
             Shipped
-          </Badge>
+          </span>
         )
       case "Pending":
         return (
-          <Badge
-            variant="outline"
-            className="border-amber-500/30 bg-amber-50 text-[10px] font-medium text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
-          >
-            <AlertCircle className="mr-1 size-3" />
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:text-amber-300">
+            <span className="size-1.5 rounded-full bg-amber-500" />
             Pending
-          </Badge>
+          </span>
         )
       case "Cancelled":
         return (
-          <Badge
-            variant="outline"
-            className="border-red-500/30 bg-red-50 text-[10px] font-medium text-red-700 dark:bg-red-950/40 dark:text-red-300"
-          >
-            <XCircle className="mr-1 size-3" />
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-2 py-0.5 text-[11px] font-medium text-red-700 dark:text-red-300">
+            <span className="size-1.5 rounded-full bg-red-500" />
             Cancelled
-          </Badge>
+          </span>
         )
     }
   }
 
-  // TanStack columns
   const columns = useMemo(
     () => [
       orderColumnHelper.accessor("orderNumber", {
-        header: "Order ID",
+        header: "Order",
         cell: (info) => (
-          <span className="font-mono text-xs font-bold text-foreground">
+          <span className="font-mono text-xs font-medium tabular-nums text-foreground">
             {info.getValue()}
           </span>
         ),
@@ -109,14 +114,14 @@ export default function DashboardOrderPage() {
         header: "Customer",
         cell: ({ row }) => (
           <div className="flex items-center gap-2.5">
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted font-bold text-[11px] text-foreground">
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
               {row.original.customer.avatar}
             </div>
-            <div className="flex flex-col min-w-0">
-              <span className="font-semibold text-xs text-foreground truncate">
+            <div className="flex min-w-0 flex-col">
+              <span className="truncate text-xs font-medium text-foreground">
                 {row.original.customer.name}
               </span>
-              <span className="text-[10px] text-muted-foreground truncate">
+              <span className="truncate text-[10px] text-muted-foreground">
                 {row.original.customer.email}
               </span>
             </div>
@@ -124,9 +129,9 @@ export default function DashboardOrderPage() {
         ),
       }),
       orderColumnHelper.accessor("date", {
-        header: "Date Placed",
+        header: "Date",
         cell: (info) => (
-          <span className="text-xs text-muted-foreground whitespace-nowrap">
+          <span className="whitespace-nowrap text-xs tabular-nums text-muted-foreground">
             {info.getValue()}
           </span>
         ),
@@ -134,55 +139,68 @@ export default function DashboardOrderPage() {
       orderColumnHelper.accessor("itemsCount", {
         header: "Items",
         cell: (info) => (
-          <span className="text-xs text-foreground font-medium">
-            {info.getValue()} items
+          <span className="text-xs font-medium tabular-nums text-foreground">
+            {info.getValue()}
           </span>
         ),
       }),
       orderColumnHelper.accessor("total", {
         header: "Total",
         cell: (info) => (
-          <span className="text-xs sm:text-sm font-bold text-foreground">
-            ${info.getValue().toFixed(2)}
+          <span className="text-xs font-semibold tabular-nums text-foreground">
+            ${info.getValue().toLocaleString("en-US", { minimumFractionDigits: 2 })}
           </span>
         ),
       }),
       orderColumnHelper.accessor("paymentMethod", {
         header: "Payment",
         cell: (info) => (
-          <Badge variant="secondary" className="text-[11px] font-normal">
+          <span className="text-xs text-muted-foreground">
             {info.getValue()}
-          </Badge>
+          </span>
         ),
       }),
       orderColumnHelper.accessor("status", {
-        header: "Order Status",
+        header: "Status",
         cell: (info) => getStatusBadge(info.getValue()),
       }),
       orderColumnHelper.display({
         id: "actions",
-        header: () => <div className="text-right">Actions</div>,
+        header: "Actions",
         cell: ({ row }) => (
-          <div className="flex items-center justify-end gap-1">
-            <Link to={`/dashboard/order/edit/${row.original.id}`}>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                className="cursor-pointer text-muted-foreground hover:text-foreground"
-                title="Edit order"
-              >
-                <Pencil className="size-3.5" />
-              </Button>
-            </Link>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => setDeletingOrder(row.original)}
-              className="cursor-pointer text-muted-foreground hover:text-destructive"
-              title="Delete order"
-            >
-              <Trash2 className="size-3.5" />
-            </Button>
+          <div className="flex items-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="size-7 cursor-pointer text-muted-foreground hover:text-foreground"
+                    title="Actions"
+                  >
+                    <MoreHorizontal className="size-4" />
+                    <span className="sr-only">Actions</span>
+                  </Button>
+                }
+              />
+              <DropdownMenuContent align="start" className="w-36">
+                <Link to={`/dashboard/order/edit/${row.original.id}`}>
+                  <DropdownMenuItem className="cursor-pointer gap-2">
+                    <Pencil className="size-3.5 text-muted-foreground" />
+                    <span>Edit Order</span>
+                  </DropdownMenuItem>
+                </Link>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => setDeletingOrder(row.original)}
+                  className="cursor-pointer gap-2"
+                >
+                  <Trash2 className="size-3.5" />
+                  <span>Delete</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         ),
         enableSorting: false,
@@ -193,14 +211,98 @@ export default function DashboardOrderPage() {
 
   return (
     <PageContent>
-      {/* ── Page Header ── */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Orders Management
-        </h1>
-        <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-          Track transactions, monitor fulfillment status, and supervise payment processing.
-        </p>
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">
+            Orders
+          </h1>
+        </div>
+      </div>
+
+      {/* ── 4 KPI Cards (Monochrome Icons + Tabular Numbers) ── */}
+      <div className="grid grid-cols-4 gap-4">
+        <Card className="flex flex-col justify-between border-border/60 bg-card p-4 shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground">
+              Total Orders
+            </span>
+            <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
+              <ShoppingBag className="size-3.5 text-muted-foreground" />
+            </div>
+          </div>
+          <div className="pt-2.5">
+            <div className="text-2xl font-semibold tracking-tight tabular-nums text-foreground">
+              {orders.length}
+            </div>
+            <div className="mt-1 text-xs tabular-nums text-muted-foreground">
+              {completedCount} completed
+            </div>
+          </div>
+        </Card>
+
+        <Card className="flex flex-col justify-between border-border/60 bg-card p-4 shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground">
+              Gross Volume
+            </span>
+            <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
+              <DollarSign className="size-3.5 text-muted-foreground" />
+            </div>
+          </div>
+          <div className="pt-2.5">
+            <div className="text-2xl font-semibold tracking-tight tabular-nums text-foreground">
+              ${totalRevenue.toLocaleString()}
+            </div>
+            <div className="mt-1 text-xs tabular-nums text-muted-foreground">
+              ${avgOrder.toLocaleString()} avg order
+            </div>
+          </div>
+        </Card>
+
+        <Card className="flex flex-col justify-between border-border/60 bg-card p-4 shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground">
+              Pending Action
+            </span>
+            <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
+              <Clock className="size-3.5 text-muted-foreground" />
+            </div>
+          </div>
+          <div className="pt-2.5">
+            <div
+              className={`text-2xl font-semibold tracking-tight tabular-nums ${
+                pendingCount > 0
+                  ? "text-amber-600 dark:text-amber-400"
+                  : "text-foreground"
+              }`}
+            >
+              {pendingCount}
+            </div>
+            <div className="mt-1 text-xs tabular-nums text-muted-foreground">
+              awaiting confirmation
+            </div>
+          </div>
+        </Card>
+
+        <Card className="flex flex-col justify-between border-border/60 bg-card p-4 shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground">
+              In Fulfillment
+            </span>
+            <div className="flex size-7 items-center justify-center rounded-md bg-muted/70">
+              <Truck className="size-3.5 text-muted-foreground" />
+            </div>
+          </div>
+          <div className="pt-2.5">
+            <div className="text-2xl font-semibold tracking-tight tabular-nums text-foreground">
+              {processingCount + shippedCount}
+            </div>
+            <div className="mt-1 text-xs tabular-nums text-muted-foreground">
+              {processingCount} processing · {shippedCount} shipped
+            </div>
+          </div>
+        </Card>
       </div>
 
       {/* ── TanStack DataGrid ── */}
@@ -209,7 +311,7 @@ export default function DashboardOrderPage() {
         columns={columns}
         urlSync={true}
         defaultPageSize={10}
-        searchPlaceholder="Filter order rows..."
+        searchPlaceholder="Search orders or customer..."
       />
 
       {/* ── Dialog: Delete Order Confirmation ── */}
@@ -219,17 +321,17 @@ export default function DashboardOrderPage() {
       >
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Delete Order Record</DialogTitle>
+            <DialogTitle>Delete Order</DialogTitle>
             <DialogDescription>
-              Are you sure you want to remove{" "}
-              <strong className="text-foreground">
+              Remove{" "}
+              <strong className="font-mono text-foreground">
                 {deletingOrder?.orderNumber}
-              </strong>{" "}
-              from the system?
+              </strong>
+              ?
             </DialogDescription>
           </DialogHeader>
 
-          <DialogFooter className="gap-2 sm:gap-0 pt-2">
+          <DialogFooter className="gap-2 pt-2 sm:gap-0">
             <Button
               type="button"
               variant="outline"

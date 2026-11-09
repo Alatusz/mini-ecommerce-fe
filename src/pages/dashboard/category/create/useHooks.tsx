@@ -1,116 +1,58 @@
-import { useState } from "react"
+import { useMutation } from "@tanstack/react-query"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
 import { useNavigate } from "react-router-dom"
-import { addCategoryToStore, type CategoryItem } from "../common/mockCategory"
+import type { z } from "zod"
 
-export interface CategoryFormState {
-  name: string
-  slug: string
-  image: string
-  status: "Active" | "Archived"
-}
+import { QUERY_KEYS } from "@/lib/constants"
+import { queryClient } from "@/lib/queryClient"
+import { showToast } from "@/lib/toast"
+import { createCategory } from "@/services/category.services"
+import {
+  categoryCreateSchema,
+  type CategoryCreateFormValues,
+} from "../common/Category.shema"
 
 export function useCategoryCreate() {
   const navigate = useNavigate()
-
-  const [formData, setFormData] = useState<CategoryFormState>({
-    name: "",
-    slug: "",
-    image: "",
-    status: "Active",
+  const { control, handleSubmit } = useForm<
+    z.input<typeof categoryCreateSchema>,
+    CategoryCreateFormValues
+  >({
+    defaultValues: {
+      name: "",
+      image: "",
+      status: "active",
+    },
+    mode: "onChange",
+    resolver: zodResolver(categoryCreateSchema),
   })
 
-  const [errors, setErrors] = useState<Partial<Record<keyof CategoryFormState, string>>>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const createCategoryMutation = useMutation({
+    mutationFn: createCategory,
+    onSuccess: async () => {
+      showToast.success("Category created successfully")
 
-  const handleNameChange = (name: string) => {
-    const autoSlug = name
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
+      await queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.DASHBOARD.CATEGORIES_LIST],
+      })
 
-    setFormData((prev) => {
-      const prevAuto = prev.name
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "")
-
-      const shouldSyncSlug = !prev.slug || prev.slug === prevAuto
-
-      return {
-        ...prev,
-        name,
-        slug: shouldSyncSlug ? autoSlug : prev.slug,
-      }
-    })
-
-    if (errors.name) {
-      setErrors((prev) => ({ ...prev, name: undefined }))
-    }
-  }
-
-  const handleFieldChange = <K extends keyof CategoryFormState>(
-    field: K,
-    value: CategoryFormState[K]
-  ) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }))
-    }
-  }
-
-  const validate = (): boolean => {
-    const newErrors: Partial<Record<keyof CategoryFormState, string>> = {}
-
-    if (!formData.name.trim()) {
-      newErrors.name = "Category name is required"
-    }
-
-    if (!formData.slug.trim()) {
-      newErrors.slug = "URL slug identifier is required"
-    } else if (!/^[a-z0-9-]+$/.test(formData.slug.trim())) {
-      newErrors.slug = "Slug must contain only lowercase alphanumeric characters and hyphens"
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const handleSubmit = (e?: React.FormEvent) => {
-    e?.preventDefault()
-    if (!validate()) return
-
-    setIsSubmitting(true)
-
-    const newCategory: CategoryItem = {
-      id: `category-${Date.now().toString(36)}`,
-      name: formData.name.trim(),
-      slug: formData.slug.trim(),
-      image: formData.image.trim() || "/images/showcase-gadgets.png",
-      itemCount: 0,
-      status: formData.status,
-    }
-
-    addCategoryToStore(newCategory)
-
-    setTimeout(() => {
-      setIsSubmitting(false)
       navigate("/dashboard/category")
-    }, 250)
-  }
+    },
+    onError: (err) => {
+      console.error("Failed to create category:", err)
 
-  const handleCancel = () => {
-    navigate("/dashboard/category")
-  }
+      showToast.error("Failed to create category")
+    },
+  })
+
+  const onSubmit = handleSubmit((data) => {
+    createCategoryMutation.mutate(data)
+  })
 
   return {
-    formData,
-    errors,
-    isSubmitting,
-    handleNameChange,
-    handleFieldChange,
-    handleSubmit,
-    handleCancel,
+    control,
+    handleSubmit: onSubmit,
+    createCategoryMutation,
   }
 }

@@ -2,9 +2,10 @@ export interface CategoryItem {
   id: string
   name: string
   slug: string
-  itemCount: number
+  itemCount?: number
+  productCount?: number
   image?: string
-  status?: "Active" | "Archived"
+  status?: "active" | "archived" | "draft" | "Active" | "Archived"
   icon?: string
 }
 

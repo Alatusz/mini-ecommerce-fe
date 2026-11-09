@@ -35,6 +35,12 @@ export const updateCategory = async (id: string, data: Partial<CategoryPayload>)
   return response.data
 }
 
+export const patchCategoryStatus = async (id: string, status: string) => {
+  const response = await apiClient.patch(`/categories/${id}/status`, { status })
+
+  return response.data
+}
+
 export const deleteCategory = async (id: string) => {
   const response = await apiClient.delete(`/categories/${id}`)
   

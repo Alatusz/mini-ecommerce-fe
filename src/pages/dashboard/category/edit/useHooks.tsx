@@ -1,133 +1,133 @@
-import { useState, useEffect } from "react"
+import axios from "axios"
+import { useEffect } from "react"
+import { useMutation, useQuery } from "@tanstack/react-query"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
 import { useNavigate, useParams } from "react-router-dom"
+import type { z } from "zod"
+
+import { showToast } from "@/lib/toast"
+import { QUERY_KEYS } from "@/lib/constants"
+import { queryClient } from "@/lib/queryClient"
 import {
   getCategoryById,
-  updateCategoryInStore,
-  deleteCategoryFromStore,
-  type CategoryItem,
-} from "../common/mockCategory"
+  updateCategory,
+  type CategoryPayload,
+} from "@/services/category.services"
+import {
+  categoryEditSchema,
+  categoryStatusSchema,
+  type CategoryEditFormValues,
+} from "../common/Category.shema"
 
-export interface CategoryEditFormState {
-  name: string
-  slug: string
-  image: string
-  status: "Active" | "Archived"
+interface CategoryDetails extends Omit<CategoryEditFormValues, "image"> {
+  id: string
+  slug?: string
+  productCount?: number
+  itemCount?: number
+  image?: string | null
 }
 
 export function useCategoryEdit() {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
 
-  const [category, setCategory] = useState<CategoryItem | null>(null)
-  const [isNotFound, setIsNotFound] = useState(false)
-  const [formData, setFormData] = useState<CategoryEditFormState>({
-    name: "",
-    slug: "",
-    image: "",
-    status: "Active",
+  const navigate = useNavigate()
+  const {
+    register,
+    watch,
+    setValue,
+    reset,
+    handleSubmit: submitForm,
+    formState: { errors },
+  } = useForm<
+    z.input<typeof categoryEditSchema>,
+    unknown,
+    CategoryEditFormValues
+  >({
+    defaultValues: {
+      name: "",
+      image: "",
+      status: "active",
+    },
+    resolver: zodResolver(categoryEditSchema),
+    mode: "onChange",
   })
 
-  const [errors, setErrors] = useState<Partial<Record<keyof CategoryEditFormState, string>>>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const categoryQuery = useQuery({
+    queryKey: [QUERY_KEYS.DASHBOARD.CATEGORIES_LIST, "detail", id],
+    queryFn: async () => {
+      if (!id) {
+        throw new Error("Category ID is required")
+      }
+
+      const response = await getCategoryById(id)
+
+      return (response?.data ?? response) as CategoryDetails
+    },
+    enabled: Boolean(id),
+  })
 
   useEffect(() => {
+    if (!categoryQuery.data) {
+      return
+    }
+
+    const status = categoryStatusSchema.safeParse(
+      categoryQuery.data.status?.toLowerCase()
+    )
+
+    reset({
+      name: categoryQuery.data.name,
+      image: categoryQuery.data.image ?? "",
+      status: status.success ? status.data : "active",
+    })
+  }, [categoryQuery.data, reset])
+
+  const updateCategoryMutation = useMutation({
+    mutationFn: ({
+      categoryId,
+      data,
+    }: {
+      categoryId: string
+      data: Partial<CategoryPayload>
+    }) => updateCategory(categoryId, data),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.DASHBOARD.CATEGORIES_LIST],
+      })
+      showToast.success("Category updated successfully")
+
+      navigate("/dashboard/category")
+    },
+    onError: showToast.error,
+  })
+
+  const handleSubmit = submitForm((data) => {
     if (!id) {
-      setIsNotFound(true)
       return
     }
 
-    const found = getCategoryById(id)
-    if (!found) {
-      setIsNotFound(true)
-      return
-    }
+    updateCategoryMutation.mutate({ categoryId: id, data })
+  })
 
-    setCategory(found)
-    setFormData({
-      name: found.name,
-      slug: found.slug,
-      image: found.image || "",
-      status: found.status || "Active",
-    })
-    setIsNotFound(false)
-  }, [id])
-
-  const handleFieldChange = <K extends keyof CategoryEditFormState>(
-    field: K,
-    value: CategoryEditFormState[K]
-  ) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }))
-    }
-  }
-
-  const validate = (): boolean => {
-    const newErrors: Partial<Record<keyof CategoryEditFormState, string>> = {}
-
-    if (!formData.name.trim()) {
-      newErrors.name = "Category name is required"
-    }
-
-    if (!formData.slug.trim()) {
-      newErrors.slug = "URL slug identifier is required"
-    } else if (!/^[a-z0-9-]+$/.test(formData.slug.trim())) {
-      newErrors.slug = "Slug must contain only lowercase alphanumeric characters and hyphens"
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const handleSubmit = (e?: React.FormEvent) => {
-    e?.preventDefault()
-    if (!id || !validate()) return
-
-    setIsSubmitting(true)
-
-    updateCategoryInStore(id, {
-      name: formData.name.trim(),
-      slug: formData.slug.trim(),
-      image: formData.image.trim(),
-      status: formData.status,
-    })
-
-    setTimeout(() => {
-      setIsSubmitting(false)
-      navigate("/dashboard/category")
-    }, 250)
-  }
-
-  const handleDelete = () => {
-    if (!id) return
-    setIsDeleting(true)
-    deleteCategoryFromStore(id)
-    setTimeout(() => {
-      setIsDeleting(false)
-      setShowDeleteConfirm(false)
-      navigate("/dashboard/category")
-    }, 250)
-  }
-
-  const handleCancel = () => {
-    navigate("/dashboard/category")
-  }
+  const isNotFound =
+    !id ||
+    (categoryQuery.isSuccess && !categoryQuery.data) ||
+    (axios.isAxiosError(categoryQuery.error) &&
+      categoryQuery.error.response?.status === 404)
 
   return {
     id,
-    category,
+    category: categoryQuery.data,
+    isLoading: categoryQuery.isLoading,
     isNotFound,
-    formData,
+    loadError: categoryQuery.isError && !isNotFound,
+    register,
+    watch,
+    setValue,
     errors,
-    isSubmitting,
-    isDeleting,
-    showDeleteConfirm,
-    setShowDeleteConfirm,
-    handleFieldChange,
+    isSubmitting: updateCategoryMutation.isPending,
     handleSubmit,
-    handleDelete,
-    handleCancel,
+    handleCancel: () => navigate("/dashboard/category"),
   }
 }
