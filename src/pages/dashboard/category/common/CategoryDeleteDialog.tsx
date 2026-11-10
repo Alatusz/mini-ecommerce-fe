@@ -25,7 +25,7 @@ export function CategoryDeleteDialog({
   onConfirm,
   isDeleting = false,
 }: CategoryDeleteDialogProps) {
-  const productCount = category?.productCount ?? category?.itemCount ?? 0
+  const productCount = category?.productCount ?? 0
   const hasProducts = productCount > 0
 
   return (

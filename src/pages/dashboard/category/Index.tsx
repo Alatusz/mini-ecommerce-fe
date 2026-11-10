@@ -19,24 +19,20 @@ export default function DashboardCategoryPage() {
     categories,
     total,
     isLoading,
+    activeCount,
+    draftCount,
+    archivedCount,
+    totalProducts,
+    emptyCount,
+    avgProducts,
     deletingCategory,
     setDeletingCategory,
     handleDeleteCategory,
     isDeleting,
     handleStatusChange,
+    selectedStatuses,
+    handleStatusFilterChange,
   } = useCategory()
-
-  const activeCount = categories.filter((c) => c.status === "active").length
-  const draftCount = categories.filter((c) => c.status === "draft").length
-  const archivedCount = categories.filter((c) => c.status === "archived").length
-  const totalProducts = categories.reduce(
-    (sum, c) => sum + (c.productCount ?? c.itemCount ?? 0),
-    0
-  )
-  const emptyCount = categories.filter(
-    (c) => (c.productCount ?? c.itemCount ?? 0) === 0
-  ).length
-  const avgProducts = total > 0 ? (totalProducts / total).toFixed(1) : "—"
 
   return (
     <PageContent>
@@ -98,6 +94,9 @@ export default function DashboardCategoryPage() {
       {/* ── TanStack DataGrid Table ── */}
       <CategoryTable
         data={categories}
+        total={total}
+        selectedStatuses={selectedStatuses}
+        onStatusFilterChange={handleStatusFilterChange}
         onDelete={setDeletingCategory}
         onStatusChange={handleStatusChange}
         isLoading={isLoading}

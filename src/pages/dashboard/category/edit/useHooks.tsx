@@ -25,7 +25,6 @@ interface CategoryDetails extends Omit<CategoryEditFormValues, "image"> {
   id: string
   slug?: string
   productCount?: number
-  itemCount?: number
   image?: string | null
 }
 
@@ -101,8 +100,7 @@ export function useCategoryEdit() {
     }
   }, [image])
 
-  const productCount =
-    categoryQuery.data?.productCount ?? categoryQuery.data?.itemCount ?? 0
+  const productCount = categoryQuery.data?.productCount ?? 0
   const hasProducts = productCount > 0
 
   // File selection & validation
