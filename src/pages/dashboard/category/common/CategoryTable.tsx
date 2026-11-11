@@ -271,28 +271,30 @@ export function CategoryTable({
       actions={
         onStatusFilterChange ? (
           <DropdownMenu>
-            <DropdownMenuTrigger className="outline-none">
-              <Button
-                variant="outline"
-                size="sm"
-                className={cn(
-                  "h-9 cursor-pointer gap-1.5 border-border/70 text-xs",
-                  selectedStatuses.length > 0 &&
-                    "border-foreground/40 bg-muted/60"
-                )}
-              >
-                <Filter className="size-3.5 text-muted-foreground" />
-                <span>Status</span>
-                {selectedStatuses.length > 0 && (
-                  <Badge
-                    variant="secondary"
-                    className="ml-0.5 rounded-full px-1.5 py-0 text-[10px] font-semibold"
-                  >
-                    {selectedStatuses.length}
-                  </Badge>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "h-9 cursor-pointer gap-1.5 border-border/70 text-xs",
+                    selectedStatuses.length > 0 &&
+                      "border-foreground/40 bg-muted/60"
+                  )}
+                >
+                  <Filter className="size-3.5 text-muted-foreground" />
+                  <span>Status</span>
+                  {selectedStatuses.length > 0 && (
+                    <Badge
+                      variant="secondary"
+                      className="ml-0.5 rounded-full px-1.5 py-0 text-[10px] font-semibold"
+                    >
+                      {selectedStatuses.length}
+                    </Badge>
+                  )}
+                </Button>
+              }
+            />
 
             <DropdownMenuContent align="end" className="w-44">
               <DropdownMenuGroup>

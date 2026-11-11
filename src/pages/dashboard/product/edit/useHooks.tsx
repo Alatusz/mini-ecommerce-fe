@@ -22,6 +22,7 @@ export interface ProductEditFormState {
   price: string
   stock: string
   image: string
+  description: string
   status: ProductPublishStatus
 }
 
@@ -61,6 +62,7 @@ export function useProductEdit() {
     price: "",
     stock: "0",
     image: "",
+    description: "",
     status: "published",
   })
 
@@ -78,6 +80,7 @@ export function useProductEdit() {
         price: String(productData.sellPrice ?? productData.originalPrice ?? 0),
         stock: String(productData.stock ?? 0),
         image: productData.images?.[0] || "",
+        description: productData.description || "",
         status: productData.status || "published",
       })
     }
@@ -219,6 +222,7 @@ export function useProductEdit() {
 
       updateProductMutation.mutate({
         name: formData.name.trim(),
+        description: formData.description.trim() || undefined,
         slug: formData.sku.trim().toLowerCase(),
         sellPrice: priceNum,
         originalPrice: priceNum,

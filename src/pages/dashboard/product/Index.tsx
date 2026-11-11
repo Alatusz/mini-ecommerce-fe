@@ -2,7 +2,9 @@ import { Link } from "react-router-dom"
 import { Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { PageContent } from "@/components/common/PageContent"
+import { PageHeader } from "@/components/common/PageHeader"
 import { useProduct } from "./useHooks"
 import { ProductStatsGrid } from "./common/ProductStatsGrid"
 import { ProductTable } from "./common/ProductTable"
@@ -31,24 +33,26 @@ export default function DashboardProductPage() {
 
   return (
     <PageContent>
-      {/* ── Header & Toolbar ── */}
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">
-            Products
-          </h1>
-        </div>
-
+      {/* ── Page Header ── */}
+      <PageHeader
+        title="Products"
+        description="Manage product catalog, live inventory, and multi-channel pricing."
+        badge={
+          <Badge variant="secondary" className="font-mono text-[11px]">
+            {total} items
+          </Badge>
+        }
+      >
         <Link to="/dashboard/product/create">
           <Button
             size="sm"
-            className="h-8 shrink-0 cursor-pointer gap-1.5 rounded-full bg-foreground px-3.5 text-xs text-background hover:bg-foreground/90"
+            className="h-8 shrink-0 cursor-pointer gap-1.5 bg-foreground px-3.5 text-xs text-background hover:bg-foreground/90"
           >
             <Plus className="size-3.5" />
             <span>Add Product</span>
           </Button>
         </Link>
-      </div>
+      </PageHeader>
 
       {/* ── Inventory KPI Metrics ── */}
       <ProductStatsGrid
