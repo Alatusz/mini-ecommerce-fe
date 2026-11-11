@@ -191,10 +191,12 @@ export function useProduct() {
     searchBy: newSearchBy,
     status: newStatuses,
     stockStatus: newStockStatuses,
+    category: newCategories,
   }: {
     searchBy?: "all" | "name" | "sku"
     status?: string[]
     stockStatus?: string[]
+    category?: string[]
   }) => {
     updateUrlParams({
       searchBy: newSearchBy && newSearchBy !== "all" ? newSearchBy : undefined,
@@ -205,6 +207,10 @@ export function useProduct() {
       stockStatus:
         newStockStatuses && newStockStatuses.length > 0
           ? newStockStatuses.join(",")
+          : undefined,
+      category:
+        newCategories && newCategories.length > 0
+          ? newCategories.join(",")
           : undefined,
       page: 1,
     })

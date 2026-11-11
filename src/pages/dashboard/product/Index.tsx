@@ -98,6 +98,7 @@ export default function DashboardProductPage() {
           searchBy,
           status: selectedStatuses,
           stockStatus: selectedStockStatuses,
+          category: selectedCategories,
         }}
         onApplyFilters={handleApplyAdvancedFilters}
         onResetFilters={handleResetFilters}

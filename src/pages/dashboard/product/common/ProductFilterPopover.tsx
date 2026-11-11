@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react"
 import { Filter, RotateCcw } from "lucide-react"
+import { useQuery } from "@tanstack/react-query"
+import { QUERY_KEYS } from "@/lib/constants"
+import { getCategoryOptions } from "@/services/category.services"
 
 import {
   Popover,
@@ -18,6 +21,7 @@ export interface AdvancedFilterState {
   searchBy: "all" | "name" | "sku"
   status: string[]
   stockStatus: string[]
+  category: string[]
 }
 
 interface ProductFilterPopoverProps {
@@ -34,6 +38,13 @@ export function ProductFilterPopover({
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState<AdvancedFilterState>(currentFilters)
 
+  // ── ดึงตัวเลือกหมวดหมู่ผ่าน Endpoint {feature}Options ──
+  const { data: categoryOptions = [] } = useQuery({
+    queryKey: [QUERY_KEYS.OPTIONS.CATEGORIES],
+    queryFn: getCategoryOptions,
+    staleTime: 1000 * 60 * 5,
+  })
+
   // Sync draft เมื่อเปิด Popover หรือค่าปัจจุบันเปลี่ยน
   useEffect(() => {
     if (open) {
@@ -45,7 +56,8 @@ export function ProductFilterPopover({
   const activeCount =
     (currentFilters.searchBy !== "all" ? 1 : 0) +
     currentFilters.status.length +
-    currentFilters.stockStatus.length
+    currentFilters.stockStatus.length +
+    currentFilters.category.length
 
   const handleApply = () => {
     onApply(draft)
@@ -75,16 +87,25 @@ export function ProductFilterPopover({
     }))
   }
 
+  const toggleCategory = (id: string, checked: boolean) => {
+    setDraft((prev) => ({
+      ...prev,
+      category: checked
+        ? [...prev.category, id]
+        : prev.category.filter((c) => c !== id),
+    }))
+  }
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger>
+      <PopoverTrigger asChild>
         <Button
           variant="outline"
           size="sm"
           className={cn(
             "h-9 cursor-pointer gap-1.5 border-border/70 text-xs text-muted-foreground hover:text-foreground",
             activeCount > 0 &&
-              "border-foreground/30 bg-muted/60 font-medium text-foreground"
+              "border-foreground/30 bg-muted/60 text-foreground font-medium"
           )}
         >
           <Filter className="size-3.5" />
@@ -108,7 +129,7 @@ export function ProductFilterPopover({
             <button
               type="button"
               onClick={handleReset}
-              className="flex cursor-pointer items-center gap-1 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+              className="flex cursor-pointer items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
             >
               <RotateCcw className="size-3" />
               Reset all
@@ -210,6 +231,34 @@ export function ProductFilterPopover({
             ))}
           </div>
         </div>
+
+        {/* ── 4. Category Filter ({feature}Options) ── */}
+        {categoryOptions.length > 0 && (
+          <>
+            <Separator />
+            <div className="space-y-2">
+              <Label className="text-xs font-medium text-foreground">
+                Category
+              </Label>
+              <div className="max-h-28 overflow-y-auto space-y-1.5 pr-1">
+                {categoryOptions.map((cat) => (
+                  <label
+                    key={cat.id}
+                    className="flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    <Checkbox
+                      checked={draft.category.includes(cat.id)}
+                      onCheckedChange={(checked) =>
+                        toggleCategory(cat.id, Boolean(checked))
+                      }
+                    />
+                    <span>{cat.name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
 
         <Separator />
 
