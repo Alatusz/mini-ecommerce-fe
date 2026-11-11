@@ -73,7 +73,7 @@ export function useProductEdit() {
     if (productData) {
       setFormData({
         name: productData.name || "",
-        sku: productData.sku || productData.slug || "",
+        sku: productData.sku || "",
         categoryId: productData.categories?.[0]?.id || "",
         price: String(productData.sellPrice ?? productData.originalPrice ?? 0),
         stock: String(productData.stock ?? 0),

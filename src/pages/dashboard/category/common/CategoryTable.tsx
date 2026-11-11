@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { type CategoryItem } from "./mockCategory"
+import { type CategoryItem } from "@/services/category.services"
 
 const categoryColumnHelper = createColumnHelper<
   DataGridFeatures,
@@ -76,7 +76,7 @@ export function CategoryTable({
   onStatusFilterChange,
   onDelete,
   onStatusChange,
-  isLoading,
+  isLoading: _isLoading,
 }: CategoryTableProps) {
   const columns = useMemo(
     () => [
