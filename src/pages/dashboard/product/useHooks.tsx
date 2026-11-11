@@ -11,10 +11,22 @@ import { productCategories } from "./common/mockProduct"
 import { queryClient } from "@/lib/queryClient"
 import { showToast } from "@/lib/toast"
 import { useSearchParams } from "react-router-dom"
-import { getCategories } from "@/services/category.services"
+import { getCategories, getCategoryOptions } from "@/services/category.services"
 
 export type { ProductItem }
 export { productCategories }
+
+/**
+ * Hook สำหรับดึงตัวเลือก Categories สำหรับ Dropdown / Filter ในโมดูล Product
+ * รองรับการส่ง limit เพื่อปรับขนาดข้อมูล และมีแคช 5 นาทีตามมาตรฐาน
+ */
+export function useCategoryOptions(limit: number = 100) {
+  return useQuery({
+    queryKey: [QUERY_KEYS.OPTIONS.CATEGORIES, { limit }],
+    queryFn: () => getCategoryOptions({ limit }),
+    staleTime: 1000 * 60 * 5,
+  })
+}
 
 const defaultStats: ProductStats = {
   totalSKUs: 0,

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { QUERY_KEYS } from "@/lib/constants"
-import { getCategoryOptions } from "@/services/category.services"
+import { useCategoryOptions } from "../useHooks"
 import {
   getProductById,
   updateProduct,
@@ -31,11 +31,8 @@ export function useProductEdit() {
   const navigate = useNavigate()
 
   // ── 1. ดึงตัวเลือกหมวดหมู่ผ่าน API ({feature}Options) ──
-  const { data: categoryOptions = [], isLoading: isLoadingCategories } = useQuery({
-    queryKey: [QUERY_KEYS.OPTIONS.CATEGORIES],
-    queryFn: getCategoryOptions,
-    staleTime: 1000 * 60 * 5,
-  })
+  const { data: categoryOptions = [], isLoading: isLoadingCategories } =
+    useCategoryOptions(100)
 
   // ── 2. ดึงข้อมูลสินค้าที่ต้องการแก้ไขจาก Backend ──
   const {
