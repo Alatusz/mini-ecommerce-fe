@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom"
-import { Plus, Package, Layers, AlertTriangle, XCircle } from "lucide-react"
+import { Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { StatCard } from "@/components/common/StatCard"
 import { PageContent } from "@/components/common/PageContent"
 import { useProduct } from "./useHooks"
+import { ProductStatsGrid } from "./common/ProductStatsGrid"
 import { ProductTable } from "./common/ProductTable"
 import { ProductDeleteDialog } from "./common/ProductDeleteDialog"
 
@@ -50,46 +50,14 @@ export default function DashboardProductPage() {
         </Link>
       </div>
 
-      {/* ── 4 KPI Cards (Monochrome Icons + Tabular Numbers) ── */}
-      <div className="grid grid-cols-4 gap-4">
-        <StatCard
-          title="Total SKUs"
-          value={total}
-          icon={<Package className="size-3.5" />}
-          description={`${inStockCount} in stock`}
-        />
-
-        <StatCard
-          title="Inventory Volume"
-          value={totalUnits.toLocaleString()}
-          icon={<Layers className="size-3.5" />}
-          description="units on hand"
-        />
-
-        <StatCard
-          title="Low Stock"
-          value={lowStockCount}
-          icon={<AlertTriangle className="size-3.5" />}
-          valueClassName={
-            lowStockCount > 0
-              ? "text-amber-600 dark:text-amber-400"
-              : "text-foreground"
-          }
-          description="below threshold"
-        />
-
-        <StatCard
-          title="Out of Stock"
-          value={outOfStockCount}
-          icon={<XCircle className="size-3.5" />}
-          valueClassName={
-            outOfStockCount > 0
-              ? "text-red-600 dark:text-red-400"
-              : "text-foreground"
-          }
-          description="0 units available"
-        />
-      </div>
+      {/* ── Inventory KPI Metrics ── */}
+      <ProductStatsGrid
+        total={total}
+        totalUnits={totalUnits}
+        inStockCount={inStockCount}
+        lowStockCount={lowStockCount}
+        outOfStockCount={outOfStockCount}
+      />
 
       {/* ── TanStack DataGrid Table with Advanced Filter Popover ── */}
       <ProductTable

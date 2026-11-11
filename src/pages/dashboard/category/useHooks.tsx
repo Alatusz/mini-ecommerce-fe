@@ -1,11 +1,11 @@
 import { useState, useMemo } from "react"
-import { type CategoryItem } from "./common/mockCategory"
 import { useMutation, useQuery, keepPreviousData } from "@tanstack/react-query"
 import { QUERY_KEYS } from "@/lib/constants"
 import {
   getCategories,
   deleteCategory,
   patchCategoryStatus,
+  type CategoryItem,
 } from "@/services/category.services"
 import { queryClient } from "@/lib/queryClient"
 import { showToast } from "@/lib/toast"

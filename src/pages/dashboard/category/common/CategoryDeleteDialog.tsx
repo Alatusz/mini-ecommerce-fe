@@ -8,7 +8,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { type CategoryItem } from "./mockCategory"
+import { type CategoryItem } from "@/services/category.services"
 
 interface CategoryDeleteDialogProps {
   category: CategoryItem | null
