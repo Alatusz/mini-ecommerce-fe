@@ -98,28 +98,30 @@ export function ProductFilterPopover({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger>
-        <Button
-          variant="outline"
-          size="sm"
-          className={cn(
-            "h-9 cursor-pointer gap-1.5 border-border/70 text-xs text-muted-foreground hover:text-foreground",
-            activeCount > 0 &&
-              "border-foreground/30 bg-muted/60 text-foreground font-medium"
-          )}
-        >
-          <Filter className="size-3.5" />
-          <span>Filters</span>
-          {activeCount > 0 && (
-            <Badge
-              variant="secondary"
-              className="ml-0.5 rounded-full px-1.5 py-0 text-[10px] font-semibold"
-            >
-              {activeCount}
-            </Badge>
-          )}
-        </Button>
-      </PopoverTrigger>
+      <PopoverTrigger
+        render={
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "h-9 cursor-pointer gap-1.5 border-border/70 text-xs text-muted-foreground hover:text-foreground",
+              activeCount > 0 &&
+                "border-foreground/30 bg-muted/60 text-foreground font-medium"
+            )}
+          >
+            <Filter className="size-3.5" />
+            <span>Filters</span>
+            {activeCount > 0 && (
+              <Badge
+                variant="secondary"
+                className="ml-0.5 rounded-full px-1.5 py-0 text-[10px] font-semibold"
+              >
+                {activeCount}
+              </Badge>
+            )}
+          </Button>
+        }
+      />
 
       <PopoverContent align="end" className="w-80 space-y-4 p-4 text-xs">
         {/* ── Header ── */}
