@@ -141,6 +141,25 @@ backend/src/
 
 ---
 
+### กฎข้อที่ 6: มาตรฐานการสร้าง Dropdown / Select Options (`{feature}Options`)
+เมื่อมีฟอร์มที่ต้องเลือกข้อมูล Master Data หรือ Foreign Key ผ่าน Dropdown (เช่น หมวดหมู่, แบรนด์, คลังสินค้า) **ห้ามใช้ API List หน้าตาราง (Pagination) มาหยอดใส่ Dropdown โดยเด็ดขาด** ให้สร้างเส้นเฉพาะตามรูปแบบด้านล่าง:
+
+1. **Backend Route & Express Ordering:**
+   * ใช้ Path: `GET /api/{feature}s/options` (เช่น `/api/categories/options`)
+   * **สำคัญมาก:** ต้องวาง Route นี้ไว้ **ข้างหน้า** Dynamic Param Route เสมอ (เช่น วางก่อน `/:id`) เพื่อป้องกันไม่ให้ Express จับคำว่า `"options"` เป็น `:id`
+2. **Backend Query Optimization:**
+   * ดึงเฉพาะฟิลด์ที่จำเป็นต่อการแสดงผล: `select: { id: true, name: true }`
+   * กรองเฉพาะรายการที่พร้อมใช้งาน: `where: { status: "active" }` (ห้ามดึง draft หรือ archived)
+   * เรียงลำดับให้อ่านง่าย: `orderBy: { name: "asc" }`
+   * ห้ามใส่ Pagination (`skip`, `take`) หรือการ Aggregate ข้อมูลหนักๆ (`_count`)
+3. **Frontend Naming Standards:**
+   * **TypeScript Interface:** `{Feature}Option` (เช่น `CategoryOption` มีโครงสร้าง `{ id: string, name: string }`)
+   * **API Service Function:** `get{Feature}Options()` (เช่น `getCategoryOptions()`)
+   * **Query Key:** `QUERY_KEYS.OPTIONS.{FEATURE}` (เช่น `QUERY_KEYS.OPTIONS.CATEGORIES`)
+   * **Hook State / Return:** `{feature}Options` (เช่น `categoryOptions`)
+
+---
+
 ## 4. Git Commit Conventions (ข้อตกลงการ Commit)
 
 กำหนดรูปแบบ Commit Message ให้เป็นระเบียบ อ่านประวัติการทำงานได้เข้าใจทันที และตรวจสอบย้อนหลังได้ชัดเจน
