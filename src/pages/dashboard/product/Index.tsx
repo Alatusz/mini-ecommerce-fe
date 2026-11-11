@@ -19,6 +19,7 @@ export default function DashboardProductPage() {
     searchBy,
     selectedStatuses,
     selectedStockStatuses,
+    selectedCategories,
     handleApplyAdvancedFilters,
     handleResetFilters,
     deletingProduct,
