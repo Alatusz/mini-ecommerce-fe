@@ -19,6 +19,7 @@ export interface ProductFormState {
   price: string
   stock: string
   image: string
+  description: string
   status: ProductPublishStatus
 }
 
@@ -26,11 +27,12 @@ export function useProductCreate() {
   const navigate = useNavigate()
 
   // ── 1. ดึงตัวเลือกหมวดหมู่สำหรับใส่ Dropdown ({feature}Options Convention) ──
-  const { data: categoryOptions = [], isLoading: isLoadingCategories } = useQuery({
-    queryKey: [QUERY_KEYS.OPTIONS.CATEGORIES],
-    queryFn: getCategoryOptions,
-    staleTime: 1000 * 60 * 5, // แคชไว้ 5 นาทีตาม Best Practice
-  })
+  const { data: categoryOptions = [], isLoading: isLoadingCategories } =
+    useQuery({
+      queryKey: [QUERY_KEYS.OPTIONS.CATEGORIES],
+      queryFn: getCategoryOptions,
+      staleTime: 1000 * 60 * 5, // แคชไว้ 5 นาทีตาม Best Practice
+    })
 
   // ── 2. Image Upload & File Attachment State (อ้างอิง Category) ──
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -45,6 +47,7 @@ export function useProductCreate() {
     price: "",
     stock: "50",
     image: "",
+    description : "",
     status: "published",
   })
 
@@ -216,6 +219,7 @@ export function useProductCreate() {
 
       createProductMutation.mutate({
         name: formData.name.trim(),
+        description: formData.description.trim() || undefined,
         slug: formData.sku.trim().toLowerCase(),
         sellPrice: priceNum,
         originalPrice: priceNum,

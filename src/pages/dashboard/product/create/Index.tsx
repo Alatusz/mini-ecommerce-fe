@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { ProductImageUpload } from "../common/ProductImageUpload"
 import { ProductStatusSelector } from "../common/ProductStatusSelector"
+import { RichTextEditor } from "@/components/common/RichTextEditor"
 
 export default function DashboardProductCreatePage() {
   const {
@@ -71,11 +72,11 @@ export default function DashboardProductCreatePage() {
                   onChange={(e) => handleNameChange(e.target.value)}
                   className={cn(
                     "h-9 text-xs",
-                    errors.name && "border-destructive focus-visible:ring-destructive"
+                    errors.name &&
+                      "border-destructive focus-visible:ring-destructive"
                   )}
                 />
               </FormField>
-
               {/* SKU & Category (2 cols) */}
               <div className="grid grid-cols-2 gap-4">
                 <FormField
@@ -93,7 +94,8 @@ export default function DashboardProductCreatePage() {
                     }
                     className={cn(
                       "h-9 font-mono text-xs uppercase",
-                      errors.sku && "border-destructive focus-visible:ring-destructive"
+                      errors.sku &&
+                        "border-destructive focus-visible:ring-destructive"
                     )}
                   />
                 </FormField>
@@ -133,7 +135,6 @@ export default function DashboardProductCreatePage() {
                   </select>
                 </FormField>
               </div>
-
               {/* Price & Stock (2 cols) */}
               <div className="grid grid-cols-2 gap-4">
                 <FormField
@@ -179,7 +180,6 @@ export default function DashboardProductCreatePage() {
                   />
                 </FormField>
               </div>
-
               {/* Product Image Upload */}
               <ProductImageUpload
                 value={formData.image}
@@ -194,7 +194,18 @@ export default function DashboardProductCreatePage() {
                 onUrlChange={(url) => handleFieldChange("image", url)}
                 disabled={isSubmitting}
               />
-
+              <FormField
+                label="Description"
+                htmlFor="prod-desc"
+                error={errors.description}
+              >
+                <RichTextEditor
+                  value={formData.description}
+                  onChange={(html) => handleFieldChange("description", html)}
+                  placeholder="Describe technical specs, warranty, or features..."
+                  error={!!errors.description}
+                />
+              </FormField>
               {/* Lifecycle Status Selection */}
               <FormField label="Status">
                 <ProductStatusSelector
@@ -203,7 +214,6 @@ export default function DashboardProductCreatePage() {
                   disabled={isSubmitting}
                 />
               </FormField>
-
               {/* Bottom Action Footer */}
               <div className="flex items-center justify-end gap-2 border-t border-border/40 pt-4">
                 <Button
