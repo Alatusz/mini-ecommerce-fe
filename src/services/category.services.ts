@@ -49,10 +49,13 @@ export interface CategoryOptionsResponse {
   data: CategoryOption[]
 }
 
-// ดึงตัวเลือกหมวดหมู่สำหรับใส่ Dropdown (เฉพาะ active, เรียงตามชื่อ, ไม่ติด pagination)
-export const getCategoryOptions = async (): Promise<CategoryOption[]> => {
+// ดึงตัวเลือกหมวดหมู่สำหรับใส่ Dropdown (เฉพาะ active, เรียงตามชื่อ, กำหนด limit ได้)
+export const getCategoryOptions = async (
+  params?: { limit?: number }
+): Promise<CategoryOption[]> => {
   const response = await apiClient.get<CategoryOptionsResponse>(
-    "/categories/options"
+    "/categories/options",
+    { params }
   )
   return response.data.data
 }

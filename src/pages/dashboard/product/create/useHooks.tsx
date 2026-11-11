@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useMutation } from "@tanstack/react-query"
 import { QUERY_KEYS } from "@/lib/constants"
-import { getCategoryOptions } from "@/services/category.services"
+import { useCategoryOptions } from "../useHooks"
 import {
   createProduct,
   type IProduct,
@@ -28,11 +28,7 @@ export function useProductCreate() {
 
   // ── 1. ดึงตัวเลือกหมวดหมู่สำหรับใส่ Dropdown ({feature}Options Convention) ──
   const { data: categoryOptions = [], isLoading: isLoadingCategories } =
-    useQuery({
-      queryKey: [QUERY_KEYS.OPTIONS.CATEGORIES],
-      queryFn: getCategoryOptions,
-      staleTime: 1000 * 60 * 5, // แคชไว้ 5 นาทีตาม Best Practice
-    })
+    useCategoryOptions(100)
 
   // ── 2. Image Upload & File Attachment State (อ้างอิง Category) ──
   const [selectedFile, setSelectedFile] = useState<File | null>(null)

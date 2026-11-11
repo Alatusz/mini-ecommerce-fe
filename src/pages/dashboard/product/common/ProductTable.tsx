@@ -18,9 +18,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
-  ProductFilterPopover,
+  ProductFilterDrawer,
   type AdvancedFilterState,
-} from "./ProductFilterPopover"
+} from "./ProductFilterDrawer"
 
 const productColumnHelper = createColumnHelper<DataGridFeatures, ProductItem>()
 
@@ -188,7 +188,7 @@ export function ProductTable({
       manualFiltering={true}
       rowCount={total}
       actions={
-        <ProductFilterPopover
+        <ProductFilterDrawer
           currentFilters={filters}
           onApply={onApplyFilters}
           onReset={onResetFilters}
