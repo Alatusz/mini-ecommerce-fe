@@ -13,7 +13,6 @@ import {
 } from "lucide-react"
 
 import { useProductCreate } from "./useHooks"
-import { productCategories } from "../common/mockProduct"
 import { PageContent } from "@/components/common/PageContent"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,6 +23,8 @@ export default function DashboardProductCreatePage() {
   const {
     formData,
     errors,
+    categoryOptions,
+    isLoadingCategories,
     isSubmitting,
     handleNameChange,
     handleFieldChange,
@@ -105,22 +106,35 @@ export default function DashboardProductCreatePage() {
 
                 <div className="space-y-1.5">
                   <Label htmlFor="prod-cat" className="text-xs font-medium text-foreground">
-                    Category
+                    Category <span className="text-destructive">*</span>
                   </Label>
                   <select
                     id="prod-cat"
-                    value={formData.category}
-                    onChange={(e) => handleFieldChange("category", e.target.value)}
-                    className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-2xs focus-visible:outline-none"
+                    value={formData.categoryId}
+                    onChange={(e) => handleFieldChange("categoryId", e.target.value)}
+                    disabled={isLoadingCategories}
+                    className={`h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-2xs focus-visible:outline-none ${
+                      errors.categoryId ? "border-destructive focus-visible:ring-destructive" : ""
+                    }`}
                   >
-                    {productCategories
-                      .filter((c) => c !== "All")
-                      .map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
+                    {categoryOptions.length === 0 ? (
+                      <option value="">
+                        {isLoadingCategories ? "Loading categories..." : "No categories found"}
+                      </option>
+                    ) : (
+                      categoryOptions.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
                         </option>
-                      ))}
+                      ))
+                    )}
                   </select>
+                  {errors.categoryId && (
+                    <p className="flex items-center gap-1 text-[11px] text-destructive">
+                      <AlertCircle className="size-3" />
+                      {errors.categoryId}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -209,9 +223,24 @@ export default function DashboardProductCreatePage() {
                 <div className="grid grid-cols-3 gap-3 pt-0.5">
                   {(
                     [
-                      { value: "In Stock", dot: "bg-emerald-500", tag: "Available" },
-                      { value: "Low Stock", dot: "bg-amber-500", tag: "< 10 units" },
-                      { value: "Out of Stock", dot: "bg-red-500", tag: "0 units" },
+                      {
+                        value: "published",
+                        label: "Published",
+                        dot: "bg-emerald-500",
+                        tag: "Visible",
+                      },
+                      {
+                        value: "draft",
+                        label: "Draft",
+                        dot: "bg-zinc-400",
+                        tag: "Hidden",
+                      },
+                      {
+                        value: "archived",
+                        label: "Archived",
+                        dot: "bg-amber-500",
+                        tag: "Archived",
+                      },
                     ] as const
                   ).map((opt) => {
                     const selected = formData.status === opt.value
@@ -229,7 +258,7 @@ export default function DashboardProductCreatePage() {
                         <div className="flex items-center gap-2">
                           <span className={`size-2 rounded-full ${opt.dot}`} />
                           <span className="text-xs font-medium text-foreground">
-                            {opt.value}
+                            {opt.label}
                           </span>
                         </div>
                         <span className="text-[11px] tabular-nums text-muted-foreground">

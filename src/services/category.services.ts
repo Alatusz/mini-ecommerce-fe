@@ -38,6 +38,25 @@ export interface CategoryListResponse {
   data: CategoryItem[]
 }
 
+// ── Dropdown / Select Option Type ({feature}Options Convention) ──
+export interface CategoryOption {
+  id: string
+  name: string
+}
+
+export interface CategoryOptionsResponse {
+  success: boolean
+  data: CategoryOption[]
+}
+
+// ดึงตัวเลือกหมวดหมู่สำหรับใส่ Dropdown (เฉพาะ active, เรียงตามชื่อ, ไม่ติด pagination)
+export const getCategoryOptions = async (): Promise<CategoryOption[]> => {
+  const response = await apiClient.get<CategoryOptionsResponse>(
+    "/categories/options"
+  )
+  return response.data.data
+}
+
 // ดึงรายการหมวดหมู่พร้อม Pagination & Search
 export const getCategories = async (
   params?: CategoryFilterParams

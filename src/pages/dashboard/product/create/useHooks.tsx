@@ -1,36 +1,59 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import { useMutation, useQuery } from "@tanstack/react-query"
+import { QUERY_KEYS } from "@/lib/constants"
+import { getCategoryOptions } from "@/services/category.services"
 import {
-  addProductToStore,
-  productCategories,
-  type ProductItem,
-} from "../common/mockProduct"
+  createProduct,
+  type IProduct,
+  type ProductPublishStatus,
+} from "@/services/product.services"
+import { queryClient } from "@/lib/queryClient"
+import { showToast } from "@/lib/toast"
 
 export interface ProductFormState {
   name: string
   sku: string
-  category: string
+  categoryId: string
   price: string
   stock: string
   image: string
-  status: "In Stock" | "Low Stock" | "Out of Stock"
+  status: ProductPublishStatus
 }
 
 export function useProductCreate() {
   const navigate = useNavigate()
 
+  // ── 1. ดึงตัวเลือกหมวดหมู่สำหรับใส่ Dropdown ({feature}Options Convention) ──
+  const { data: categoryOptions = [], isLoading: isLoadingCategories } = useQuery({
+    queryKey: [QUERY_KEYS.OPTIONS.CATEGORIES],
+    queryFn: getCategoryOptions,
+    staleTime: 1000 * 60 * 5, // แคชไว้ 5 นาทีตาม Best Practice
+  })
+
   const [formData, setFormData] = useState<ProductFormState>({
     name: "",
     sku: "",
-    category: productCategories.find((c) => c !== "All") || "Smartphones",
+    categoryId: "",
     price: "",
     stock: "50",
     image: "",
-    status: "In Stock",
+    status: "published",
   })
 
-  const [errors, setErrors] = useState<Partial<Record<keyof ProductFormState, string>>>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof ProductFormState, string>>
+  >({})
+
+  // Auto-select first category เมื่อ options โหลดเสร็จ
+  useEffect(() => {
+    if (!formData.categoryId && categoryOptions.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        categoryId: prev.categoryId || categoryOptions[0].id,
+      }))
+    }
+  }, [categoryOptions, formData.categoryId])
 
   const handleNameChange = (name: string) => {
     // Generate suggested SKU from name words (e.g. Sony WH 1000 -> SONY-WH-1000)
@@ -69,24 +92,7 @@ export function useProductCreate() {
     field: K,
     value: ProductFormState[K]
   ) => {
-    setFormData((prev) => {
-      const next = { ...prev, [field]: value }
-
-      // Auto update status based on stock if stock changed
-      if (field === "stock") {
-        const units = Number(value)
-        if (units <= 0) {
-          next.status = "Out of Stock"
-        } else if (units < 10) {
-          next.status = "Low Stock"
-        } else {
-          next.status = "In Stock"
-        }
-      }
-
-      return next
-    })
-
+    setFormData((prev) => ({ ...prev, [field]: value }))
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }))
     }
@@ -96,49 +102,64 @@ export function useProductCreate() {
     const newErrors: Partial<Record<keyof ProductFormState, string>> = {}
 
     if (!formData.name.trim()) {
-      newErrors.name = "Product title is required"
+      newErrors.name = "Product name is required"
     }
 
     if (!formData.sku.trim()) {
-      newErrors.sku = "SKU identifier code is required"
+      newErrors.sku = "SKU is required"
     }
 
-    if (!formData.price.trim() || isNaN(Number(formData.price)) || Number(formData.price) < 0) {
+    const priceNum = Number(formData.price)
+    if (!formData.price.trim() || isNaN(priceNum) || priceNum < 0) {
       newErrors.price = "Valid price is required"
     }
 
-    if (!formData.stock.trim() || isNaN(Number(formData.stock)) || Number(formData.stock) < 0) {
-      newErrors.stock = "Valid stock count is required"
+    const stockNum = Number(formData.stock)
+    if (!formData.stock.trim() || isNaN(stockNum) || stockNum < 0) {
+      newErrors.stock = "Valid stock is required"
+    }
+
+    if (!formData.categoryId) {
+      newErrors.categoryId = "Category is required"
     }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
+  // ── 2. Mutation สำหรับสร้างสินค้าใหม่ผ่าน API ──
+  const createProductMutation = useMutation({
+    mutationFn: (payload: IProduct) => createProduct(payload),
+    onSuccess: () => {
+      showToast.success("Product created successfully")
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.DASHBOARD.PRODUCTS_LIST],
+      })
+      navigate("/dashboard/product")
+    },
+    onError: (err: any) => {
+      const message = err?.response?.data?.message || "Failed to create product"
+      showToast.error(message)
+    },
+  })
+
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault()
     if (!validate()) return
 
-    setIsSubmitting(true)
+    const priceNum = Number(formData.price) || 0
+    const stockNum = Number(formData.stock) || 0
 
-    const newProduct: ProductItem = {
-      id: `prod-${Date.now().toString(36)}`,
+    createProductMutation.mutate({
       name: formData.name.trim(),
-      sku: formData.sku.trim().toUpperCase(),
-      category: formData.category,
-      price: Number(formData.price) || 0,
-      stock: Number(formData.stock) || 0,
-      salesCount: 0,
-      image: formData.image.trim() || "/images/detail-purple.png",
+      slug: formData.sku.trim().toLowerCase(),
+      sellPrice: priceNum,
+      originalPrice: priceNum,
+      stock: stockNum,
+      images: formData.image.trim() ? [formData.image.trim()] : [],
       status: formData.status,
-    }
-
-    addProductToStore(newProduct)
-
-    setTimeout(() => {
-      setIsSubmitting(false)
-      navigate("/dashboard/product")
-    }, 250)
+      categoryId: formData.categoryId,
+    })
   }
 
   const handleCancel = () => {
@@ -148,7 +169,9 @@ export function useProductCreate() {
   return {
     formData,
     errors,
-    isSubmitting,
+    categoryOptions,
+    isLoadingCategories,
+    isSubmitting: createProductMutation.isPending,
     handleNameChange,
     handleFieldChange,
     handleSubmit,
