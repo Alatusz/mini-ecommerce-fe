@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { QUERY_KEYS } from "@/lib/constants"
@@ -8,6 +8,7 @@ import {
   type IProduct,
   type ProductPublishStatus,
 } from "@/services/product.services"
+import { uploadImage } from "@/services/upload.services"
 import { queryClient } from "@/lib/queryClient"
 import { showToast } from "@/lib/toast"
 
@@ -30,6 +31,12 @@ export function useProductCreate() {
     queryFn: getCategoryOptions,
     staleTime: 1000 * 60 * 5, // แคชไว้ 5 นาทีตาม Best Practice
   })
+
+  // ── 2. Image Upload & File Attachment State (อ้างอิง Category) ──
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
+  const [useUrlInput, setUseUrlInput] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [formData, setFormData] = useState<ProductFormState>({
     name: "",
@@ -55,8 +62,16 @@ export function useProductCreate() {
     }
   }, [categoryOptions, formData.categoryId])
 
+  // Cleanup blob URL on unmount
+  useEffect(() => {
+    return () => {
+      if (formData.image?.startsWith("blob:")) {
+        URL.revokeObjectURL(formData.image)
+      }
+    }
+  }, [formData.image])
+
   const handleNameChange = (name: string) => {
-    // Generate suggested SKU from name words (e.g. Sony WH 1000 -> SONY-WH-1000)
     const suggestedSku = name
       .trim()
       .toUpperCase()
@@ -98,6 +113,45 @@ export function useProductCreate() {
     }
   }
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith("image/")) {
+      showToast.error("Only image files are allowed")
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showToast.error("File size exceeds 5MB limit")
+      return
+    }
+
+    if (formData.image?.startsWith("blob:")) {
+      URL.revokeObjectURL(formData.image)
+    }
+
+    setSelectedFile(file)
+    const localBlobUrl = URL.createObjectURL(file)
+    setFormData((prev) => ({ ...prev, image: localBlobUrl }))
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }
+
+  const handleRemoveImage = () => {
+    if (formData.image?.startsWith("blob:")) {
+      URL.revokeObjectURL(formData.image)
+    }
+    setSelectedFile(null)
+    setFormData((prev) => ({ ...prev, image: "" }))
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }
+
   const validate = (): boolean => {
     const newErrors: Partial<Record<keyof ProductFormState, string>> = {}
 
@@ -127,7 +181,7 @@ export function useProductCreate() {
     return Object.keys(newErrors).length === 0
   }
 
-  // ── 2. Mutation สำหรับสร้างสินค้าใหม่ผ่าน API ──
+  // ── 3. Mutation สำหรับสร้างสินค้าใหม่ผ่าน API ──
   const createProductMutation = useMutation({
     mutationFn: (payload: IProduct) => createProduct(payload),
     onSuccess: () => {
@@ -143,23 +197,39 @@ export function useProductCreate() {
     },
   })
 
-  const handleSubmit = (e?: React.FormEvent) => {
+  const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault()
     if (!validate()) return
 
-    const priceNum = Number(formData.price) || 0
-    const stockNum = Number(formData.stock) || 0
+    try {
+      let finalImageUrl = formData.image || ""
 
-    createProductMutation.mutate({
-      name: formData.name.trim(),
-      slug: formData.sku.trim().toLowerCase(),
-      sellPrice: priceNum,
-      originalPrice: priceNum,
-      stock: stockNum,
-      images: formData.image.trim() ? [formData.image.trim()] : [],
-      status: formData.status,
-      categoryId: formData.categoryId,
-    })
+      // ถ้าผู้ใช้เลือกไฟล์ ให้ Upload ไปยัง /upload/single ก่อนบันทึก
+      if (selectedFile) {
+        setIsUploading(true)
+        const uploadRes = await uploadImage(selectedFile)
+        finalImageUrl = uploadRes.url
+      }
+
+      const priceNum = Number(formData.price) || 0
+      const stockNum = Number(formData.stock) || 0
+
+      createProductMutation.mutate({
+        name: formData.name.trim(),
+        slug: formData.sku.trim().toLowerCase(),
+        sellPrice: priceNum,
+        originalPrice: priceNum,
+        stock: stockNum,
+        images: finalImageUrl ? [finalImageUrl] : [],
+        status: formData.status,
+        categoryId: formData.categoryId,
+      })
+    } catch (error) {
+      console.error("Upload error:", error)
+      showToast.error("Failed to upload image before saving")
+    } finally {
+      setIsUploading(false)
+    }
   }
 
   const handleCancel = () => {
@@ -171,7 +241,14 @@ export function useProductCreate() {
     errors,
     categoryOptions,
     isLoadingCategories,
-    isSubmitting: createProductMutation.isPending,
+    isSubmitting: isUploading || createProductMutation.isPending,
+    selectedFile,
+    useUrlInput,
+    toggleUseUrlInput: () => setUseUrlInput((prev) => !prev),
+    fileInputRef,
+    openFileDialog: () => fileInputRef.current?.click(),
+    handleFileSelect,
+    handleRemoveImage,
     handleNameChange,
     handleFieldChange,
     handleSubmit,

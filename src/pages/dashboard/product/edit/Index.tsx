@@ -1,34 +1,50 @@
-/**
- * Edit Product — Unslop Redesign (dashboard-design skill)
- * - Wordless: compact numeric facts & crisp labels; zero filler prose.
- * - Selection: soft tinted fill with faint ring.
- */
 import { Link } from "react-router-dom"
 import {
   ArrowLeft,
   Check,
   AlertCircle,
   Loader2,
-  Image as ImageIcon,
+  ImageIcon,
+  UploadCloud,
+  X,
 } from "lucide-react"
 
 import { useProductEdit } from "./useHooks"
-import { productCategories } from "../common/mockProduct"
 import { PageContent } from "@/components/common/PageContent"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
+import { Spinner } from "@/components/ui/spinner"
+import {
+  Attachment,
+  AttachmentMedia,
+  AttachmentContent,
+  AttachmentTitle,
+  AttachmentDescription,
+  AttachmentActions,
+  AttachmentAction,
+} from "@/components/ui/attachment"
 
 export default function DashboardProductEditPage() {
   const {
     id,
     product,
     isNotFound,
+    isLoading,
     formData,
     errors,
+    categoryOptions,
+    isLoadingCategories,
     isSubmitting,
     isDeleting,
+    selectedFile,
+    useUrlInput,
+    toggleUseUrlInput,
+    fileInputRef,
+    openFileDialog,
+    handleFileSelect,
+    handleRemoveImage,
     handleFieldChange,
     handleSubmit,
     handleCancel,
@@ -47,12 +63,27 @@ export default function DashboardProductEditPage() {
           <p className="mt-1 font-mono text-xs text-muted-foreground">{id}</p>
           <div className="mt-4">
             <Link to="/dashboard/product">
-              <Button variant="outline" size="sm" className="h-8 cursor-pointer gap-1.5 text-xs">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 cursor-pointer gap-1.5 text-xs"
+              >
                 <ArrowLeft className="size-3.5" />
                 Products
               </Button>
             </Link>
           </div>
+        </div>
+      </PageContent>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <PageContent>
+        <div className="mx-auto flex max-w-md flex-col items-center justify-center py-24 text-center">
+          <Spinner className="size-6 text-muted-foreground" />
+          <p className="mt-3 text-xs text-muted-foreground">Loading product...</p>
         </div>
       </PageContent>
     )
@@ -114,7 +145,7 @@ export default function DashboardProductEditPage() {
                   </Label>
                   <Input
                     id="edit-psku"
-                    placeholder="WH-1000XM5-BLK"
+                    placeholder="SONY-WH-1000"
                     value={formData.sku}
                     onChange={(e) => handleFieldChange("sku", e.target.value.toUpperCase())}
                     className={`h-9 font-mono text-xs uppercase tabular-nums ${
@@ -131,22 +162,35 @@ export default function DashboardProductEditPage() {
 
                 <div className="space-y-1.5">
                   <Label htmlFor="edit-pcat" className="text-xs font-medium text-foreground">
-                    Category
+                    Category <span className="text-destructive">*</span>
                   </Label>
                   <select
                     id="edit-pcat"
-                    value={formData.category}
-                    onChange={(e) => handleFieldChange("category", e.target.value)}
-                    className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-2xs focus-visible:outline-none"
+                    value={formData.categoryId}
+                    onChange={(e) => handleFieldChange("categoryId", e.target.value)}
+                    disabled={isLoadingCategories}
+                    className={`h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-2xs focus-visible:outline-none ${
+                      errors.categoryId ? "border-destructive focus-visible:ring-destructive" : ""
+                    }`}
                   >
-                    {productCategories
-                      .filter((c) => c !== "All")
-                      .map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
+                    {categoryOptions.length === 0 ? (
+                      <option value="">
+                        {isLoadingCategories ? "Loading categories..." : "No categories found"}
+                      </option>
+                    ) : (
+                      categoryOptions.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
                         </option>
-                      ))}
+                      ))
+                    )}
                   </select>
+                  {errors.categoryId && (
+                    <p className="flex items-center gap-1 text-[11px] text-destructive">
+                      <AlertCircle className="size-3" />
+                      {errors.categoryId}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -198,31 +242,116 @@ export default function DashboardProductEditPage() {
                 </div>
               </div>
 
-              {/* Product Image */}
+              {/* ── Product Image (Attachment Pattern from Category) ── */}
               <div className="space-y-1.5">
-                <Label htmlFor="edit-pimage" className="text-xs font-medium text-foreground">
-                  Image URL <span className="font-normal text-muted-foreground">(optional)</span>
-                </Label>
-                <div className="flex items-center gap-3">
-                  <div className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border/60 bg-muted/40 p-1">
-                    {formData.image ? (
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-medium text-foreground">
+                    Product Image <span className="font-normal text-muted-foreground">(optional)</span>
+                  </Label>
+                  <button
+                    type="button"
+                    onClick={toggleUseUrlInput}
+                    className="cursor-pointer text-[11px] text-muted-foreground hover:text-foreground"
+                  >
+                    {useUrlInput ? "Upload File instead" : "or enter URL"}
+                  </button>
+                </div>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="hidden"
+                  onChange={handleFileSelect}
+                />
+
+                {useUrlInput ? (
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border/60 bg-muted/40 p-1">
+                      {formData.image ? (
+                        <img
+                          src={formData.image}
+                          alt="Preview"
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      ) : (
+                        <ImageIcon className="size-4 text-muted-foreground" />
+                      )}
+                    </div>
+                    <Input
+                      id="edit-pimage"
+                      placeholder="https://... or /images/..."
+                      value={formData.image}
+                      onChange={(e) => handleFieldChange("image", e.target.value)}
+                      className="h-9 font-mono text-xs"
+                    />
+                  </div>
+                ) : isSubmitting && selectedFile ? (
+                  /* Attachment Uploading State */
+                  <Attachment state="uploading" className="w-full p-2.5">
+                    <AttachmentMedia variant="icon" className="size-10 rounded-md">
+                      <Spinner className="size-4 text-muted-foreground" />
+                    </AttachmentMedia>
+                    <AttachmentContent>
+                      <AttachmentTitle className="text-xs">
+                        Uploading {selectedFile.name}...
+                      </AttachmentTitle>
+                      <AttachmentDescription className="text-[11px]">
+                        Saving file to server
+                      </AttachmentDescription>
+                    </AttachmentContent>
+                  </Attachment>
+                ) : formData.image ? (
+                  /* Attachment Done / Preview State */
+                  <Attachment state="done" className="w-full p-2">
+                    <AttachmentMedia variant="image" className="size-10 rounded-md">
                       <img
                         src={formData.image}
-                        alt="Preview"
-                        className="max-h-full max-w-full object-contain"
+                        alt="Product preview"
+                        className="size-full object-cover"
                       />
-                    ) : (
-                      <ImageIcon className="size-4 text-muted-foreground" />
-                    )}
-                  </div>
-                  <Input
-                    id="edit-pimage"
-                    placeholder="/images/hero-airpods.png"
-                    value={formData.image}
-                    onChange={(e) => handleFieldChange("image", e.target.value)}
-                    className="h-9 font-mono text-xs"
-                  />
-                </div>
+                    </AttachmentMedia>
+                    <AttachmentContent>
+                      <AttachmentTitle className="truncate text-xs">
+                        {selectedFile?.name || formData.image.split("/").pop() || "Uploaded Image"}
+                      </AttachmentTitle>
+                      <AttachmentDescription className="text-[11px]">
+                        {selectedFile
+                          ? `${(selectedFile.size / 1024).toFixed(1)} KB · Ready`
+                          : "Ready"}
+                      </AttachmentDescription>
+                    </AttachmentContent>
+                    <AttachmentActions>
+                      <AttachmentAction
+                        type="button"
+                        size="icon-xs"
+                        variant="ghost"
+                        onClick={handleRemoveImage}
+                        className="cursor-pointer text-muted-foreground hover:text-destructive"
+                        title="Remove image"
+                      >
+                        <X className="size-3.5" />
+                      </AttachmentAction>
+                    </AttachmentActions>
+                  </Attachment>
+                ) : (
+                  /* Attachment Idle State (Click to Upload) */
+                  <Attachment
+                    state="idle"
+                    onClick={openFileDialog}
+                    className="w-full cursor-pointer p-2.5 transition-colors hover:bg-muted/40"
+                  >
+                    <AttachmentMedia variant="icon" className="size-10 rounded-md">
+                      <UploadCloud className="size-4 text-muted-foreground" />
+                    </AttachmentMedia>
+                    <AttachmentContent>
+                      <AttachmentTitle className="text-xs">Upload image</AttachmentTitle>
+                      <AttachmentDescription className="text-[11px]">
+                        SVG, PNG, JPG under 5MB
+                      </AttachmentDescription>
+                    </AttachmentContent>
+                  </Attachment>
+                )}
               </div>
 
               {/* Status Segmented Selection */}
@@ -233,9 +362,24 @@ export default function DashboardProductEditPage() {
                 <div className="grid grid-cols-3 gap-3 pt-0.5">
                   {(
                     [
-                      { value: "In Stock", dot: "bg-emerald-500", tag: "Available" },
-                      { value: "Low Stock", dot: "bg-amber-500", tag: "< 10 units" },
-                      { value: "Out of Stock", dot: "bg-red-500", tag: "0 units" },
+                      {
+                        value: "published",
+                        label: "Published",
+                        dot: "bg-emerald-500",
+                        tag: "Visible",
+                      },
+                      {
+                        value: "draft",
+                        label: "Draft",
+                        dot: "bg-zinc-400",
+                        tag: "Hidden",
+                      },
+                      {
+                        value: "archived",
+                        label: "Archived",
+                        dot: "bg-amber-500",
+                        tag: "Archived",
+                      },
                     ] as const
                   ).map((opt) => {
                     const selected = formData.status === opt.value
@@ -253,7 +397,7 @@ export default function DashboardProductEditPage() {
                         <div className="flex items-center gap-2">
                           <span className={`size-2 rounded-full ${opt.dot}`} />
                           <span className="text-xs font-medium text-foreground">
-                            {opt.value}
+                            {opt.label}
                           </span>
                         </div>
                         <span className="text-[11px] tabular-nums text-muted-foreground">

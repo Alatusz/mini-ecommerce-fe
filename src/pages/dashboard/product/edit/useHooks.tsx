@@ -1,91 +1,143 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useNavigate, useParams } from "react-router-dom"
+import { useMutation, useQuery } from "@tanstack/react-query"
+import { QUERY_KEYS } from "@/lib/constants"
+import { getCategoryOptions } from "@/services/category.services"
 import {
   getProductById,
-  updateProductInStore,
-  deleteProductFromStore,
+  updateProduct,
+  deleteProduct,
+  type IProduct,
+  type ProductPublishStatus,
   type ProductItem,
-} from "../common/mockProduct"
+} from "@/services/product.services"
+import { uploadImage } from "@/services/upload.services"
+import { queryClient } from "@/lib/queryClient"
+import { showToast } from "@/lib/toast"
 
 export interface ProductEditFormState {
   name: string
   sku: string
-  category: string
+  categoryId: string
   price: string
   stock: string
   image: string
-  status: "In Stock" | "Low Stock" | "Out of Stock"
+  status: ProductPublishStatus
 }
 
 export function useProductEdit() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
-  const [product, setProduct] = useState<ProductItem | null>(null)
-  const [isNotFound, setIsNotFound] = useState(false)
+  // ── 1. ดึงตัวเลือกหมวดหมู่ผ่าน API ({feature}Options) ──
+  const { data: categoryOptions = [], isLoading: isLoadingCategories } = useQuery({
+    queryKey: [QUERY_KEYS.OPTIONS.CATEGORIES],
+    queryFn: getCategoryOptions,
+    staleTime: 1000 * 60 * 5,
+  })
+
+  // ── 2. ดึงข้อมูลสินค้าที่ต้องการแก้ไขจาก Backend ──
+  const {
+    data: productData,
+    isLoading: isLoadingProduct,
+    isError,
+  } = useQuery({
+    queryKey: [QUERY_KEYS.DASHBOARD.PRODUCTS_LIST, id],
+    queryFn: () => getProductById(id!),
+    enabled: !!id,
+    select: (res) => res.data as ProductItem,
+  })
+
+  // ── 3. Image Upload & Attachment State (อ้างอิง Category) ──
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
+  const [useUrlInput, setUseUrlInput] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   const [formData, setFormData] = useState<ProductEditFormState>({
     name: "",
     sku: "",
-    category: "Smartphones",
+    categoryId: "",
     price: "",
-    stock: "",
+    stock: "0",
     image: "",
-    status: "In Stock",
+    status: "published",
   })
 
-  const [errors, setErrors] = useState<Partial<Record<keyof ProductEditFormState, string>>>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof ProductEditFormState, string>>
+  >({})
 
+  // Populate form data เมื่อ productData โหลดเสร็จ
   useEffect(() => {
-    if (!id) {
-      setIsNotFound(true)
-      return
+    if (productData) {
+      setFormData({
+        name: productData.name || "",
+        sku: productData.sku || productData.slug || "",
+        categoryId: productData.categories?.[0]?.id || "",
+        price: String(productData.sellPrice ?? productData.originalPrice ?? 0),
+        stock: String(productData.stock ?? 0),
+        image: productData.images?.[0] || "",
+        status: productData.status || "published",
+      })
     }
+  }, [productData])
 
-    const found = getProductById(id)
-    if (!found) {
-      setIsNotFound(true)
-      return
+  // Cleanup blob URL on unmount
+  useEffect(() => {
+    return () => {
+      if (formData.image?.startsWith("blob:")) {
+        URL.revokeObjectURL(formData.image)
+      }
     }
-
-    setProduct(found)
-    setFormData({
-      name: found.name,
-      sku: found.sku,
-      category: found.category,
-      price: String(found.price),
-      stock: String(found.stock),
-      image: found.image || "",
-      status: found.status,
-    })
-    setIsNotFound(false)
-  }, [id])
+  }, [formData.image])
 
   const handleFieldChange = <K extends keyof ProductEditFormState>(
     field: K,
     value: ProductEditFormState[K]
   ) => {
-    setFormData((prev) => {
-      const next = { ...prev, [field]: value }
-
-      // Auto update status based on stock if stock changed
-      if (field === "stock") {
-        const units = Number(value)
-        if (units <= 0) {
-          next.status = "Out of Stock"
-        } else if (units < 10) {
-          next.status = "Low Stock"
-        } else {
-          next.status = "In Stock"
-        }
-      }
-
-      return next
-    })
-
+    setFormData((prev) => ({ ...prev, [field]: value }))
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }))
+    }
+  }
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith("image/")) {
+      showToast.error("Only image files are allowed")
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showToast.error("File size exceeds 5MB limit")
+      return
+    }
+
+    if (formData.image?.startsWith("blob:")) {
+      URL.revokeObjectURL(formData.image)
+    }
+
+    setSelectedFile(file)
+    const localBlobUrl = URL.createObjectURL(file)
+    setFormData((prev) => ({ ...prev, image: localBlobUrl }))
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }
+
+  const handleRemoveImage = () => {
+    if (formData.image?.startsWith("blob:")) {
+      URL.revokeObjectURL(formData.image)
+    }
+    setSelectedFile(null)
+    setFormData((prev) => ({ ...prev, image: "" }))
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
     }
   }
 
@@ -100,48 +152,92 @@ export function useProductEdit() {
       newErrors.sku = "SKU identifier code is required"
     }
 
-    if (!formData.price.trim() || isNaN(Number(formData.price)) || Number(formData.price) < 0) {
+    const priceNum = Number(formData.price)
+    if (!formData.price.trim() || isNaN(priceNum) || priceNum < 0) {
       newErrors.price = "Valid price is required"
     }
 
-    if (!formData.stock.trim() || isNaN(Number(formData.stock)) || Number(formData.stock) < 0) {
+    const stockNum = Number(formData.stock)
+    if (!formData.stock.trim() || isNaN(stockNum) || stockNum < 0) {
       newErrors.stock = "Valid stock count is required"
+    }
+
+    if (!formData.categoryId) {
+      newErrors.categoryId = "Category is required"
     }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e?: React.FormEvent) => {
+  // ── 4. Mutation สำหรับ Update และ Delete ──
+  const updateProductMutation = useMutation({
+    mutationFn: (payload: Partial<IProduct>) => updateProduct(id!, payload),
+    onSuccess: () => {
+      showToast.success("Product updated successfully")
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.DASHBOARD.PRODUCTS_LIST],
+      })
+      navigate("/dashboard/product")
+    },
+    onError: (err: any) => {
+      const message = err?.response?.data?.message || "Failed to update product"
+      showToast.error(message)
+    },
+  })
+
+  const deleteProductMutation = useMutation({
+    mutationFn: () => deleteProduct(id!),
+    onSuccess: () => {
+      showToast.success("Product deleted successfully")
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.DASHBOARD.PRODUCTS_LIST],
+      })
+      navigate("/dashboard/product")
+    },
+    onError: (err: any) => {
+      const message = err?.response?.data?.message || "Failed to delete product"
+      showToast.error(message)
+    },
+  })
+
+  const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault()
     if (!id || !validate()) return
 
-    setIsSubmitting(true)
+    try {
+      let finalImageUrl = formData.image || ""
 
-    updateProductInStore(id, {
-      name: formData.name.trim(),
-      sku: formData.sku.trim().toUpperCase(),
-      category: formData.category,
-      price: Number(formData.price) || 0,
-      stock: Number(formData.stock) || 0,
-      image: formData.image.trim(),
-      status: formData.status,
-    })
+      if (selectedFile) {
+        setIsUploading(true)
+        const uploadRes = await uploadImage(selectedFile)
+        finalImageUrl = uploadRes.url
+      }
 
-    setTimeout(() => {
-      setIsSubmitting(false)
-      navigate("/dashboard/product")
-    }, 250)
+      const priceNum = Number(formData.price) || 0
+      const stockNum = Number(formData.stock) || 0
+
+      updateProductMutation.mutate({
+        name: formData.name.trim(),
+        slug: formData.sku.trim().toLowerCase(),
+        sellPrice: priceNum,
+        originalPrice: priceNum,
+        stock: stockNum,
+        images: finalImageUrl ? [finalImageUrl] : [],
+        status: formData.status,
+        categoryId: formData.categoryId,
+      })
+    } catch (error) {
+      console.error("Upload error:", error)
+      showToast.error("Failed to upload image before saving")
+    } finally {
+      setIsUploading(false)
+    }
   }
 
   const handleDelete = () => {
     if (!id) return
-    setIsDeleting(true)
-    deleteProductFromStore(id)
-    setTimeout(() => {
-      setIsDeleting(false)
-      navigate("/dashboard/product")
-    }, 250)
+    deleteProductMutation.mutate()
   }
 
   const handleCancel = () => {
@@ -150,12 +246,22 @@ export function useProductEdit() {
 
   return {
     id,
-    product,
-    isNotFound,
+    product: productData,
+    isNotFound: !isLoadingProduct && (isError || !productData),
+    isLoading: isLoadingProduct,
     formData,
     errors,
-    isSubmitting,
-    isDeleting,
+    categoryOptions,
+    isLoadingCategories,
+    isSubmitting: isUploading || updateProductMutation.isPending,
+    isDeleting: deleteProductMutation.isPending,
+    selectedFile,
+    useUrlInput,
+    toggleUseUrlInput: () => setUseUrlInput((prev) => !prev),
+    fileInputRef,
+    openFileDialog: () => fileInputRef.current?.click(),
+    handleFileSelect,
+    handleRemoveImage,
     handleFieldChange,
     handleSubmit,
     handleDelete,

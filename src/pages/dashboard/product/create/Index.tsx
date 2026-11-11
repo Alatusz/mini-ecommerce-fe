@@ -1,15 +1,12 @@
-/**
- * Create Product — Unslop Redesign (dashboard-design skill)
- * - Wordless: crisp labels and tabular numeric inputs; zero filler prose.
- * - Selection: soft tinted fill with faint ring.
- */
 import { Link } from "react-router-dom"
 import {
   ArrowLeft,
   Check,
-  AlertCircle,
   Loader2,
-  Image as ImageIcon,
+  AlertCircle,
+  ImageIcon,
+  UploadCloud,
+  X,
 } from "lucide-react"
 
 import { useProductCreate } from "./useHooks"
@@ -18,6 +15,16 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
+import { Spinner } from "@/components/ui/spinner"
+import {
+  Attachment,
+  AttachmentMedia,
+  AttachmentContent,
+  AttachmentTitle,
+  AttachmentDescription,
+  AttachmentActions,
+  AttachmentAction,
+} from "@/components/ui/attachment"
 
 export default function DashboardProductCreatePage() {
   const {
@@ -26,6 +33,13 @@ export default function DashboardProductCreatePage() {
     categoryOptions,
     isLoadingCategories,
     isSubmitting,
+    selectedFile,
+    useUrlInput,
+    toggleUseUrlInput,
+    fileInputRef,
+    openFileDialog,
+    handleFileSelect,
+    handleRemoveImage,
     handleNameChange,
     handleFieldChange,
     handleSubmit,
@@ -54,21 +68,20 @@ export default function DashboardProductCreatePage() {
           </Link>
         </div>
 
-        {/* ── Form Card ── */}
-        <Card className="border-border/60 bg-card shadow-2xs">
+        {/* ── Main Form Card ── */}
+        <Card className="border-border/60 shadow-2xs">
           <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Product Title */}
+              {/* Product Name */}
               <div className="space-y-1.5">
                 <Label htmlFor="prod-name" className="text-xs font-medium text-foreground">
-                  Name <span className="text-destructive">*</span>
+                  Product Name <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="prod-name"
-                  placeholder="Sony WH-1000XM5 Wireless Headphones"
+                  placeholder="e.g. Sony WH-1000XM5 Wireless Headphones"
                   value={formData.name}
                   onChange={(e) => handleNameChange(e.target.value)}
-                  autoFocus
                   className={`h-9 text-xs ${
                     errors.name ? "border-destructive focus-visible:ring-destructive" : ""
                   }`}
@@ -89,10 +102,10 @@ export default function DashboardProductCreatePage() {
                   </Label>
                   <Input
                     id="prod-sku"
-                    placeholder="WH-1000XM5-BLK"
+                    placeholder="SONY-WH-1000"
                     value={formData.sku}
                     onChange={(e) => handleFieldChange("sku", e.target.value.toUpperCase())}
-                    className={`h-9 font-mono text-xs uppercase tabular-nums ${
+                    className={`h-9 font-mono text-xs ${
                       errors.sku ? "border-destructive focus-visible:ring-destructive" : ""
                     }`}
                   />
@@ -188,31 +201,116 @@ export default function DashboardProductCreatePage() {
                 </div>
               </div>
 
-              {/* Product Image */}
+              {/* ── Product Image (Attachment Pattern from Category) ── */}
               <div className="space-y-1.5">
-                <Label htmlFor="prod-image" className="text-xs font-medium text-foreground">
-                  Image URL <span className="font-normal text-muted-foreground">(optional)</span>
-                </Label>
-                <div className="flex items-center gap-3">
-                  <div className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border/60 bg-muted/40 p-1">
-                    {formData.image ? (
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-medium text-foreground">
+                    Product Image <span className="font-normal text-muted-foreground">(optional)</span>
+                  </Label>
+                  <button
+                    type="button"
+                    onClick={toggleUseUrlInput}
+                    className="cursor-pointer text-[11px] text-muted-foreground hover:text-foreground"
+                  >
+                    {useUrlInput ? "Upload File instead" : "or enter URL"}
+                  </button>
+                </div>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="hidden"
+                  onChange={handleFileSelect}
+                />
+
+                {useUrlInput ? (
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border/60 bg-muted/40 p-1">
+                      {formData.image ? (
+                        <img
+                          src={formData.image}
+                          alt="Preview"
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      ) : (
+                        <ImageIcon className="size-4 text-muted-foreground" />
+                      )}
+                    </div>
+                    <Input
+                      id="prod-image"
+                      placeholder="https://... or /images/..."
+                      value={formData.image}
+                      onChange={(e) => handleFieldChange("image", e.target.value)}
+                      className="h-9 font-mono text-xs"
+                    />
+                  </div>
+                ) : isSubmitting && selectedFile ? (
+                  /* Attachment Uploading State */
+                  <Attachment state="uploading" className="w-full p-2.5">
+                    <AttachmentMedia variant="icon" className="size-10 rounded-md">
+                      <Spinner className="size-4 text-muted-foreground" />
+                    </AttachmentMedia>
+                    <AttachmentContent>
+                      <AttachmentTitle className="text-xs">
+                        Uploading {selectedFile.name}...
+                      </AttachmentTitle>
+                      <AttachmentDescription className="text-[11px]">
+                        Saving file to server
+                      </AttachmentDescription>
+                    </AttachmentContent>
+                  </Attachment>
+                ) : formData.image ? (
+                  /* Attachment Done / Preview State */
+                  <Attachment state="done" className="w-full p-2">
+                    <AttachmentMedia variant="image" className="size-10 rounded-md">
                       <img
                         src={formData.image}
-                        alt="Preview"
-                        className="max-h-full max-w-full object-contain"
+                        alt="Product preview"
+                        className="size-full object-cover"
                       />
-                    ) : (
-                      <ImageIcon className="size-4 text-muted-foreground" />
-                    )}
-                  </div>
-                  <Input
-                    id="prod-image"
-                    placeholder="/images/hero-airpods.png"
-                    value={formData.image}
-                    onChange={(e) => handleFieldChange("image", e.target.value)}
-                    className="h-9 font-mono text-xs"
-                  />
-                </div>
+                    </AttachmentMedia>
+                    <AttachmentContent>
+                      <AttachmentTitle className="truncate text-xs">
+                        {selectedFile?.name || formData.image.split("/").pop() || "Uploaded Image"}
+                      </AttachmentTitle>
+                      <AttachmentDescription className="text-[11px]">
+                        {selectedFile
+                          ? `${(selectedFile.size / 1024).toFixed(1)} KB · Ready`
+                          : "Ready"}
+                      </AttachmentDescription>
+                    </AttachmentContent>
+                    <AttachmentActions>
+                      <AttachmentAction
+                        type="button"
+                        size="icon-xs"
+                        variant="ghost"
+                        onClick={handleRemoveImage}
+                        className="cursor-pointer text-muted-foreground hover:text-destructive"
+                        title="Remove image"
+                      >
+                        <X className="size-3.5" />
+                      </AttachmentAction>
+                    </AttachmentActions>
+                  </Attachment>
+                ) : (
+                  /* Attachment Idle State (Click to Upload) */
+                  <Attachment
+                    state="idle"
+                    onClick={openFileDialog}
+                    className="w-full cursor-pointer p-2.5 transition-colors hover:bg-muted/40"
+                  >
+                    <AttachmentMedia variant="icon" className="size-10 rounded-md">
+                      <UploadCloud className="size-4 text-muted-foreground" />
+                    </AttachmentMedia>
+                    <AttachmentContent>
+                      <AttachmentTitle className="text-xs">Upload image</AttachmentTitle>
+                      <AttachmentDescription className="text-[11px]">
+                        SVG, PNG, JPG under 5MB
+                      </AttachmentDescription>
+                    </AttachmentContent>
+                  </Attachment>
+                )}
               </div>
 
               {/* Status Segmented Selection */}
