@@ -21,8 +21,16 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
+export type CategorySearchTarget = "name" | "slug"
+
+export const CATEGORY_SEARCH_TARGET_OPTIONS = [
+  { value: "name", label: "Category Name" },
+  { value: "slug", label: "Slug" },
+] as const
+
 export interface CategoryFilterState {
   status: string[]
+  searchBy: CategorySearchTarget[]
 }
 
 interface CategoryFilterDrawerProps {
@@ -39,6 +47,7 @@ export const CATEGORY_STATUS_OPTIONS = [
 
 export const DEFAULT_CATEGORY_FILTERS: CategoryFilterState = {
   status: [],
+  searchBy: [],
 }
 
 export function CategoryFilterDrawer({
@@ -95,6 +104,47 @@ export function CategoryFilterDrawer({
         </SheetHeader>
 
         <div className="flex-1 space-y-5 overflow-y-auto px-6 py-5">
+          {/* Search Target Column */}
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+              Search Target Column
+            </Label>
+            <Select
+              multiple
+              value={draft.searchBy}
+              onValueChange={(values: CategorySearchTarget[]) => {
+                setDraft((prev) => ({ ...prev, searchBy: values }))
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue>
+                  {(value: CategorySearchTarget[]) =>
+                    !value ||
+                    value.length === 0 ||
+                    value.length === CATEGORY_SEARCH_TARGET_OPTIONS.length
+                      ? "All Columns (Default)"
+                      : value
+                          .map(
+                            (v) =>
+                              CATEGORY_SEARCH_TARGET_OPTIONS.find((o) => o.value === v)
+                                ?.label || v
+                          )
+                          .join(", ")
+                  }
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent alignItemWithTrigger={false}>
+                <SelectGroup>
+                  {CATEGORY_SEARCH_TARGET_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="space-y-2">
             <Label className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
               Category Status

@@ -17,7 +17,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { CategoryFilterDrawer } from "./CategoryFilterDrawer"
+import {
+  CategoryFilterDrawer,
+  type CategoryFilterState,
+  type CategorySearchTarget,
+} from "./CategoryFilterDrawer"
 import {
   Select,
   SelectContent,
@@ -60,7 +64,10 @@ interface CategoryTableProps {
   data: CategoryItem[]
   total: number
   selectedStatuses?: string[]
+  selectedSearchBy?: CategorySearchTarget[]
   onStatusFilterChange?: (statuses: string[]) => void
+  onFilterApply?: (filters: CategoryFilterState) => void
+  onFilterReset?: () => void
   onDelete: (category: CategoryItem) => void
   onStatusChange?: (id: string, newStatus: string) => void
   isLoading?: boolean
@@ -70,7 +77,10 @@ export function CategoryTable({
   data,
   total,
   selectedStatuses = [],
+  selectedSearchBy = [],
   onStatusFilterChange,
+  onFilterApply,
+  onFilterReset,
   onDelete,
   onStatusChange,
   isLoading: _isLoading,
@@ -266,11 +276,26 @@ export function CategoryTable({
       manualFiltering={true} // โหมด Server-side: Server เป็นคนค้นหา
       rowCount={total} // ส่งจำนวนแถวทั้งหมด เพื่อคำนวณจำนวนหน้า
       actions={
-        onStatusFilterChange ? (
+        onFilterApply || onStatusFilterChange ? (
           <CategoryFilterDrawer
-            currentFilters={{ status: selectedStatuses }}
-            onApply={(filters) => onStatusFilterChange(filters.status)}
-            onReset={() => onStatusFilterChange([])}
+            currentFilters={{
+              status: selectedStatuses,
+              searchBy: selectedSearchBy,
+            }}
+            onApply={(filters) => {
+              if (onFilterApply) {
+                onFilterApply(filters)
+              } else {
+                onStatusFilterChange?.(filters.status)
+              }
+            }}
+            onReset={() => {
+              if (onFilterReset) {
+                onFilterReset()
+              } else {
+                onStatusFilterChange?.([])
+              }
+            }}
           />
         ) : undefined
       }

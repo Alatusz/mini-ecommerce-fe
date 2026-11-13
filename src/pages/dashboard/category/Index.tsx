@@ -31,7 +31,10 @@ export default function DashboardCategoryPage() {
     isDeleting,
     handleStatusChange,
     selectedStatuses,
+    selectedSearchBy,
     handleStatusFilterChange,
+    handleFilterApply,
+    handleFilterReset,
   } = useCategory()
 
   return (
@@ -71,7 +74,10 @@ export default function DashboardCategoryPage() {
         data={categories}
         total={total}
         selectedStatuses={selectedStatuses}
+        selectedSearchBy={selectedSearchBy}
         onStatusFilterChange={handleStatusFilterChange}
+        onFilterApply={handleFilterApply}
+        onFilterReset={handleFilterReset}
         onDelete={setDeletingCategory}
         onStatusChange={handleStatusChange}
         isLoading={isLoading}
