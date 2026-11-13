@@ -1,3 +1,4 @@
+import { useState, useMemo } from "react"
 import { Link } from "react-router-dom"
 import { ArrowLeft, Check, AlertCircle, Loader2 } from "lucide-react"
 import { cn } from "cn"
@@ -8,6 +9,14 @@ import { FormField } from "@/components/common/FormField"
 import { RichTextEditor } from "@/components/common/RichTextEditor"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Card,
   CardHeader,
@@ -41,6 +50,15 @@ export default function DashboardProductEditPage() {
     handleSubmit,
     handleCancel,
   } = useProductEdit()
+
+  const [categorySearch, setCategorySearch] = useState("")
+  const filteredCategoryOptions = useMemo(() => {
+    const query = categorySearch.toLowerCase().trim()
+    if (!query) return categoryOptions
+    return categoryOptions.filter((cat) =>
+      cat.name.toLowerCase().includes(query)
+    )
+  }, [categoryOptions, categorySearch])
 
   if (isNotFound) {
     return (
@@ -246,33 +264,55 @@ export default function DashboardProductEditPage() {
                 required
                 error={errors.categoryId}
               >
-                <select
-                  id="edit-pcat"
-                  value={formData.categoryId}
-                  onChange={(e) =>
-                    handleFieldChange("categoryId", e.target.value)
+                <Select
+                  value={formData.categoryId || undefined}
+                  onValueChange={(val) =>
+                    handleFieldChange("categoryId", val ?? "")
                   }
                   disabled={isLoadingCategories || isSubmitting || isDeleting}
-                  className={cn(
-                    "h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-2xs focus-visible:outline-none",
-                    errors.categoryId &&
-                      "border-destructive focus-visible:ring-destructive"
-                  )}
                 >
-                  {categoryOptions.length === 0 ? (
-                    <option value="">
-                      {isLoadingCategories
-                        ? "Loading categories..."
-                        : "No categories found"}
-                    </option>
-                  ) : (
-                    categoryOptions.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </option>
-                    ))
-                  )}
-                </select>
+                  <SelectTrigger
+                    id="edit-pcat"
+                    className={cn(
+                      "w-full",
+                      errors.categoryId &&
+                        "border-destructive focus-visible:ring-destructive"
+                    )}
+                  >
+                    <SelectValue>
+                      {(val: string) =>
+                        categoryOptions.find((c) => c.id === val)?.name ||
+                        (isLoadingCategories
+                          ? "Loading categories..."
+                          : "Select category")
+                      }
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent alignItemWithTrigger={false}>
+                    <div className="border-b p-1.5">
+                      <Input
+                        type="text"
+                        placeholder="Search categories..."
+                        value={categorySearch}
+                        onChange={(e) => setCategorySearch(e.target.value)}
+                        onKeyDown={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                    <SelectGroup className="max-h-56 overflow-y-auto p-1">
+                      {filteredCategoryOptions.length === 0 ? (
+                        <div className="py-3 text-center text-xs text-muted-foreground">
+                          No categories found
+                        </div>
+                      ) : (
+                        filteredCategoryOptions.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
               </FormField>
 
               <FormField label="Product Status">
