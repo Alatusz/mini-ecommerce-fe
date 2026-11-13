@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { useCategoryOptions } from "../useHooks"
+import { useCategoryOptions } from "../useHubs"
 import {
   Select,
   SelectContent,

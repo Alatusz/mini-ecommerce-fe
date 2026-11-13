@@ -10,23 +10,13 @@ import {
 import { queryClient } from "@/lib/queryClient"
 import { showToast } from "@/lib/toast"
 import { useSearchParams } from "react-router-dom"
-import { getCategories, getCategoryOptions } from "@/services/category.services"
+import { getCategories } from "@/services/category.services"
 import {
   type AdvancedFilterState,
 } from "./common/ProductFilterDrawer"
+export { useCategoryOptions } from "./useHubs"
 
 export type { ProductItem }
-/**
- * Hook สำหรับดึงตัวเลือก Categories สำหรับ Dropdown / Filter ในโมดูล Product
- * รองรับการส่ง limit เพื่อปรับขนาดข้อมูล และมีแคช 5 นาทีตามมาตรฐาน
- */
-export function useCategoryOptions(limit: number = 100) {
-  return useQuery({
-    queryKey: [QUERY_KEYS.OPTIONS.CATEGORIES, { limit }],
-    queryFn: () => getCategoryOptions({ limit }),
-    staleTime: 1000 * 60 * 5,
-  })
-}
 
 const defaultStats: ProductStats = {
   totalSKUs: 0,
@@ -95,7 +85,6 @@ export function useProduct() {
     data: { products = [], stats = defaultStats, total = 0 } = {},
     isLoading,
     isError,
-    isPlaceholderData,
   } = useQuery({
     queryKey: [
       QUERY_KEYS.DASHBOARD.PRODUCTS_LIST,
@@ -177,40 +166,6 @@ export function useProduct() {
     )
   }
 
-  const handlePageChange = (newPage: number) => {
-    updateUrlParams({ page: newPage })
-  }
-
-  const handleLimitChange = (newLimit: number) => {
-    updateUrlParams({ limit: newLimit, page: 1 })
-  }
-
-  const handleSearchChange = (newSearch: string) => {
-    updateUrlParams({ search: newSearch, page: 1 })
-  }
-
-  const handleStatusFilterChange = (newStatuses: string[]) => {
-    updateUrlParams({
-      status: newStatuses.length > 0 ? newStatuses.join(",") : undefined,
-      page: 1,
-    })
-  }
-
-  const handleStockStatusFilterChange = (newStockStatuses: string[]) => {
-    updateUrlParams({
-      stockStatus:
-        newStockStatuses.length > 0 ? newStockStatuses.join(",") : undefined,
-      page: 1,
-    })
-  }
-
-  const handleCategoryFilterChange = (newCategories: string[]) => {
-    updateUrlParams({
-      category: newCategories.length > 0 ? newCategories.join(",") : undefined,
-      page: 1,
-    })
-  }
-
   // ── 5. Advanced Filter Handlers
   const handleApplyAdvancedFilters = ({
     searchBy: newSearchBy,
@@ -262,17 +217,10 @@ export function useProduct() {
     selectedStatuses,
     selectedStockStatuses,
     selectedCategories,
-    handleStatusFilterChange,
-    handleStockStatusFilterChange,
-    handleCategoryFilterChange,
     handleApplyAdvancedFilters,
     handleResetFilters,
-    handlePageChange,
-    handleLimitChange,
-    handleSearchChange,
     isLoading,
     isError,
-    isPlaceholderData,
     deletingProduct,
     setDeletingProduct,
     handleDeleteProduct,
