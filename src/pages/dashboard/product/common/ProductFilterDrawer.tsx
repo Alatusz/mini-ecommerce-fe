@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react"
-import { Filter, Search } from "lucide-react"
+import { Filter } from "lucide-react"
 
 import {
   Sheet,
@@ -24,11 +24,8 @@ import {
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Field } from "@/components/ui/field"
-
-export type SearchTarget = "name" | "sku"
-
 export interface AdvancedFilterState {
-  searchBy: SearchTarget[]
+  searchBy: string[]
   status: string[]
   stockStatus: string[]
   category: string[]
@@ -151,7 +148,7 @@ export function ProductFilterDrawer({
             <Select
               multiple
               value={draft.searchBy}
-              onValueChange={(values: SearchTarget[]) => {
+              onValueChange={(values) => {
                 setDraft((prev) => ({ ...prev, searchBy: values }))
               }}
             >
