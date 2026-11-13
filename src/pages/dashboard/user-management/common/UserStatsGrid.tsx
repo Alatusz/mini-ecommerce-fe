@@ -19,27 +19,28 @@ export function UserStatsGrid({
       <StatCard
         title="Total Users"
         value={total}
-        icon={Users}
+        icon={<Users className="h-4 w-4" />}
         description="Registered accounts"
       />
       <StatCard
         title="Admin & Staff"
         value={staffCount}
-        icon={ShieldCheck}
+        icon={<ShieldCheck className="h-4 w-4" />}
         description="Privileged team members"
       />
       <StatCard
         title="Customers"
         value={customerCount}
-        icon={UserCheck}
+        icon={<UserCheck className="h-4 w-4" />}
         description="Storefront shoppers"
       />
       <StatCard
         title="Total Orders"
         value={totalOrders}
-        icon={ShoppingBag}
+        icon={<ShoppingBag className="h-4 w-4" />}
         description="Across listed users"
       />
     </div>
   )
 }
+

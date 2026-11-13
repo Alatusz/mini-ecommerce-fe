@@ -1,5 +1,5 @@
 import { useMemo } from "react"
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react"
+import { MoreHorizontal, Trash2 } from "lucide-react"
 import {
   DataGrid,
   createColumnHelper,
@@ -10,33 +10,38 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   UserFilterDrawer,
   type UserFilterState,
 } from "./UserFilterDrawer"
-import { type UserItem, type UserSearchTarget } from "../useHubs"
+import {
+  USER_STATUS_OPTIONS,
+  type UserItem,
+  type UserSearchTarget,
+  type UserStatus,
+} from "../useHubs"
 
 const userColumnHelper = createColumnHelper<DataGridFeatures, UserItem>()
 
 interface UserTableProps {
   data: UserItem[]
   total: number
-  isLoading: boolean
-  page: number
-  limit: number
-  search: string
   selectedSearchBy: UserSearchTarget[]
   selectedRoles: string[]
   selectedStatuses: string[]
-  onPageChange: (page: number) => void
-  onLimitChange: (limit: number) => void
-  onSearchChange: (search: string) => void
   onFilterApply: (filters: UserFilterState) => void
   onFilterReset: () => void
-  onEdit: (user: UserItem) => void
+  onStatusChange: (id: string, status: UserStatus) => void
+  isUpdatingStatus?: boolean
   onDelete: (user: UserItem) => void
 }
 
@@ -55,26 +60,19 @@ function getFullName(user: UserItem) {
 export function UserTable({
   data,
   total,
-  isLoading,
-  page,
-  limit,
-  search,
   selectedSearchBy,
   selectedRoles,
   selectedStatuses,
-  onPageChange,
-  onLimitChange,
-  onSearchChange,
   onFilterApply,
   onFilterReset,
-  onEdit,
+  onStatusChange,
+  isUpdatingStatus = false,
   onDelete,
 }: UserTableProps) {
   const columns = useMemo(
     () => [
       userColumnHelper.accessor("email", {
         header: "User",
-        size: 260,
         cell: (info) => {
           const user = info.row.original
           return (
@@ -96,7 +94,6 @@ export function UserTable({
       }),
       userColumnHelper.accessor("role", {
         header: "Role",
-        size: 110,
         cell: (info) => {
           const role = info.getValue()
           const label = role.charAt(0).toUpperCase() + role.slice(1)
@@ -107,9 +104,50 @@ export function UserTable({
           )
         },
       }),
+      userColumnHelper.accessor("status", {
+        header: "Status",
+        cell: (info) => {
+          const user = info.row.original
+          const currentStatus = info.getValue() || "active"
+          const statusOpt = USER_STATUS_OPTIONS.find(
+            (s) => s.id === currentStatus
+          )
+          return (
+            <Select
+              value={currentStatus}
+              disabled={isUpdatingStatus}
+              onValueChange={(val) =>
+                onStatusChange(user.id, val as UserStatus)
+              }
+            >
+              <SelectTrigger className="h-7 w-[120px] text-xs">
+                <SelectValue>
+                  <span className="flex items-center gap-1.5">
+                    <span
+                      className={`size-2 shrink-0 rounded-full ${statusOpt?.dot ?? "bg-zinc-400"}`}
+                    />
+                    <span>{statusOpt?.label ?? currentStatus}</span>
+                  </span>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {USER_STATUS_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.id} value={opt.id}>
+                    <span className="flex items-center gap-2">
+                      <span
+                        className={`size-2 shrink-0 rounded-full ${opt.dot}`}
+                      />
+                      <span>{opt.label}</span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )
+        },
+      }),
       userColumnHelper.accessor("phone", {
         header: "Phone",
-        size: 140,
         cell: (info) => (
           <span className="text-xs text-muted-foreground tabular-nums">
             {info.getValue() || "—"}
@@ -118,7 +156,6 @@ export function UserTable({
       }),
       userColumnHelper.accessor("ordersCount", {
         header: "Orders",
-        size: 90,
         cell: (info) => (
           <span className="text-xs font-medium tabular-nums">
             {info.getValue() ?? 0}
@@ -127,7 +164,6 @@ export function UserTable({
       }),
       userColumnHelper.accessor("createdAt", {
         header: "Joined",
-        size: 130,
         cell: (info) => {
           const raw = info.getValue()
           const formatted = raw
@@ -147,7 +183,6 @@ export function UserTable({
       userColumnHelper.display({
         id: "actions",
         header: "",
-        size: 60,
         cell: (info) => {
           const user = info.row.original
           return (
@@ -166,14 +201,6 @@ export function UserTable({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40">
                   <DropdownMenuItem
-                    className="cursor-pointer"
-                    onClick={() => onEdit(user)}
-                  >
-                    <Pencil className="mr-2 h-3.5 w-3.5" />
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
                     className="cursor-pointer text-destructive focus:text-destructive"
                     onClick={() => onDelete(user)}
                   >
@@ -187,33 +214,20 @@ export function UserTable({
         },
       }),
     ],
-    [onEdit, onDelete]
+    [onStatusChange, isUpdatingStatus, onDelete]
   )
 
   return (
     <DataGrid
       data={data}
       columns={columns}
-      rowCount={total}
-      isLoading={isLoading}
-      manualPagination
-      manualFiltering
-      pagination={{ pageIndex: page - 1, pageSize: limit }}
-      onPaginationChange={(updater) => {
-        const next =
-          typeof updater === "function"
-            ? updater({ pageIndex: page - 1, pageSize: limit })
-            : updater
-        if (next.pageSize !== limit) {
-          onLimitChange(next.pageSize)
-        } else if (next.pageIndex + 1 !== page) {
-          onPageChange(next.pageIndex + 1)
-        }
-      }}
-      searchValue={search}
-      onSearchChange={onSearchChange}
+      urlSync={true}
+      defaultPageSize={10}
       searchPlaceholder="Search users..."
-      toolbarActions={
+      manualPagination={true}
+      manualFiltering={true}
+      rowCount={total}
+      actions={
         <UserFilterDrawer
           currentFilters={{
             searchBy: selectedSearchBy,
@@ -227,3 +241,4 @@ export function UserTable({
     />
   )
 }
+

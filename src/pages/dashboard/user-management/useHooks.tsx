@@ -1,17 +1,18 @@
 import { useState, useMemo } from "react"
-import { useNavigate, useSearchParams } from "react-router-dom"
+import { useSearchParams } from "react-router-dom"
 import {
   useUsersListQuery,
+  usePatchUserStatusMutation,
   useDeleteUserMutation,
   type UserItem,
   type UserSearchTarget,
+  type UserStatus,
 } from "./useHubs"
 import { type UserFilterState } from "./common/UserFilterDrawer"
 
 export type { UserItem }
 
 export function useUserManagement() {
-  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [deletingUser, setDeletingUser] = useState<UserItem | null>(null)
 
@@ -55,6 +56,7 @@ export function useUserManagement() {
     search,
     searchBy: rawSearchBy,
     role: rawRole,
+    status: rawStatus,
   })
 
   const users: UserItem[] = Array.isArray(data) ? data : (data?.data ?? [])
@@ -68,6 +70,7 @@ export function useUserManagement() {
   const customerCount = users.filter((u) => u.role === "customer").length
   const totalOrders = users.reduce((sum, u) => sum + (u.ordersCount ?? 0), 0)
 
+  const patchStatusMutation = usePatchUserStatusMutation()
   const deleteMutation = useDeleteUserMutation(() => setDeletingUser(null))
 
   const updateUrlParams = (
@@ -120,12 +123,8 @@ export function useUserManagement() {
     })
   }
 
-  const handleCreate = () => {
-    navigate("/dashboard/users/create")
-  }
-
-  const handleEdit = (user: UserItem) => {
-    navigate(`/dashboard/users/edit/${user.id}`)
+  const handleStatusChange = (id: string, status: UserStatus) => {
+    patchStatusMutation.mutate({ id, status })
   }
 
   const handleDeleteConfirm = (id: string) => {
@@ -148,13 +147,13 @@ export function useUserManagement() {
     deletingUser,
     setDeletingUser,
     isDeleting: deleteMutation.isPending,
+    isUpdatingStatus: patchStatusMutation.isPending,
     handlePageChange,
     handleLimitChange,
     handleSearchChange,
     handleFilterApply,
     handleFilterReset,
-    handleCreate,
-    handleEdit,
+    handleStatusChange,
     handleDeleteConfirm,
   }
 }

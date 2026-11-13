@@ -1,21 +1,17 @@
 import { useMutation, useQuery, keepPreviousData } from "@tanstack/react-query"
-import { useNavigate } from "react-router-dom"
 import { QUERY_KEYS } from "@/lib/constants"
 import {
   getUsers,
-  getUserById,
-  createUser,
-  updateUser,
   deleteUser,
+  patchUserStatus,
   type UserItem,
   type UserRole,
-  type CreateUserPayload,
-  type UpdateUserPayload,
+  type UserStatus,
 } from "@/services/user.services"
 import { queryClient } from "@/lib/queryClient"
 import { showToast } from "@/lib/toast"
 
-export type { UserItem, UserRole, CreateUserPayload, UpdateUserPayload }
+export type { UserItem, UserRole, UserStatus }
 
 export type UserSearchTarget = "name" | "email"
 
@@ -42,6 +38,7 @@ export function useUsersListQuery(params: {
   search: string
   searchBy: string
   role: string
+  status: string
 }) {
   return useQuery({
     queryKey: [QUERY_KEYS.DASHBOARD.USERS_LIST, params],
@@ -52,49 +49,26 @@ export function useUsersListQuery(params: {
         search: params.search || undefined,
         searchBy: params.searchBy || undefined,
         role: params.role || undefined,
+        status: params.status || undefined,
       }),
     placeholderData: keepPreviousData,
   })
 }
 
-export function useUserDetailQuery(id?: string) {
-  return useQuery({
-    queryKey: [QUERY_KEYS.DASHBOARD.USERS_LIST, "detail", id],
-    queryFn: () => getUserById(id!),
-    enabled: Boolean(id),
-  })
-}
-
-export function useCreateUserMutation() {
-  const navigate = useNavigate()
+export function usePatchUserStatusMutation() {
   return useMutation({
-    mutationFn: (payload: CreateUserPayload) => createUser(payload),
+    mutationFn: ({ id, status }: { id: string; status: UserStatus }) =>
+      patchUserStatus(id, status),
     onSuccess: () => {
-      showToast.success("User created successfully")
+      showToast.success("User status updated")
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.DASHBOARD.USERS_LIST],
       })
-      navigate("/dashboard/users")
     },
     onError: (err: any) => {
-      showToast.error(err?.response?.data?.message || "Failed to create user")
-    },
-  })
-}
-
-export function useUpdateUserMutation(id: string) {
-  const navigate = useNavigate()
-  return useMutation({
-    mutationFn: (payload: UpdateUserPayload) => updateUser(id, payload),
-    onSuccess: () => {
-      showToast.success("User updated successfully")
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.DASHBOARD.USERS_LIST],
-      })
-      navigate("/dashboard/users")
-    },
-    onError: (err: any) => {
-      showToast.error(err?.response?.data?.message || "Failed to update user")
+      showToast.error(
+        err?.response?.data?.message || "Failed to update user status"
+      )
     },
   })
 }

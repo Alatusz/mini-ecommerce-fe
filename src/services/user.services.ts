@@ -35,11 +35,13 @@ export const changePassword = async (data: IChangePassword) => {
 
 // ── Admin / Dashboard User Management ──
 export type UserRole = "admin" | "staff" | "customer"
+export type UserStatus = "active" | "inactive" | "suspended"
 
 export interface UserItem {
   id: string
   email: string
   role: UserRole
+  status: UserStatus
   firstName?: string | null
   lastName?: string | null
   phone?: string | null
@@ -55,6 +57,7 @@ export interface GetUsersParams {
   search?: string
   searchBy?: string
   role?: string
+  status?: string
 }
 
 export interface CreateUserPayload {
@@ -99,5 +102,10 @@ export const updateUser = async (id: string, data: UpdateUserPayload) => {
 
 export const deleteUser = async (id: string) => {
   const response = await apiClient.delete(`/users/${id}`)
+  return response.data
+}
+
+export const patchUserStatus = async (id: string, status: UserStatus) => {
+  const response = await apiClient.patch(`/users/${id}/status`, { status })
   return response.data
 }

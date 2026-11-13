@@ -1,6 +1,4 @@
-import { Plus } from "lucide-react"
 import { PageContent } from "@/components/common/PageContent"
-import { Button } from "@/components/ui/button"
 import { useUserManagement } from "./useHooks"
 import { UserStatsGrid } from "./common/UserStatsGrid"
 import { UserTable } from "./common/UserTable"
@@ -19,10 +17,10 @@ export default function DashboardUserManagementPage() {
     deletingUser,
     setDeletingUser,
     isDeleting,
+    isUpdatingStatus,
     handleFilterApply,
     handleFilterReset,
-    handleCreate,
-    handleEdit,
+    handleStatusChange,
     handleDeleteConfirm,
   } = useUserManagement()
 
@@ -35,10 +33,6 @@ export default function DashboardUserManagementPage() {
             Manage customer, staff, and administrator accounts.
           </p>
         </div>
-        <Button onClick={handleCreate} className="cursor-pointer gap-1.5">
-          <Plus className="h-4 w-4" />
-          Add User
-        </Button>
       </div>
 
       <UserStatsGrid
@@ -56,7 +50,8 @@ export default function DashboardUserManagementPage() {
         selectedStatuses={selectedStatuses}
         onFilterApply={handleFilterApply}
         onFilterReset={handleFilterReset}
-        onEdit={handleEdit}
+        onStatusChange={handleStatusChange}
+        isUpdatingStatus={isUpdatingStatus}
         onDelete={setDeletingUser}
       />
 
