@@ -70,7 +70,9 @@ export function ProductTable({
           <div className="flex items-center gap-3">
             <div className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border/40 bg-muted/50 p-1">
               <img
-                src={info.row.original.images?.[0] || "/images/detail-purple.png"}
+                src={
+                  info.row.original.images?.[0] || "/images/detail-purple.png"
+                }
                 alt={info.getValue()}
                 className="max-h-full max-w-full object-contain"
               />
@@ -104,8 +106,7 @@ export function ProductTable({
           const price = info.getValue() ?? info.row.original.originalPrice ?? 0
           return (
             <span className="text-xs font-semibold text-foreground tabular-nums">
-              $
-              {price.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+              ${price.toLocaleString("en-US", { minimumFractionDigits: 2 })}
             </span>
           )
         },
@@ -177,13 +178,7 @@ export function ProductTable({
       columns={columns}
       urlSync={true}
       defaultPageSize={10}
-      searchPlaceholder={
-        filters.searchBy === "name"
-          ? "Search product name..."
-          : filters.searchBy === "sku"
-            ? "Search SKU..."
-            : "Search products or SKU..."
-      }
+      searchPlaceholder="Search..."
       manualPagination={true}
       manualFiltering={true}
       rowCount={total}

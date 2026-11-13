@@ -9,10 +9,6 @@ export interface ProductStatsGridProps {
   outOfStockCount: number
 }
 
-/**
- * ProductStatsGrid
- * Displays four standardized KPI stat cards for product inventory metrics.
- */
 export function ProductStatsGrid({
   total,
   totalUnits,
@@ -62,4 +58,3 @@ export function ProductStatsGrid({
     </div>
   )
 }
-
