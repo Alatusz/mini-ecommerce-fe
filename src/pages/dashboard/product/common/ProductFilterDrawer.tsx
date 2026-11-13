@@ -92,15 +92,16 @@ export function ProductFilterDrawer({
   }, [open, currentFilters])
 
   const handleApply = () => {
-    onApply({
-      ...draft,
-    })
+    onApply(draft)
+
     setOpen(false)
   }
 
   const handleReset = () => {
     setDraft(DEFAULT_FILTERS)
+
     onReset()
+    
     setOpen(false)
   }
 
