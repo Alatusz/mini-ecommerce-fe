@@ -1,6 +1,6 @@
 import { useMemo } from "react"
 import { Link } from "react-router-dom"
-import { Tags, Pencil, Trash2, MoreHorizontal, Filter } from "lucide-react"
+import { Tags, Pencil, Trash2, MoreHorizontal } from "lucide-react"
 import { cn } from "cn"
 import { capitalizeFirstLetter } from "@/lib/capitalizeFirstLetter"
 
@@ -10,17 +10,14 @@ import {
   type DataGridFeatures,
 } from "@/components/common/data-grid"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuCheckboxItem,
-  DropdownMenuGroup,
-  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu"
+import { CategoryFilterDrawer } from "./CategoryFilterDrawer"
 import {
   Select,
   SelectContent,
@@ -270,82 +267,11 @@ export function CategoryTable({
       rowCount={total} // ส่งจำนวนแถวทั้งหมด เพื่อคำนวณจำนวนหน้า
       actions={
         onStatusFilterChange ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={cn(
-                    "h-9 cursor-pointer gap-1.5 border-border/70 text-xs",
-                    selectedStatuses.length > 0 &&
-                      "border-foreground/40 bg-muted/60"
-                  )}
-                >
-                  <Filter className="size-3.5 text-muted-foreground" />
-                  <span>Status</span>
-                  {selectedStatuses.length > 0 && (
-                    <Badge
-                      variant="secondary"
-                      className="ml-0.5 rounded-full px-1.5 py-0 text-[10px] font-semibold"
-                    >
-                      {selectedStatuses.length}
-                    </Badge>
-                  )}
-                </Button>
-              }
-            />
-
-            <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuGroup>
-                <DropdownMenuLabel className="text-xs">
-                  Filter by Status
-                </DropdownMenuLabel>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-
-              <DropdownMenuGroup>
-                {[
-                  { id: "active", label: "Active", dot: "bg-emerald-500" },
-                  { id: "draft", label: "Draft", dot: "bg-amber-500" },
-                  { id: "archived", label: "Archived", dot: "bg-zinc-400" },
-                ].map((item) => {
-                  const isChecked = selectedStatuses.includes(item.id)
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={item.id}
-                      className="cursor-pointer text-xs"
-                      checked={isChecked}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          onStatusFilterChange([...selectedStatuses, item.id])
-                        } else {
-                          onStatusFilterChange(
-                            selectedStatuses.filter((s) => s !== item.id)
-                          )
-                        }
-                      }}
-                    >
-                      <span className={cn("size-2 rounded-full", item.dot)} />
-                      <span>{item.label}</span>
-                    </DropdownMenuCheckboxItem>
-                  )
-                })}
-              </DropdownMenuGroup>
-
-              {selectedStatuses.length > 0 && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="cursor-pointer justify-center text-xs text-muted-foreground hover:text-foreground"
-                    onClick={() => onStatusFilterChange([])}
-                  >
-                    Clear Filter
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <CategoryFilterDrawer
+            currentFilters={{ status: selectedStatuses }}
+            onApply={(filters) => onStatusFilterChange(filters.status)}
+            onReset={() => onStatusFilterChange([])}
+          />
         ) : undefined
       }
     />

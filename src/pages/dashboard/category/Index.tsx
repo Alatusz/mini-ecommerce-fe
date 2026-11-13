@@ -5,12 +5,12 @@
  * - Quiet: monochrome KPI icons; warm amber only when empty/draft categories need attention.
  */
 import { Link } from "react-router-dom"
-import { Plus, Tags, Package, AlertTriangle, EyeOff } from "lucide-react"
+import { Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { StatCard } from "@/components/common/StatCard"
 import { PageContent } from "@/components/common/PageContent"
 import { useCategory } from "./useHooks"
+import { CategoryStatsGrid } from "./common/CategoryStatsGrid"
 import { CategoryTable } from "./common/CategoryTable"
 import { CategoryDeleteDialog } from "./common/CategoryDeleteDialog"
 
@@ -56,40 +56,15 @@ export default function DashboardCategoryPage() {
       </div>
 
       {/* ── KPI Strip (4 Monochrome-Icon Cards) ── */}
-      <div className="grid grid-cols-4 gap-4">
-        <StatCard
-          title="Total Categories"
-          value={total}
-          icon={<Tags className="size-3.5" />}
-          description={`${activeCount} active · ${archivedCount} archived`}
-        />
-
-        <StatCard
-          title="Assigned Products"
-          value={totalProducts.toLocaleString()}
-          icon={<Package className="size-3.5" />}
-          description={`${avgProducts} avg / category`}
-        />
-
-        <StatCard
-          title="Empty Categories"
-          value={emptyCount}
-          icon={<AlertTriangle className="size-3.5" />}
-          valueClassName={
-            emptyCount > 0
-              ? "text-amber-600 dark:text-amber-400"
-              : "text-foreground"
-          }
-          description={emptyCount > 0 ? "0 products assigned" : "All populated"}
-        />
-
-        <StatCard
-          title="Drafts & Hidden"
-          value={draftCount + archivedCount}
-          icon={<EyeOff className="size-3.5" />}
-          description={`${draftCount} draft · ${archivedCount} archived`}
-        />
-      </div>
+      <CategoryStatsGrid
+        total={total}
+        activeCount={activeCount}
+        draftCount={draftCount}
+        archivedCount={archivedCount}
+        totalProducts={totalProducts}
+        emptyCount={emptyCount}
+        avgProducts={avgProducts}
+      />
 
       {/* ── TanStack DataGrid Table ── */}
       <CategoryTable
