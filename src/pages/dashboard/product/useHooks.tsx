@@ -12,6 +12,9 @@ import { queryClient } from "@/lib/queryClient"
 import { showToast } from "@/lib/toast"
 import { useSearchParams } from "react-router-dom"
 import { getCategories, getCategoryOptions } from "@/services/category.services"
+import {
+  type AdvancedFilterState,
+} from "./common/ProductFilterDrawer"
 
 export type { ProductItem }
 export { productCategories }
@@ -46,13 +49,21 @@ export function useProduct() {
   const page = Math.max(1, Number(searchParams.get("page")) || 1)
   const limit = Math.max(1, Number(searchParams.get("limit")) || 10)
   const search = searchParams.get("search") || ""
-  const searchBy =
-    (searchParams.get("searchBy") as "all" | "name" | "sku") || "all"
+  const rawSearchBy = searchParams.get("searchBy") || ""
   const rawStatus = searchParams.get("status") || ""
   const rawStockStatus = searchParams.get("stockStatus") || ""
   const rawCategory = searchParams.get("category") || ""
 
-  // แปลง status จาก URL comma string เป็น string[] (รองรับ Multi-Select สำหรับ Lifecycle)
+  const selectedSearchBy = useMemo(() => {
+    return rawSearchBy
+      ? rawSearchBy
+          .split(",")
+          .map((s) => s.trim().toLowerCase())
+          .filter(Boolean)
+      : []
+  }, [rawSearchBy])
+
+  // แปลง status จาก URL comma string เป็น string[] (รองรับ Multi-Select)
   const selectedStatuses = useMemo(() => {
     return rawStatus
       ? rawStatus
@@ -62,7 +73,7 @@ export function useProduct() {
       : []
   }, [rawStatus])
 
-  // แปลง stockStatus จาก URL comma string เป็น string[] (รองรับ Multi-Select สำหรับ Stock)
+  // แปลง stockStatus จาก URL comma string เป็น string[] (รองรับ Multi-Select)
   const selectedStockStatuses = useMemo(() => {
     return rawStockStatus
       ? rawStockStatus
@@ -82,7 +93,7 @@ export function useProduct() {
       : []
   }, [rawCategory])
 
-  // ── 2. ดึงข้อมูลสินค้าและสถิติพร้อมกันจาก Backend ──
+  // Query Data
   const {
     data: { products = [], stats = defaultStats, total = 0 } = {},
     isLoading,
@@ -95,7 +106,7 @@ export function useProduct() {
         page,
         limit,
         search,
-        searchBy,
+        searchBy: rawSearchBy,
         status: rawStatus,
         stockStatus: rawStockStatus,
         category: rawCategory,
@@ -106,7 +117,7 @@ export function useProduct() {
         page,
         limit,
         search,
-        searchBy: searchBy !== "all" ? searchBy : undefined,
+        searchBy: rawSearchBy || undefined,
         status: rawStatus || undefined,
         stockStatus: rawStockStatus || undefined,
         category: rawCategory || undefined,
@@ -124,7 +135,7 @@ export function useProduct() {
     queryFn: () => getCategories(),
   })
 
-  // ── 3. Mutation สำหรับลบสินค้า ──
+  // Mutation สำหรับลบสินค้า
   const deleteProductMutation = useMutation({
     mutationFn: (id: string) => deleteProduct(id),
     onSuccess: () => {
@@ -132,10 +143,12 @@ export function useProduct() {
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.DASHBOARD.PRODUCTS_LIST],
       })
+
       setDeletingProduct(null)
     },
     onError: (err: any) => {
       const message = err?.response?.data?.message || "Failed to delete product"
+
       showToast.error(message)
     },
   })
@@ -144,13 +157,14 @@ export function useProduct() {
     deleteProductMutation.mutate(id)
   }
 
-  // ── 4. URL Update Handlers ──
+  // URL Update Handlers
   const updateUrlParams = (
     newParams: Record<string, string | number | undefined>
   ) => {
     setSearchParams(
       (prev) => {
         const next = new URLSearchParams(prev)
+
         Object.entries(newParams).forEach(([key, val]) => {
           if (val === undefined || val === "" || val === null) {
             next.delete(key)
@@ -158,8 +172,10 @@ export function useProduct() {
             next.set(key, String(val))
           }
         })
+
         return next
       },
+
       { replace: true }
     )
   }
@@ -198,20 +214,15 @@ export function useProduct() {
     })
   }
 
-  // ── 5. Advanced Filter Handlers (Applied from Popover) ──
+  // ── 5. Advanced Filter Handlers
   const handleApplyAdvancedFilters = ({
     searchBy: newSearchBy,
     status: newStatuses,
     stockStatus: newStockStatuses,
     category: newCategories,
-  }: {
-    searchBy?: "all" | "name" | "sku"
-    status?: string[]
-    stockStatus?: string[]
-    category?: string[]
-  }) => {
+  }: AdvancedFilterState) => {
     updateUrlParams({
-      searchBy: newSearchBy && newSearchBy !== "all" ? newSearchBy : undefined,
+      searchBy: newSearchBy.length === 1 ? newSearchBy[0] : undefined,
       status:
         newStatuses && newStatuses.length > 0
           ? newStatuses.join(",")
@@ -230,6 +241,7 @@ export function useProduct() {
 
   const handleResetFilters = () => {
     updateUrlParams({
+      search: undefined,
       searchBy: undefined,
       status: undefined,
       stockStatus: undefined,
@@ -249,7 +261,7 @@ export function useProduct() {
     page,
     limit,
     search,
-    searchBy,
+    selectedSearchBy,
     selectedStatuses,
     selectedStockStatuses,
     selectedCategories,

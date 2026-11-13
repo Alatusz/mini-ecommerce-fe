@@ -17,7 +17,7 @@ export default function DashboardProductPage() {
     lowStockCount,
     outOfStockCount,
     totalUnits,
-    searchBy,
+    selectedSearchBy,
     selectedStatuses,
     selectedStockStatuses,
     selectedCategories,
@@ -62,7 +62,7 @@ export default function DashboardProductPage() {
         data={products}
         total={total}
         filters={{
-          searchBy,
+          searchBy: selectedSearchBy,
           status: selectedStatuses,
           stockStatus: selectedStockStatuses,
           category: selectedCategories,
