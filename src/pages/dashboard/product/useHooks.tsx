@@ -7,7 +7,6 @@ import {
   type ProductItem,
   type ProductStats,
 } from "@/services/product.services"
-import { productCategories } from "./common/mockProduct"
 import { queryClient } from "@/lib/queryClient"
 import { showToast } from "@/lib/toast"
 import { useSearchParams } from "react-router-dom"
@@ -17,8 +16,6 @@ import {
 } from "./common/ProductFilterDrawer"
 
 export type { ProductItem }
-export { productCategories }
-
 /**
  * Hook สำหรับดึงตัวเลือก Categories สำหรับ Dropdown / Filter ในโมดูล Product
  * รองรับการส่ง limit เพื่อปรับขนาดข้อมูล และมีแคช 5 นาทีตามมาตรฐาน
