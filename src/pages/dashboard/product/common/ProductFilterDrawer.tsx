@@ -101,7 +101,7 @@ export function ProductFilterDrawer({
     setDraft(DEFAULT_FILTERS)
 
     onReset()
-    
+
     setOpen(false)
   }
 
@@ -155,18 +155,13 @@ export function ProductFilterDrawer({
             >
               <SelectTrigger className="w-full">
                 <SelectValue>
-                  {(value: string[]) => {
-                    if (!value || value.length === 0)
-                      return "Search target column"
-                    if (value.length === 1) {
-                      return (
-                        SEARCH_TARGET_OPTIONS.find(
+                  {(value: string[]) =>
+                    value?.length === 1
+                      ? SEARCH_TARGET_OPTIONS.find(
                           (opt) => opt.value === value[0]
                         )?.label || value[0]
-                      )
-                    }
-                    return "All Columns"
-                  }}
+                      : "All Columns"
+                  }
                 </SelectValue>
               </SelectTrigger>
               <SelectContent alignItemWithTrigger={false}>
@@ -197,11 +192,19 @@ export function ProductFilterDrawer({
             >
               <SelectTrigger className="w-full">
                 <SelectValue>
-                  {(value: string[]) => {
-                    if (!value || value.length === 0)
-                      return "Select Product Status"
-                    return value.join(",")
-                  }}
+                  {(value: string[]) =>
+                    !value ||
+                    value.length === 0 ||
+                    value.length === STATUS_OPTIONS.length
+                      ? "All Status"
+                      : value
+                          .map(
+                            (id) =>
+                              STATUS_OPTIONS.find((s) => s.id === id)?.label ||
+                              id
+                          )
+                          .join(", ")
+                  }
                 </SelectValue>
               </SelectTrigger>
               <SelectContent alignItemWithTrigger={false}>
@@ -237,11 +240,19 @@ export function ProductFilterDrawer({
             >
               <SelectTrigger className="w-full">
                 <SelectValue>
-                  {(value: string[]) => {
-                    if (!value || value.length === 0)
-                      return "Select Stock Status"
-                    return value.join(",")
-                  }}
+                  {(value: string[]) =>
+                    !value ||
+                    value.length === 0 ||
+                    value.length === STOCK_OPTIONS.length
+                      ? "All Status"
+                      : value
+                          .map(
+                            (id) =>
+                              STOCK_OPTIONS.find((s) => s.id === id)?.label ||
+                              id
+                          )
+                          .join(", ")
+                  }
                 </SelectValue>
               </SelectTrigger>
               <SelectContent alignItemWithTrigger={false}>
@@ -277,17 +288,15 @@ export function ProductFilterDrawer({
             >
               <SelectTrigger className="w-full">
                 <SelectValue>
-                  {(value: string[]) => {
-                    if (!value || value.length === 0) return "Select Category"
-                    if (value.length === 1) return value[0]
-                    if (
-                      value.length > 1 &&
-                      value.length < categoryOptions.length
-                    ) {
-                      return `${value.length} Categories`
-                    }
-                    return "All Categories"
-                  }}
+                  {(value: string[]) =>
+                    !value ||
+                    value.length === 0 ||
+                    value.length === categoryOptions.length
+                      ? "All Categories"
+                      : value.length === 1
+                        ? value[0]
+                        : `${value.length} Categories`
+                  }
                 </SelectValue>
               </SelectTrigger>
               <SelectContent alignItemWithTrigger={false}>
