@@ -122,7 +122,7 @@ export function CategoryFilterDrawer({
                     !value ||
                     value.length === 0 ||
                     value.length === CATEGORY_SEARCH_TARGET_OPTIONS.length
-                      ? "All Columns (Default)"
+                      ? "All Columns"
                       : value
                           .map(
                             (v) =>
