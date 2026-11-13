@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react"
-import { Filter } from "lucide-react"
+import { useState, useEffect, useMemo } from "react"
+import { Filter, Search } from "lucide-react"
 
 import {
   Sheet,
@@ -22,6 +22,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
+import { Field } from "@/components/ui/field"
 
 export type SearchTarget = "name" | "sku"
 
@@ -46,6 +48,11 @@ export const DEFAULT_FILTERS: AdvancedFilterState = {
   category: [],
 }
 
+export const SEARCH_TARGET_OPTIONS = [
+  { value: "name", label: "Product Name" },
+  { value: "sku", label: "Product SKU" },
+] as const
+
 export const STATUS_OPTIONS = [
   { id: "published", label: "Published", dot: "bg-emerald-500" },
   { id: "draft", label: "Draft", dot: "bg-zinc-400" },
@@ -65,9 +72,20 @@ export function ProductFilterDrawer({
 }: ProductFilterDrawerProps) {
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState<AdvancedFilterState>(currentFilters)
+  const [categorySearch, setCategorySearch] = useState("")
 
   // ── ดึงตัวเลือกหมวดหมู่จาก Custom Hook
   const { data: categoryOptions = [] } = useCategoryOptions()
+
+  const filteredCategoryOptions = useMemo(() => {
+    const query = categorySearch.toLocaleLowerCase().trim()
+
+    if (!query) return categoryOptions
+
+    return categoryOptions.filter((cat) =>
+      cat.name.toLocaleLowerCase().includes(query)
+    )
+  }, [categoryOptions, categorySearch])
 
   // Sync draft state เมื่อเปิด Drawer หรือเมื่อ currentFilters ใน URL มีการเปลี่ยน
   useEffect(() => {
@@ -93,7 +111,11 @@ export function ProductFilterDrawer({
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
         render={
-          <Button variant="outline" size="sm">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 cursor-pointer gap-1.5 border-border/70 text-xs"
+          >
             <Filter className="size-3.5 text-muted-foreground" />
             <span>Filters</span>
           </Button>
@@ -139,16 +161,23 @@ export function ProductFilterDrawer({
                     if (!value || value.length === 0)
                       return "Search target column"
                     if (value.length === 1) {
-                      return value[0] === "name" ? "name" : "sku"
+                      return (
+                        SEARCH_TARGET_OPTIONS.find(
+                          (opt) => opt.value === value[0]
+                        )?.label || value[0]
+                      )
                     }
-                    return value.join(",")
+                    return "All Columns"
                   }}
                 </SelectValue>
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent alignItemWithTrigger={false}>
                 <SelectGroup>
-                  <SelectItem value="name">name</SelectItem>
-                  <SelectItem value="sku">sku</SelectItem>
+                  {SEARCH_TARGET_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
                 </SelectGroup>
               </SelectContent>
             </Select>
@@ -173,20 +202,20 @@ export function ProductFilterDrawer({
                   {(value: string[]) => {
                     if (!value || value.length === 0)
                       return "Select Product Status"
-                    return value
-                      .map(
-                        (id) => STATUS_OPTIONS.find((s) => s.id === id)?.label
-                      )
-                      .join(",")
+                    return value.join(",")
                   }}
                 </SelectValue>
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent alignItemWithTrigger={false}>
                 <SelectGroup>
                   {STATUS_OPTIONS.map((st) => (
                     <SelectItem key={st.id} value={st.label}>
-                      <span className={`size-2 rounded-full ${st.dot}`} />
-                      <span>{st.label}</span>
+                      <span className="flex items-center gap-2">
+                        <span
+                          className={`size-2 shrink-0 rounded-full ${st.dot}`}
+                        />
+                        <span>{st.label}</span>
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectGroup>
@@ -217,12 +246,16 @@ export function ProductFilterDrawer({
                   }}
                 </SelectValue>
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent alignItemWithTrigger={false}>
                 <SelectGroup>
                   {STOCK_OPTIONS.map((sto) => (
                     <SelectItem key={sto.id} value={sto.label}>
-                      <span className={`size-2 rounded-full ${sto.dot}`} />
-                      <span>{sto.label}</span>
+                      <span className="flex items-center gap-2">
+                        <span
+                          className={`size-2 shrink-0 rounded-full ${sto.dot}`}
+                        />
+                        <span>{sto.label}</span>
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectGroup>
@@ -259,13 +292,36 @@ export function ProductFilterDrawer({
                   }}
                 </SelectValue>
               </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {categoryOptions.map((cto) => (
-                    <SelectItem key={cto.id} value={cto.name}>
-                      <span>{cto.name}</span>
-                    </SelectItem>
-                  ))}
+              <SelectContent alignItemWithTrigger={false}>
+                {/* Sticky Search Input */}
+                <div className="border-b p-1.5">
+                  <div className="relative">
+                    <Field>
+                      <Input
+                        id="input-field-username"
+                        type="text"
+                        placeholder="Search..."
+                        value={categorySearch}
+                        onChange={(e) => setCategorySearch(e.target.value)}
+                        onKeyDown={(e) => e.stopPropagation()}
+                      />
+                    </Field>
+                  </div>
+                </div>
+
+                {/* Scrollable Category List */}
+                <SelectGroup className="max-h-56 overflow-y-auto p-1">
+                  {filteredCategoryOptions.length === 0 ? (
+                    <div className="py-3 text-center text-xs text-muted-foreground">
+                      No categories found
+                    </div>
+                  ) : (
+                    filteredCategoryOptions.map((cto) => (
+                      <SelectItem key={cto.id} value={cto.name}>
+                        <span>{cto.name}</span>
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectGroup>
               </SelectContent>
             </Select>
