@@ -1,10 +1,3 @@
-/**
- * Dashboard Overview — Unslop Redesign (dashboard-design skill)
- * Question: "Is store revenue growing, and what orders/categories drive it?"
- * - Wordless: zero prose sentences; compact numeric facts only.
- * - Quiet: monochrome KPI icons, #3e63dd entity accent, warm amber only on Pending orders.
- * - Encoding ladder: Ranked category breakdown with 3px share bars replaces pie chart.
- */
 import { Link } from "react-router-dom"
 import {
   DollarSign,
@@ -17,22 +10,11 @@ import {
   Eye,
   MoreHorizontal,
 } from "lucide-react"
-import {
-  AreaChart,
-  Area,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-} from "recharts"
+import { AreaChart, Area, CartesianGrid, XAxis, YAxis } from "recharts"
 
 import { useDashboardDefault, type OrderItem } from "./useHooks"
 import { StatCard } from "@/components/common/StatCard"
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import {
   Table,
   TableHeader,
@@ -54,7 +36,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { PageContent } from "@/components/common/PageContent"
-import { DateRangeFilter } from "@/components/common/DateRangeFilter"
+import { DateRangeFilter } from "@/pages/dashboard/default/common/DateRangeFilter"
 
 export default function DashboardPage() {
   const {
@@ -64,6 +46,7 @@ export default function DashboardPage() {
     areaChartData,
     pieChartData,
     areaChartConfig,
+    handleDateRangeChange,
   } = useDashboardDefault()
 
   const maxProductSales = Math.max(...topProducts.map((p) => p.salesCount), 1)
@@ -125,7 +108,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <DateRangeFilter />
+          <DateRangeFilter onChange={handleDateRangeChange} />
 
           <Button
             variant="outline"
@@ -170,7 +153,7 @@ export default function DashboardPage() {
               <CardTitle className="text-sm font-semibold">
                 Revenue & Orders
               </CardTitle>
-              <span className="text-xs tabular-nums text-muted-foreground">
+              <span className="text-xs text-muted-foreground tabular-nums">
                 Jan – Oct · $346.3k YTD
               </span>
             </div>
@@ -256,10 +239,8 @@ export default function DashboardPage() {
         {/* Ranked Category Breakdown with 3px Share Bars: 3 Columns */}
         <Card className="col-span-3 flex h-full flex-col border-border/60 bg-card shadow-2xs">
           <CardHeader className="flex shrink-0 flex-row items-center justify-between border-b border-border/40 px-5 py-3.5">
-            <CardTitle className="text-sm font-semibold">
-              By Category
-            </CardTitle>
-            <span className="text-xs tabular-nums text-muted-foreground">
+            <CardTitle className="text-sm font-semibold">By Category</CardTitle>
+            <span className="text-xs text-muted-foreground tabular-nums">
               $48.3k total
             </span>
           </CardHeader>
@@ -295,7 +276,7 @@ export default function DashboardPage() {
               ))}
             </div>
 
-            <div className="mt-4 flex items-center justify-between border-t border-border/40 pt-3 text-xs tabular-nums text-muted-foreground">
+            <div className="mt-4 flex items-center justify-between border-t border-border/40 pt-3 text-xs text-muted-foreground tabular-nums">
               <span>Top share</span>
               <span className="font-medium text-foreground">
                 Smartphones · 45%
@@ -314,7 +295,7 @@ export default function DashboardPage() {
               <CardTitle className="text-sm font-semibold">
                 Recent Orders
               </CardTitle>
-              <span className="text-xs tabular-nums text-muted-foreground">
+              <span className="text-xs text-muted-foreground tabular-nums">
                 {orders.length} latest · $8,292 total
               </span>
             </div>
@@ -334,8 +315,12 @@ export default function DashboardPage() {
                   <TableHead className="h-9 pl-5 text-xs">Order</TableHead>
                   <TableHead className="h-9 text-xs">Customer</TableHead>
                   <TableHead className="h-9 text-xs">Date</TableHead>
-                  <TableHead className="h-9 text-right text-xs">Items</TableHead>
-                  <TableHead className="h-9 text-right text-xs">Total</TableHead>
+                  <TableHead className="h-9 text-right text-xs">
+                    Items
+                  </TableHead>
+                  <TableHead className="h-9 text-right text-xs">
+                    Total
+                  </TableHead>
                   <TableHead className="h-9 text-xs">Status</TableHead>
                   <TableHead className="h-9 text-xs">Actions</TableHead>
                 </TableRow>
@@ -358,16 +343,19 @@ export default function DashboardPage() {
                       </div>
                     </TableCell>
 
-                    <TableCell className="text-xs tabular-nums text-muted-foreground">
+                    <TableCell className="text-xs text-muted-foreground tabular-nums">
                       {ord.date}
                     </TableCell>
 
-                    <TableCell className="text-right text-xs tabular-nums text-muted-foreground">
+                    <TableCell className="text-right text-xs text-muted-foreground tabular-nums">
                       {ord.itemsCount}
                     </TableCell>
 
-                    <TableCell className="text-right text-xs font-semibold tabular-nums text-foreground">
-                      ${ord.total.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    <TableCell className="text-right text-xs font-semibold text-foreground tabular-nums">
+                      $
+                      {ord.total.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                      })}
                     </TableCell>
 
                     <TableCell>{getStatusBadge(ord.status)}</TableCell>
@@ -410,7 +398,7 @@ export default function DashboardPage() {
             <CardTitle className="text-sm font-semibold">
               Top Products
             </CardTitle>
-            <span className="text-xs tabular-nums text-muted-foreground">
+            <span className="text-xs text-muted-foreground tabular-nums">
               By units sold
             </span>
           </CardHeader>
@@ -418,7 +406,9 @@ export default function DashboardPage() {
           <CardContent className="flex flex-1 flex-col justify-between p-5">
             <div className="flex flex-col gap-4">
               {topProducts.map((prod, idx) => {
-                const share = Math.round((prod.salesCount / maxProductSales) * 100)
+                const share = Math.round(
+                  (prod.salesCount / maxProductSales) * 100
+                )
                 const revenue = prod.price * prod.salesCount
                 return (
                   <div key={prod.id} className="space-y-2">
@@ -435,7 +425,7 @@ export default function DashboardPage() {
                           <span className="truncate text-xs font-medium text-foreground">
                             {prod.name}
                           </span>
-                          <span className="text-[11px] tabular-nums text-muted-foreground">
+                          <span className="text-[11px] text-muted-foreground tabular-nums">
                             {prod.category} · ${prod.price.toLocaleString()}
                           </span>
                         </div>
@@ -468,7 +458,7 @@ export default function DashboardPage() {
 
             <div className="mt-4 flex items-center justify-between border-t border-border/40 pt-3 text-xs">
               <span className="text-muted-foreground">Top 3 volume</span>
-              <span className="font-medium tabular-nums text-foreground">
+              <span className="font-medium text-foreground tabular-nums">
                 327 units · $287.2k
               </span>
             </div>
