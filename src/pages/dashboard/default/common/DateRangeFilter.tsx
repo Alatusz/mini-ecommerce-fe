@@ -1,15 +1,9 @@
 import { useState } from "react"
 import { Calendar as CalendarIcon, ChevronDown, ArrowRight } from "lucide-react"
-import {
-  format,
-  subDays,
-  subMonths,
-  startOfMonth,
-  startOfQuarter,
-} from "date-fns"
+import { format, subDays, subMonths, subYears } from "date-fns"
 import type { DateRange } from "react-day-picker"
 
-import { cn } from "cn"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {
@@ -45,7 +39,15 @@ export function DateRangeFilter({
   // Presets definition matching the mockup
   const presets: PresetItem[] = [
     {
-      key: "last-7-days",
+      key: "today",
+      label: "Today",
+      getRange: () => ({
+        from: effectiveMaxDate,
+        to: effectiveMaxDate,
+      }),
+    },
+    {
+      key: "week",
       label: "Last 7 days",
       getRange: () => ({
         from: subDays(effectiveMaxDate, 6),
@@ -53,50 +55,18 @@ export function DateRangeFilter({
       }),
     },
     {
-      key: "last-14-days",
-      label: "Last 14 Days",
-      getRange: () => ({
-        from: subDays(effectiveMaxDate, 13),
-        to: effectiveMaxDate,
-      }),
-    },
-    {
-      key: "last-30-days",
-      label: "Last 30 Days",
-      getRange: () => ({
-        from: subDays(effectiveMaxDate, 29),
-        to: effectiveMaxDate,
-      }),
-    },
-    {
-      key: "last-3-months",
-      label: "Last 3 months",
-      getRange: () => ({
-        from: subMonths(effectiveMaxDate, 3),
-        to: effectiveMaxDate,
-      }),
-    },
-    {
-      key: "last-12-months",
-      label: "Last 12 months",
+      key: "month",
+      label: "Last 12 Months",
       getRange: () => ({
         from: subMonths(effectiveMaxDate, 12),
         to: effectiveMaxDate,
       }),
     },
     {
-      key: "month-to-date",
-      label: "Month to date",
+      key: "year",
+      label: "Last Year",
       getRange: () => ({
-        from: startOfMonth(effectiveMaxDate),
-        to: effectiveMaxDate,
-      }),
-    },
-    {
-      key: "quarter-to-date",
-      label: "Quarter to date",
-      getRange: () => ({
-        from: startOfQuarter(effectiveMaxDate),
+        from: subYears(effectiveMaxDate, 1),
         to: effectiveMaxDate,
       }),
     },
@@ -118,10 +88,7 @@ export function DateRangeFilter({
     },
   ]
 
-  // Default initial range: Last 12 months (as shown active in the user's mockup)
-  const defaultInitial = presets
-    .find((p) => p.key === "last-12-months")!
-    .getRange()
+  const defaultInitial = presets.find((p) => p.key === "month")!.getRange()
 
   const [isOpen, setIsOpen] = useState(false)
   const [selectedPreset, setSelectedPreset] = useState<string>("last-12-months")
