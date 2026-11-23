@@ -42,7 +42,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { PageContent } from "@/components/common/PageContent"
-import { useUserManagement } from "./useHooks"
 import { UserStatsGrid } from "./common/UserStatsGrid"
 import { UserTable } from "./common/UserTable"
 import { UserDeleteDialog } from "./common/UserDeleteDialog"
