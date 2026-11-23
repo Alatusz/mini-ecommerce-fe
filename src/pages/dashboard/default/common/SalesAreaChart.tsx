@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/chart"
 
 export interface SalesDataPoint {
-  date: string
+  label: string
   total: number
 }
 
@@ -24,16 +24,31 @@ const DEFAULT_CHART_CONFIG: ChartConfig = {
   },
 }
 
-function formatShortDate(value: string): string {
+function formatAxisLabel(value: string): string {
   if (!value) return ""
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
 
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(date)
+  if (/^\d{4}-\d{2}$/.test(value)) {
+    const [year, month] = value.split("-")
+
+    const date = new Date(Number(year), Number(month) - 1, 1)
+
+    return Intl.DateTimeFormat("en-GB", {
+      month: "short",
+      year: "2-digit",
+    }).format(date)
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const date = new Date(`${value}T00:00:00`)
+
+    if (!Number.isNaN(date.getTime())) {
+      return new Intl.DateTimeFormat("en-GB", {
+        day: "numeric",
+        month: "short",
+      }).format(date)
+    }
+  }
+
+  return value
 }
 
 export function SalesAreaChart({
@@ -75,12 +90,12 @@ export function SalesAreaChart({
             </defs>
             <CartesianGrid vertical={false} strokeDasharray="3 3" />
             <XAxis
-              dataKey="date"
+              dataKey="label"
               tickLine={false}
               axisLine={false}
               tickMargin={8}
               fontSize={12}
-              tickFormatter={formatShortDate}
+              tickFormatter={formatAxisLabel}
             />
             <YAxis
               tickLine={false}
@@ -90,11 +105,7 @@ export function SalesAreaChart({
               tickFormatter={(value) => `฿${(value / 1000).toFixed(0)}k`}
             />
             <ChartTooltip
-              content={
-                <ChartTooltipContent
-                  labelFormatter={(value) => formatShortDate(String(value))}
-                />
-              }
+              content={<ChartTooltipContent indicator="dot" hideLabel />}
             />
             <Area
               type="monotone"
@@ -103,6 +114,7 @@ export function SalesAreaChart({
               strokeWidth={2}
               fillOpacity={1}
               fill="url(#fillTotal)"
+              isAnimationActive={false}
             />
           </AreaChart>
         </ChartContainer>
