@@ -42,8 +42,10 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { PageContent } from "@/components/common/PageContent"
-
-const userColumnHelper = createColumnHelper<DataGridFeatures, UserItem>()
+import { useUserManagement } from "./useHooks"
+import { UserStatsGrid } from "./common/UserStatsGrid"
+import { UserTable } from "./common/UserTable"
+import { UserDeleteDialog } from "./common/UserDeleteDialog"
 
 export default function DashboardUserManagementPage() {
   const {
@@ -243,332 +245,41 @@ export default function DashboardUserManagementPage() {
 
   return (
     <PageContent>
-      {/* ── Header & Toolbar ── */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">
-            Customers & Staff
-          </h1>
-        </div>
-
-        <Button
-          size="sm"
-          onClick={() => setIsAddOpen(true)}
-          className="h-8 shrink-0 cursor-pointer gap-1.5 rounded-full bg-foreground px-3.5 text-xs text-background hover:bg-foreground/90"
-        >
-          <Plus className="size-3.5" />
-          <span>Add User</span>
-        </Button>
-      </div>
-
-      {/* ── 4 KPI Cards (Monochrome Icons + Tabular Numbers) ── */}
-      <div className="grid grid-cols-4 gap-4">
-        <StatCard
-          title="Total Accounts"
-          value={users.length}
-          icon={<Users className="size-3.5" />}
-          description={
-            suspendedCount > 0 ? `${suspendedCount} suspended` : "0 suspended"
-          }
-        />
-
-        <StatCard
-          title="Active Users"
-          value={activeCount}
-          icon={<UserCheck className="size-3.5" />}
-          description={
-            users.length > 0
-              ? `${Math.round((activeCount / users.length) * 100)}% of base`
-              : "—"
-          }
-        />
-
-        <StatCard
-          title="Total LTV"
-          value={`$${totalSpent.toLocaleString()}`}
-          icon={<DollarSign className="size-3.5" />}
-          description={`$${avgSpent.toLocaleString()} avg / user`}
-        />
-
-        <StatCard
-          title="Admins & Staff"
-          value={staffCount}
-          icon={<ShieldCheck className="size-3.5" />}
-          description="internal access"
-        />
-      </div>
-
-      {/* ── Calm Segmented Filter Bar ── */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="relative w-72">
-          <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Filter by name or email..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-8 rounded-lg border-border/60 bg-card pl-8 text-xs"
-          />
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Role Segmented Filter */}
-          <div className="inline-flex items-center rounded-lg border border-border/60 bg-card p-0.5">
-            {(["All", "Admin", "Staff", "Customer"] as const).map((role) => (
-              <button
-                key={role}
-                type="button"
-                onClick={() => setRoleFilter(role)}
-                className={`cursor-pointer rounded-md px-2.5 py-1 text-xs transition-all ${
-                  roleFilter === role
-                    ? "bg-muted font-medium text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {role}
-              </button>
-            ))}
-          </div>
-
-          {/* Status Segmented Filter */}
-          <div className="inline-flex items-center rounded-lg border border-border/60 bg-card p-0.5">
-            {(["All", "Active", "Inactive", "Suspended"] as const).map(
-              (status) => (
-                <button
-                  key={status}
-                  type="button"
-                  onClick={() => setStatusFilter(status)}
-                  className={`cursor-pointer rounded-md px-2.5 py-1 text-xs transition-all ${
-                    statusFilter === status
-                      ? "bg-muted font-medium text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {status}
-                </button>
-              )
-            )}
-          </div>
+          <h1 className="text-2xl font-bold tracking-tight">Users</h1>
+          <p className="text-sm text-muted-foreground">
+            Manage customer, staff, and administrator accounts.
+          </p>
         </div>
       </div>
 
-      {/* ── TanStack DataGrid ── */}
-      <DataGrid
-        data={users}
-        columns={columns}
-        urlSync={true}
-        defaultPageSize={10}
-        searchPlaceholder="Search users..."
+      <UserStatsGrid
+        total={total}
+        staffCount={staffCount}
+        customerCount={customerCount}
+        totalOrders={totalOrders}
       />
 
-      {/* ── Dialog 1: Add User ── */}
-      <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>New User</DialogTitle>
-          </DialogHeader>
+      <UserTable
+        data={users}
+        total={total}
+        selectedSearchBy={selectedSearchBy}
+        selectedRoles={selectedRoles}
+        selectedStatuses={selectedStatuses}
+        onFilterApply={handleFilterApply}
+        onFilterReset={handleFilterReset}
+        onStatusChange={handleStatusChange}
+        isUpdatingStatus={isUpdatingStatus}
+        onDelete={setDeletingUser}
+      />
 
-          <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="user-name" className="text-xs font-medium">
-                Name
-              </Label>
-              <Input
-                id="user-name"
-                placeholder="Alex Johnson"
-                className="h-9 text-xs"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="user-email" className="text-xs font-medium">
-                Email
-              </Label>
-              <Input
-                id="user-email"
-                type="email"
-                placeholder="alex.j@example.com"
-                className="h-9 text-xs"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="user-role" className="text-xs font-medium">
-                  Role
-                </Label>
-                <select
-                  id="user-role"
-                  className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-2xs focus-visible:outline-none"
-                >
-                  <option value="Customer">Customer</option>
-                  <option value="Staff">Staff</option>
-                  <option value="Admin">Admin</option>
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="user-status" className="text-xs font-medium">
-                  Status
-                </Label>
-                <select
-                  id="user-status"
-                  className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-2xs focus-visible:outline-none"
-                >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                  <option value="Suspended">Suspended</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setIsAddOpen(false)}
-              className="cursor-pointer text-xs"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => setIsAddOpen(false)}
-              className="cursor-pointer bg-foreground text-xs text-background hover:bg-foreground/90"
-            >
-              Create
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* ── Dialog 2: Edit User ── */}
-      <Dialog
-        open={!!editingUser}
-        onOpenChange={(open) => !open && setEditingUser(null)}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-uname" className="text-xs font-medium">
-                Name
-              </Label>
-              <Input
-                id="edit-uname"
-                defaultValue={editingUser?.name}
-                className="h-9 text-xs"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-uemail" className="text-xs font-medium">
-                Email
-              </Label>
-              <Input
-                id="edit-uemail"
-                type="email"
-                defaultValue={editingUser?.email}
-                className="h-9 text-xs"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-urole" className="text-xs font-medium">
-                  Role
-                </Label>
-                <select
-                  id="edit-urole"
-                  defaultValue={editingUser?.role}
-                  className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-2xs focus-visible:outline-none"
-                >
-                  <option value="Customer">Customer</option>
-                  <option value="Staff">Staff</option>
-                  <option value="Admin">Admin</option>
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-ustatus" className="text-xs font-medium">
-                  Status
-                </Label>
-                <select
-                  id="edit-ustatus"
-                  defaultValue={editingUser?.status}
-                  className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-2xs focus-visible:outline-none"
-                >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                  <option value="Suspended">Suspended</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setEditingUser(null)}
-              className="cursor-pointer text-xs"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => setEditingUser(null)}
-              className="cursor-pointer bg-foreground text-xs text-background hover:bg-foreground/90"
-            >
-              Save
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* ── Dialog 3: Delete User ── */}
-      <Dialog
-        open={!!deletingUser}
-        onOpenChange={(open) => !open && setDeletingUser(null)}
-      >
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Delete User</DialogTitle>
-            <DialogDescription>
-              Remove{" "}
-              <strong className="text-foreground">{deletingUser?.name}</strong>?
-            </DialogDescription>
-          </DialogHeader>
-
-          <DialogFooter className="gap-2 pt-2 sm:gap-0">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setDeletingUser(null)}
-              className="cursor-pointer text-xs"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              onClick={() => setDeletingUser(null)}
-              className="cursor-pointer text-xs"
-            >
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <UserDeleteDialog
+        user={deletingUser}
+        isDeleting={isDeleting}
+        onClose={() => setDeletingUser(null)}
+        onConfirm={handleDeleteConfirm}
+      />
     </PageContent>
   )
 }
