@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import {
-  getCouponById,
-  updateCouponInStore,
-  deleteCouponFromStore,
+  useCouponDetailQuery,
+  useUpdateCouponMutation,
+  useDeleteCouponMutation,
   type CouponItem,
-} from "../common/mockCoupon"
+} from "../useHubs"
 
 export interface CouponEditFormState {
   code: string
@@ -19,11 +19,18 @@ export interface CouponEditFormState {
 }
 
 export function useCouponEdit() {
-  const { id } = useParams<{ id: string }>()
+  const { id = "" } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
-  const [coupon, setCoupon] = useState<CouponItem | null>(null)
-  const [isNotFound, setIsNotFound] = useState(false)
+  const { data, isLoading, isError } = useCouponDetailQuery(id)
+  const updateMutation = useUpdateCouponMutation(id)
+  const deleteMutation = useDeleteCouponMutation(() =>
+    navigate("/dashboard/coupon")
+  )
+
+  const coupon: CouponItem | null = data?.data ?? null
+  const isNotFound = !isLoading && (!id || isError || !coupon)
+
   const [formData, setFormData] = useState<CouponEditFormState>({
     code: "",
     description: "",
@@ -35,35 +42,26 @@ export function useCouponEdit() {
     expiredDate: "",
   })
 
-  const [errors, setErrors] = useState<Partial<Record<keyof CouponEditFormState, string>>>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof CouponEditFormState, string>>
+  >({})
 
   useEffect(() => {
-    if (!id) {
-      setIsNotFound(true)
-      return
-    }
-
-    const found = getCouponById(id)
-    if (!found) {
-      setIsNotFound(true)
-      return
-    }
-
-    setCoupon(found)
+    if (!coupon) return
     setFormData({
-      code: found.code,
-      description: found.description || "",
-      discountType: found.discountType,
-      discountValue: String(found.discountValue),
-      minSpend: found.minSpend !== undefined ? String(found.minSpend) : "",
-      usageLimit: found.usageLimit !== undefined ? String(found.usageLimit) : "",
-      startDate: found.startDate,
-      expiredDate: found.expiredDate,
+      code: coupon.code,
+      description: coupon.description || "",
+      discountType: coupon.discountType,
+      discountValue: String(coupon.discountValue),
+      minSpend: coupon.minSpend !== undefined ? String(coupon.minSpend) : "",
+      usageLimit:
+        coupon.usageLimit !== null && coupon.usageLimit !== undefined
+          ? String(coupon.usageLimit)
+          : "",
+      startDate: coupon.startDate ? coupon.startDate.slice(0, 10) : "",
+      expiredDate: coupon.expiredDate ? coupon.expiredDate.slice(0, 10) : "",
     })
-    setIsNotFound(false)
-  }, [id])
+  }, [coupon])
 
   const handleFieldChange = <K extends keyof CouponEditFormState>(
     field: K,
@@ -134,37 +132,27 @@ export function useCouponEdit() {
 
     if (!validate() || !id) return
 
-    setIsSubmitting(true)
-
     const discountVal = Number(formData.discountValue)
-    const minSpendVal = formData.minSpend.trim() ? Number(formData.minSpend) : undefined
-    const usageLimitVal = formData.usageLimit.trim() ? Number(formData.usageLimit) : undefined
+    const minSpendVal = formData.minSpend.trim() ? Number(formData.minSpend) : 0
+    const usageLimitVal = formData.usageLimit.trim()
+      ? Number(formData.usageLimit)
+      : null
 
-    setTimeout(() => {
-      updateCouponInStore(id, {
-        code: formData.code.trim().toUpperCase(),
-        description: formData.description.trim(),
-        discountType: formData.discountType,
-        discountValue: discountVal,
-        minSpend: minSpendVal,
-        usageLimit: usageLimitVal,
-        startDate: formData.startDate,
-        expiredDate: formData.expiredDate,
-      })
-
-      setIsSubmitting(false)
-      navigate("/dashboard/coupon")
-    }, 400)
+    updateMutation.mutate({
+      code: formData.code.trim().toUpperCase(),
+      description: formData.description.trim(),
+      discountType: formData.discountType,
+      discountValue: discountVal,
+      minSpend: minSpendVal,
+      usageLimit: usageLimitVal,
+      startDate: formData.startDate,
+      expiredDate: formData.expiredDate,
+    })
   }
 
   const handleDelete = () => {
     if (!id) return
-    setIsDeleting(true)
-    setTimeout(() => {
-      deleteCouponFromStore(id)
-      setIsDeleting(false)
-      navigate("/dashboard/coupon")
-    }, 300)
+    deleteMutation.mutate(id)
   }
 
   const handleCancel = () => {
@@ -177,8 +165,8 @@ export function useCouponEdit() {
     isNotFound,
     formData,
     errors,
-    isSubmitting,
-    isDeleting,
+    isSubmitting: updateMutation.isPending,
+    isDeleting: deleteMutation.isPending,
     handleFieldChange,
     handleSubmit,
     handleDelete,

@@ -101,9 +101,9 @@ export function useCoupon() {
     patchStatusMutation.mutate({ id, status })
   }
 
-  const handleCreate = () => navigate("/dashboard/coupons/create")
+  const handleCreate = () => navigate("/dashboard/coupon/create")
   const handleEdit = (coupon: CouponItem) =>
-    navigate(`/dashboard/coupons/edit/${coupon.id}`)
+    navigate(`/dashboard/coupon/edit/${coupon.id}`)
   const handleDeleteConfirm = (id: string) => deleteMutation.mutate(id)
 
   return {

@@ -86,7 +86,7 @@ export function useCreateCouponMutation() {
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.DASHBOARD.COUPONS_LIST],
       })
-      navigate("/dashboard/coupons")
+      navigate("/dashboard/coupon")
     },
     onError: (err: any) => {
       showToast.error(err?.response?.data?.message || "Failed to create coupon")
@@ -103,7 +103,7 @@ export function useUpdateCouponMutation(id: string) {
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.DASHBOARD.COUPONS_LIST],
       })
-      navigate("/dashboard/coupons")
+      navigate("/dashboard/coupon")
     },
     onError: (err: any) => {
       showToast.error(err?.response?.data?.message || "Failed to update coupon")
