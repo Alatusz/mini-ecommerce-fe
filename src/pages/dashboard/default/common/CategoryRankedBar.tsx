@@ -31,7 +31,7 @@ export function CategoryRankedBar({ data = [] }: CategoryRankedBarProps) {
                   {item.label}
                 </span>
                 <span className="text-muted-foreground tabular-nums">
-                  ${item.total}
+                  ${item.total.toLocaleString()}
                 </span>
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-muted">

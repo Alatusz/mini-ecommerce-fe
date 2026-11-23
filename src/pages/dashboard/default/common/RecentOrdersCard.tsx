@@ -15,10 +15,6 @@ export interface OrderItem {
   userId: string
   totalAmount: number
   status: "completed" | "processing" | "pending" | "cancelled"
-  paymentMethod: string
-  paymentStatus: ""
-  shippingAddress: string
-  shippingPhone: string
 }
 
 interface RecentOrdersCardProps {
