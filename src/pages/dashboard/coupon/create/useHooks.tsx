@@ -1,10 +1,6 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import {
-  addCouponToStore,
-  computeCouponStatus,
-  type CouponItem,
-} from "../common/mockCoupon"
+import { useCreateCouponMutation } from "../useHubs"
 
 export interface CouponFormState {
   code: string
@@ -30,6 +26,7 @@ const getFutureDateString = (daysAhead = 30): string => {
 
 export function useCouponCreate() {
   const navigate = useNavigate()
+  const createMutation = useCreateCouponMutation()
 
   const [formData, setFormData] = useState<CouponFormState>({
     code: "",
@@ -43,7 +40,6 @@ export function useCouponCreate() {
   })
 
   const [errors, setErrors] = useState<Partial<Record<keyof CouponFormState, string>>>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const generateRandomCode = () => {
     const prefixes = ["PROMO", "SAVE", "FLASH", "DEAL", "OFFER", "MEGA", "SPECIAL"]
@@ -127,31 +123,22 @@ export function useCouponCreate() {
 
     if (!validate()) return
 
-    setIsSubmitting(true)
-
     const discountVal = Number(formData.discountValue)
-    const minSpendVal = formData.minSpend.trim() ? Number(formData.minSpend) : undefined
-    const usageLimitVal = formData.usageLimit.trim() ? Number(formData.usageLimit) : undefined
+    const minSpendVal = formData.minSpend.trim() ? Number(formData.minSpend) : 0
+    const usageLimitVal = formData.usageLimit.trim()
+      ? Number(formData.usageLimit)
+      : null
 
-    const newCoupon: CouponItem = {
-      id: `cpn-${Date.now()}`,
+    createMutation.mutate({
       code: formData.code.trim().toUpperCase(),
-      description: formData.description.trim() || `${discountVal}${formData.discountType === "percent" ? "%" : "$"} discount coupon`,
+      description: formData.description.trim() || undefined,
       discountType: formData.discountType,
       discountValue: discountVal,
       minSpend: minSpendVal,
       usageLimit: usageLimitVal,
-      usageCount: 0,
       startDate: formData.startDate,
       expiredDate: formData.expiredDate,
-      status: computeCouponStatus(formData.startDate, formData.expiredDate),
-    }
-
-    setTimeout(() => {
-      addCouponToStore(newCoupon)
-      setIsSubmitting(false)
-      navigate("/dashboard/coupon")
-    }, 400)
+    })
   }
 
   const handleCancel = () => {
@@ -161,7 +148,7 @@ export function useCouponCreate() {
   return {
     formData,
     errors,
-    isSubmitting,
+    isSubmitting: createMutation.isPending,
     generateRandomCode,
     handleFieldChange,
     handleSubmit,
