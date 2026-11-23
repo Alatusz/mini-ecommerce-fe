@@ -118,6 +118,121 @@
     --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* ─── Preset Color Themes ─── */
+[data-color="blue"] {
+    --primary: oklch(0.546 0.245 262.881);
+    --primary-foreground: oklch(0.985 0 0);
+    --ring: oklch(0.623 0.214 259.815);
+    --sidebar-primary: oklch(0.546 0.245 262.881);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-ring: oklch(0.623 0.214 259.815);
+}
+.dark[data-color="blue"],
+[data-color="blue"].dark,
+.dark [data-color="blue"] {
+    --primary: oklch(0.623 0.214 259.815);
+    --primary-foreground: oklch(0.145 0 0);
+    --ring: oklch(0.546 0.245 262.881);
+    --sidebar-primary: oklch(0.623 0.214 259.815);
+    --sidebar-primary-foreground: oklch(0.145 0 0);
+    --sidebar-ring: oklch(0.546 0.245 262.881);
+}
+
+[data-color="violet"] {
+    --primary: oklch(0.541 0.281 293.009);
+    --primary-foreground: oklch(0.985 0 0);
+    --ring: oklch(0.606 0.25 292.717);
+    --sidebar-primary: oklch(0.541 0.281 293.009);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-ring: oklch(0.606 0.25 292.717);
+}
+.dark[data-color="violet"],
+[data-color="violet"].dark,
+.dark [data-color="violet"] {
+    --primary: oklch(0.606 0.25 292.717);
+    --primary-foreground: oklch(0.145 0 0);
+    --ring: oklch(0.541 0.281 293.009);
+    --sidebar-primary: oklch(0.606 0.25 292.717);
+    --sidebar-primary-foreground: oklch(0.145 0 0);
+    --sidebar-ring: oklch(0.541 0.281 293.009);
+}
+
+[data-color="emerald"] {
+    --primary: oklch(0.596 0.145 163.225);
+    --primary-foreground: oklch(0.985 0 0);
+    --ring: oklch(0.696 0.17 162.48);
+    --sidebar-primary: oklch(0.596 0.145 163.225);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-ring: oklch(0.696 0.17 162.48);
+}
+.dark[data-color="emerald"],
+[data-color="emerald"].dark,
+.dark [data-color="emerald"] {
+    --primary: oklch(0.696 0.17 162.48);
+    --primary-foreground: oklch(0.145 0 0);
+    --ring: oklch(0.596 0.145 163.225);
+    --sidebar-primary: oklch(0.696 0.17 162.48);
+    --sidebar-primary-foreground: oklch(0.145 0 0);
+    --sidebar-ring: oklch(0.596 0.145 163.225);
+}
+
+[data-color="rose"] {
+    --primary: oklch(0.586 0.253 17.585);
+    --primary-foreground: oklch(0.985 0 0);
+    --ring: oklch(0.656 0.241 18.232);
+    --sidebar-primary: oklch(0.586 0.253 17.585);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-ring: oklch(0.656 0.241 18.232);
+}
+.dark[data-color="rose"],
+[data-color="rose"].dark,
+.dark [data-color="rose"] {
+    --primary: oklch(0.656 0.241 18.232);
+    --primary-foreground: oklch(0.145 0 0);
+    --ring: oklch(0.586 0.253 17.585);
+    --sidebar-primary: oklch(0.656 0.241 18.232);
+    --sidebar-primary-foreground: oklch(0.145 0 0);
+    --sidebar-ring: oklch(0.586 0.253 17.585);
+}
+
+[data-color="orange"] {
+    --primary: oklch(0.646 0.222 41.116);
+    --primary-foreground: oklch(0.985 0 0);
+    --ring: oklch(0.705 0.213 47.604);
+    --sidebar-primary: oklch(0.646 0.222 41.116);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-ring: oklch(0.705 0.213 47.604);
+}
+.dark[data-color="orange"],
+[data-color="orange"].dark,
+.dark [data-color="orange"] {
+    --primary: oklch(0.705 0.213 47.604);
+    --primary-foreground: oklch(0.145 0 0);
+    --ring: oklch(0.646 0.222 41.116);
+    --sidebar-primary: oklch(0.705 0.213 47.604);
+    --sidebar-primary-foreground: oklch(0.145 0 0);
+    --sidebar-ring: oklch(0.646 0.222 41.116);
+}
+
+[data-color="amber"] {
+    --primary: oklch(0.769 0.188 70.08);
+    --primary-foreground: oklch(0.145 0 0);
+    --ring: oklch(0.828 0.189 84.429);
+    --sidebar-primary: oklch(0.769 0.188 70.08);
+    --sidebar-primary-foreground: oklch(0.145 0 0);
+    --sidebar-ring: oklch(0.828 0.189 84.429);
+}
+.dark[data-color="amber"],
+[data-color="amber"].dark,
+.dark [data-color="amber"] {
+    --primary: oklch(0.828 0.189 84.429);
+    --primary-foreground: oklch(0.145 0 0);
+    --ring: oklch(0.769 0.188 70.08);
+    --sidebar-primary: oklch(0.828 0.189 84.429);
+    --sidebar-primary-foreground: oklch(0.145 0 0);
+    --sidebar-ring: oklch(0.769 0.188 70.08);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -20,8 +20,8 @@ export interface DataGridUrlSyncOptions {
 export function useDataGridUrlSync({
   enabled = true,
   pageParamKey = "page",
-  pageSizeParamKey = "size",
-  searchParamKey = "q",
+  pageSizeParamKey = "limit",
+  searchParamKey = "search",
   defaultPageSize = 10,
 }: DataGridUrlSyncOptions = {}) {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -80,7 +80,16 @@ export function useDataGridUrlSync({
       globalFilterAtom.set(urlSearch)
       isUpdatingFromUrl.current = false
     }
-  }, [searchParams, enabled, pageParamKey, pageSizeParamKey, searchParamKey, defaultPageSize, paginationAtom, globalFilterAtom])
+  }, [
+    searchParams,
+    enabled,
+    pageParamKey,
+    pageSizeParamKey,
+    searchParamKey,
+    defaultPageSize,
+    paginationAtom,
+    globalFilterAtom,
+  ])
 
   // 2. Subscribe to External Atoms and push updates to URL
   useEffect(() => {
@@ -135,7 +144,16 @@ export function useDataGridUrlSync({
       subPagination.unsubscribe()
       subFilter.unsubscribe()
     }
-  }, [enabled, pageParamKey, pageSizeParamKey, searchParamKey, defaultPageSize, setSearchParams, paginationAtom, globalFilterAtom])
+  }, [
+    enabled,
+    pageParamKey,
+    pageSizeParamKey,
+    searchParamKey,
+    defaultPageSize,
+    setSearchParams,
+    paginationAtom,
+    globalFilterAtom,
+  ])
 
   return {
     paginationAtom,

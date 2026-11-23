@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom"
 import {
   Smartphone,
   Cpu,
@@ -10,6 +11,7 @@ import {
   Heart,
   Check,
   ChevronDown,
+  ChevronRight,
 } from "lucide-react"
 
 import {
@@ -21,6 +23,10 @@ import { Button } from "@/components/ui/button"
 
 function ProductDetailPage() {
   const {
+    productName,
+    currentPrice,
+    currentOriginalPrice,
+    isThaiPrice,
     selectedColor,
     selectedStorage,
     activeImageIndex,
@@ -41,6 +47,21 @@ function ProductDetailPage() {
 
   return (
     <div className="mx-auto max-w-6xl py-4 sm:py-8">
+      {/* Breadcrumb Navigation */}
+      <nav className="flex items-center gap-1.5 text-xs text-muted-foreground mb-6">
+        <Link to="/" className="hover:text-foreground transition-colors">
+          Home
+        </Link>
+        <ChevronRight className="size-3.5" />
+        <Link to="/products" className="hover:text-foreground transition-colors">
+          Catalog
+        </Link>
+        <ChevronRight className="size-3.5" />
+        <span className="text-foreground font-medium truncate max-w-xs sm:max-w-md">
+          {productName}
+        </span>
+      </nav>
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center">
         {/* Left: Product Gallery (Thumbnails + Large Main Image) */}
         <div className="lg:col-span-6 flex flex-col-reverse sm:flex-row items-center gap-4 sm:gap-6 justify-center">
@@ -74,7 +95,7 @@ function ProductDetailPage() {
           <div className="flex-1 flex items-center justify-center p-2 min-h-[300px] sm:min-h-[460px]">
             <img
               src={currentImage}
-              alt="Apple iPhone 14 Pro Max"
+              alt={productName}
               className="max-h-[340px] sm:max-h-[460px] w-auto object-contain select-none transition-all duration-300"
             />
           </div>
@@ -85,15 +106,17 @@ function ProductDetailPage() {
           {/* Title & Price */}
           <div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
-              Apple iPhone 14 Pro Max
+              {productName}
             </h1>
 
             <div className="flex items-baseline gap-3 mt-2">
               <span className="text-2xl sm:text-3xl font-bold text-foreground">
-                ${selectedStorage.price}
+                {isThaiPrice ? `฿${currentPrice.toLocaleString()}` : `$${currentPrice}`}
               </span>
               <span className="text-lg sm:text-xl text-muted-foreground line-through font-normal">
-                ${selectedStorage.originalPrice}
+                {isThaiPrice
+                  ? `฿${currentOriginalPrice.toLocaleString()}`
+                  : `$${currentOriginalPrice}`}
               </span>
             </div>
           </div>
@@ -248,7 +271,7 @@ function ProductDetailPage() {
                   Added!
                 </>
               ) : (
-                "Add to Card"
+                "Add to Cart"
               )}
             </Button>
           </div>

@@ -44,18 +44,28 @@ function CartPage() {
                 >
                   {/* Product Thumbnail & Details */}
                   <div className="flex items-center gap-4 sm:gap-5 min-w-0">
-                    <div className="size-20 sm:size-24 rounded-xl bg-[#f9f9f9] dark:bg-zinc-900 p-2 shrink-0 flex items-center justify-center border border-border/40">
+                    <Link
+                      to={`/products/${item.id}`}
+                      className="size-20 sm:size-24 rounded-xl bg-[#f9f9f9] dark:bg-zinc-900 p-2 shrink-0 flex items-center justify-center border border-border/40 hover:border-foreground/30 transition-colors"
+                      title={item.name}
+                    >
                       <img
                         src={item.image}
                         alt={item.name}
                         className="max-h-full max-w-full object-contain select-none"
                       />
-                    </div>
+                    </Link>
 
                     <div className="flex flex-col gap-1 min-w-0">
-                      <h3 className="text-sm sm:text-base font-semibold text-foreground leading-snug">
-                        {item.name}
-                      </h3>
+                      <Link
+                        to={`/products/${item.id}`}
+                        className="hover:underline transition-colors"
+                        title={item.name}
+                      >
+                        <h3 className="text-sm sm:text-base font-semibold text-foreground leading-snug">
+                          {item.name}
+                        </h3>
+                      </Link>
                       <span className="text-xs text-muted-foreground font-mono">
                         {item.sku}
                       </span>

@@ -718,10 +718,15 @@ function CheckoutPage() {
             </div>
           </div>
 
-          <DialogFooter className="sm:justify-center mt-3">
-            <Link to="/" className="w-full">
-              <Button className="w-full h-11 bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black cursor-pointer font-semibold">
-                Back to Home
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:justify-center mt-3">
+            <Link to="/my-orders" className="w-full sm:w-1/2">
+              <Button className="w-full h-10 bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black cursor-pointer text-xs font-semibold">
+                ดูคำสั่งซื้อของฉัน
+              </Button>
+            </Link>
+            <Link to="/" className="w-full sm:w-1/2">
+              <Button variant="outline" className="w-full h-10 cursor-pointer text-xs font-semibold">
+                กลับสู่หน้าแรก
               </Button>
             </Link>
           </DialogFooter>

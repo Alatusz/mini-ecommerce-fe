@@ -6,6 +6,9 @@ import HomePage from "@/pages/home/Index"
 import ProductListPage from "@/pages/products/Index"
 import CartPage from "@/pages/default-user/cart/Index"
 import CheckoutPage from "@/pages/default-user/checkout/Index"
+import ProductDetailPage from "@/pages/default-user/product-detail/Index"
+import UserProfilePage from "@/pages/default-user/profile/Index"
+import MyOrdersPage from "@/pages/default-user/my-orders/Index"
 import DashboardLayout from "@/pages/dashboard/Index"
 import DashboardPage from "@/pages/dashboard/default/Index"
 import DashboardCategoryPage from "@/pages/dashboard/category/Index"
@@ -15,8 +18,12 @@ import DashboardProductPage from "@/pages/dashboard/product/Index"
 import DashboardProductCreatePage from "@/pages/dashboard/product/create/Index"
 import DashboardProductEditPage from "@/pages/dashboard/product/edit/Index"
 import DashboardUserManagementPage from "@/pages/dashboard/user-management/Index"
-import DashboardUserCreatePage from "@/pages/dashboard/user-management/create/Index"
-import DashboardUserEditPage from "@/pages/dashboard/user-management/edit/Index"
+import DashboardOrderPage from "@/pages/dashboard/order/Index"
+import DashboardOrderEditPage from "@/pages/dashboard/order/edit/Index"
+import DashboardCouponPage from "@/pages/dashboard/coupon/Index"
+import DashboardCouponCreatePage from "@/pages/dashboard/coupon/create/Index"
+import DashboardCouponEditPage from "@/pages/dashboard/coupon/edit/Index"
+import DashboardSettingsPage from "@/pages/dashboard/settings/Index"
 
 const NotFoundPage = () => (
   <div className="p-6 text-xl text-red-500">404 - ไม่พบหน้า</div>
@@ -25,26 +32,43 @@ const NotFoundPage = () => (
 export function App() {
   return (
     <Routes>
-      {/* หน้าแรก, หน้ารายการสินค้า, ตะกร้าสินค้า, หน้าชำระเงิน */}
+      {/* หน้าแรก, หน้ารายการสินค้า, ตะกร้าสินค้า, หน้าชำระเงิน, ประวัติคำสั่งซื้อ, โปรไฟล์ */}
       <Route path="/" element={<MainLayout />}>
         <Route index element={<HomePage />} />
         <Route path="products" element={<ProductListPage />} />
+        <Route path="products/:id" element={<ProductDetailPage />} />
+        <Route path="product-detail/:id" element={<ProductDetailPage />} />
         <Route path="cart" element={<CartPage />} />
         <Route path="checkout" element={<CheckoutPage />} />
+        <Route path="profile" element={<UserProfilePage />} />
+        <Route path="my-orders" element={<MyOrdersPage />} />
       </Route>
 
       {/* หน้าจัดการระบบ Dashboard */}
       <Route path="/dashboard" element={<DashboardLayout />}>
         <Route index element={<DashboardPage />} />
+        <Route path="order" element={<DashboardOrderPage />} />
+        <Route path="order/edit/:id" element={<DashboardOrderEditPage />} />
         <Route path="category" element={<DashboardCategoryPage />} />
-        <Route path="category/create" element={<DashboardCategoryCreatePage />} />
-        <Route path="category/edit/:id" element={<DashboardCategoryEditPage />} />
+        <Route
+          path="category/create"
+          element={<DashboardCategoryCreatePage />}
+        />
+        <Route
+          path="category/edit/:id"
+          element={<DashboardCategoryEditPage />}
+        />
         <Route path="product" element={<DashboardProductPage />} />
         <Route path="product/create" element={<DashboardProductCreatePage />} />
         <Route path="product/edit/:id" element={<DashboardProductEditPage />} />
-        <Route path="user-management" element={<DashboardUserManagementPage />} />
-        <Route path="user-management/create" element={<DashboardUserCreatePage />} />
-        <Route path="user-management/edit/:id" element={<DashboardUserEditPage />} />
+        <Route path="coupon" element={<DashboardCouponPage />} />
+        <Route path="coupon/create" element={<DashboardCouponCreatePage />} />
+        <Route path="coupon/edit/:id" element={<DashboardCouponEditPage />} />
+        <Route
+          path="user-management"
+          element={<DashboardUserManagementPage />}
+        />
+        <Route path="settings" element={<DashboardSettingsPage />} />
       </Route>
 
       {/* เข้าสู่ระบบ */}

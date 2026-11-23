@@ -1,39 +1,76 @@
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
+import { useMutation } from "@tanstack/react-query"
+import { QUERY_KEYS } from "@/lib/constants"
+import { useCategoryOptions } from "../useHooks"
 import {
-  addProductToStore,
-  productCategories,
-  type ProductItem,
-} from "../common/mockProduct"
+  createProduct,
+  type IProduct,
+  type ProductPublishStatus,
+} from "@/services/product.services"
+import { uploadImage } from "@/services/upload.services"
+import { queryClient } from "@/lib/queryClient"
+import { showToast } from "@/lib/toast"
 
 export interface ProductFormState {
   name: string
   sku: string
-  category: string
+  categoryId: string
   price: string
   stock: string
   image: string
-  status: "In Stock" | "Low Stock" | "Out of Stock"
+  description: string
+  status: ProductPublishStatus
 }
 
 export function useProductCreate() {
   const navigate = useNavigate()
 
+  // ── 1. ดึงตัวเลือกหมวดหมู่สำหรับใส่ Dropdown ({feature}Options Convention) ──
+  const { data: categoryOptions = [], isLoading: isLoadingCategories } =
+    useCategoryOptions(100)
+
+  // ── 2. Image Upload & File Attachment State (อ้างอิง Category) ──
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
+  const [useUrlInput, setUseUrlInput] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   const [formData, setFormData] = useState<ProductFormState>({
     name: "",
     sku: "",
-    category: productCategories.find((c) => c !== "All") || "Smartphones",
+    categoryId: "",
     price: "",
     stock: "50",
     image: "",
-    status: "In Stock",
+    description : "",
+    status: "published",
   })
 
-  const [errors, setErrors] = useState<Partial<Record<keyof ProductFormState, string>>>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof ProductFormState, string>>
+  >({})
+
+  // Auto-select first category เมื่อ options โหลดเสร็จ
+  useEffect(() => {
+    if (!formData.categoryId && categoryOptions.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        categoryId: prev.categoryId || categoryOptions[0].id,
+      }))
+    }
+  }, [categoryOptions, formData.categoryId])
+
+  // Cleanup blob URL on unmount
+  useEffect(() => {
+    return () => {
+      if (formData.image?.startsWith("blob:")) {
+        URL.revokeObjectURL(formData.image)
+      }
+    }
+  }, [formData.image])
 
   const handleNameChange = (name: string) => {
-    // Generate suggested SKU from name words (e.g. Sony WH 1000 -> SONY-WH-1000)
     const suggestedSku = name
       .trim()
       .toUpperCase()
@@ -69,26 +106,48 @@ export function useProductCreate() {
     field: K,
     value: ProductFormState[K]
   ) => {
-    setFormData((prev) => {
-      const next = { ...prev, [field]: value }
-
-      // Auto update status based on stock if stock changed
-      if (field === "stock") {
-        const units = Number(value)
-        if (units <= 0) {
-          next.status = "Out of Stock"
-        } else if (units < 10) {
-          next.status = "Low Stock"
-        } else {
-          next.status = "In Stock"
-        }
-      }
-
-      return next
-    })
-
+    setFormData((prev) => ({ ...prev, [field]: value }))
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }))
+    }
+  }
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith("image/")) {
+      showToast.error("Only image files are allowed")
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showToast.error("File size exceeds 5MB limit")
+      return
+    }
+
+    if (formData.image?.startsWith("blob:")) {
+      URL.revokeObjectURL(formData.image)
+    }
+
+    setSelectedFile(file)
+    const localBlobUrl = URL.createObjectURL(file)
+    setFormData((prev) => ({ ...prev, image: localBlobUrl }))
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }
+
+  const handleRemoveImage = () => {
+    if (formData.image?.startsWith("blob:")) {
+      URL.revokeObjectURL(formData.image)
+    }
+    setSelectedFile(null)
+    setFormData((prev) => ({ ...prev, image: "" }))
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
     }
   }
 
@@ -96,49 +155,81 @@ export function useProductCreate() {
     const newErrors: Partial<Record<keyof ProductFormState, string>> = {}
 
     if (!formData.name.trim()) {
-      newErrors.name = "Product title is required"
+      newErrors.name = "Product name is required"
     }
 
     if (!formData.sku.trim()) {
-      newErrors.sku = "SKU identifier code is required"
+      newErrors.sku = "SKU is required"
     }
 
-    if (!formData.price.trim() || isNaN(Number(formData.price)) || Number(formData.price) < 0) {
+    const priceNum = Number(formData.price)
+    if (!formData.price.trim() || isNaN(priceNum) || priceNum < 0) {
       newErrors.price = "Valid price is required"
     }
 
-    if (!formData.stock.trim() || isNaN(Number(formData.stock)) || Number(formData.stock) < 0) {
-      newErrors.stock = "Valid stock count is required"
+    const stockNum = Number(formData.stock)
+    if (!formData.stock.trim() || isNaN(stockNum) || stockNum < 0) {
+      newErrors.stock = "Valid stock is required"
+    }
+
+    if (!formData.categoryId) {
+      newErrors.categoryId = "Category is required"
     }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e?: React.FormEvent) => {
+  // ── 3. Mutation สำหรับสร้างสินค้าใหม่ผ่าน API ──
+  const createProductMutation = useMutation({
+    mutationFn: (payload: IProduct) => createProduct(payload),
+    onSuccess: () => {
+      showToast.success("Product created successfully")
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.DASHBOARD.PRODUCTS_LIST],
+      })
+      navigate("/dashboard/product")
+    },
+    onError: (err: any) => {
+      const message = err?.response?.data?.message || "Failed to create product"
+      showToast.error(message)
+    },
+  })
+
+  const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault()
     if (!validate()) return
 
-    setIsSubmitting(true)
+    try {
+      let finalImageUrl = formData.image || ""
 
-    const newProduct: ProductItem = {
-      id: `prod-${Date.now().toString(36)}`,
-      name: formData.name.trim(),
-      sku: formData.sku.trim().toUpperCase(),
-      category: formData.category,
-      price: Number(formData.price) || 0,
-      stock: Number(formData.stock) || 0,
-      salesCount: 0,
-      image: formData.image.trim() || "/images/detail-purple.png",
-      status: formData.status,
+      // ถ้าผู้ใช้เลือกไฟล์ ให้ Upload ไปยัง /upload/single ก่อนบันทึก
+      if (selectedFile) {
+        setIsUploading(true)
+        const uploadRes = await uploadImage(selectedFile)
+        finalImageUrl = uploadRes.url
+      }
+
+      const priceNum = Number(formData.price) || 0
+      const stockNum = Number(formData.stock) || 0
+
+      createProductMutation.mutate({
+        name: formData.name.trim(),
+        description: formData.description.trim() || undefined,
+        slug: formData.sku.trim().toLowerCase(),
+        sellPrice: priceNum,
+        originalPrice: priceNum,
+        stock: stockNum,
+        images: finalImageUrl ? [finalImageUrl] : [],
+        status: formData.status,
+        categoryId: formData.categoryId,
+      })
+    } catch (error) {
+      console.error("Upload error:", error)
+      showToast.error("Failed to upload image before saving")
+    } finally {
+      setIsUploading(false)
     }
-
-    addProductToStore(newProduct)
-
-    setTimeout(() => {
-      setIsSubmitting(false)
-      navigate("/dashboard/product")
-    }, 250)
   }
 
   const handleCancel = () => {
@@ -148,7 +239,16 @@ export function useProductCreate() {
   return {
     formData,
     errors,
-    isSubmitting,
+    categoryOptions,
+    isLoadingCategories,
+    isSubmitting: isUploading || createProductMutation.isPending,
+    selectedFile,
+    useUrlInput,
+    toggleUseUrlInput: () => setUseUrlInput((prev) => !prev),
+    fileInputRef,
+    openFileDialog: () => fileInputRef.current?.click(),
+    handleFileSelect,
+    handleRemoveImage,
     handleNameChange,
     handleFieldChange,
     handleSubmit,

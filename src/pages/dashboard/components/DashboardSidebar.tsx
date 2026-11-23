@@ -14,22 +14,17 @@ import {
   Bell,
   Settings,
   Store,
-  LogOut,
 } from "lucide-react"
 
 import Logo from "@/assets/alatusz-logo.svg"
-import { useAuth } from "@/context/AuthContext"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
@@ -45,20 +40,28 @@ export function DashboardSidebar({
   activeMenu: propActiveMenu,
   setActiveMenu,
 }: DashboardSidebarProps = {}) {
-  const { user, logout } = useAuth()
   const location = useLocation()
 
   // Derive active menu from URL path if not explicitly provided
   let activeMenu = propActiveMenu
   if (!activeMenu) {
-    if (location.pathname === "/dashboard" || location.pathname === "/dashboard/") {
+    if (
+      location.pathname === "/dashboard" ||
+      location.pathname === "/dashboard/"
+    ) {
       activeMenu = "dashboard"
+    } else if (location.pathname.startsWith("/dashboard/order")) {
+      activeMenu = "orders"
     } else if (location.pathname.startsWith("/dashboard/category")) {
       activeMenu = "categories"
     } else if (location.pathname.startsWith("/dashboard/product")) {
       activeMenu = "products"
+    } else if (location.pathname.startsWith("/dashboard/coupon")) {
+      activeMenu = "coupons"
     } else if (location.pathname.startsWith("/dashboard/user-management")) {
       activeMenu = "customers"
+    } else if (location.pathname.startsWith("/dashboard/settings")) {
+      activeMenu = "settings"
     } else {
       activeMenu = "dashboard"
     }
@@ -72,13 +75,13 @@ export function DashboardSidebar({
           <img
             src={Logo}
             alt="Mini Ecommerce"
-            className="size-8 rounded-md object-contain shrink-0"
+            className="size-8 shrink-0 rounded-md object-contain"
           />
-          <div className="flex flex-col min-w-0 group-data-[collapsible=icon]:hidden">
-            <span className="text-sm font-bold text-sidebar-foreground truncate">
+          <div className="flex min-w-0 flex-col group-data-[collapsible=icon]:hidden">
+            <span className="truncate text-sm font-bold text-sidebar-foreground">
               Mini Ecommerce
             </span>
-            <span className="text-[11px] text-muted-foreground font-medium">
+            <span className="text-[11px] font-medium text-muted-foreground">
               Admin Console
             </span>
           </div>
@@ -107,16 +110,17 @@ export function DashboardSidebar({
               </SidebarMenuItem>
 
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={activeMenu === "orders"}
-                  onClick={() => setActiveMenu?.("orders")}
-                  tooltip="Orders Management"
-                  className="cursor-pointer"
-                >
-                  <ShoppingBag className="size-4" />
-                  <span>Orders</span>
-                  <SidebarMenuBadge>5</SidebarMenuBadge>
-                </SidebarMenuButton>
+                <Link to="/dashboard/order" className="w-full">
+                  <SidebarMenuButton
+                    isActive={activeMenu === "orders"}
+                    onClick={() => setActiveMenu?.("orders")}
+                    tooltip="Orders Management"
+                    className="cursor-pointer"
+                  >
+                    <ShoppingBag className="size-4" />
+                    <span>Orders</span>
+                  </SidebarMenuButton>
+                </Link>
               </SidebarMenuItem>
 
               <SidebarMenuItem>
@@ -129,7 +133,6 @@ export function DashboardSidebar({
                   >
                     <Package className="size-4" />
                     <span>Products</span>
-                    <SidebarMenuBadge>18</SidebarMenuBadge>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
@@ -144,7 +147,6 @@ export function DashboardSidebar({
                   >
                     <Tags className="size-4" />
                     <span>Categories</span>
-                    <SidebarMenuBadge>8</SidebarMenuBadge>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
@@ -159,7 +161,6 @@ export function DashboardSidebar({
                   >
                     <Users className="size-4" />
                     <span>Customers</span>
-                    <SidebarMenuBadge>8</SidebarMenuBadge>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
@@ -173,7 +174,6 @@ export function DashboardSidebar({
                 >
                   <Star className="size-4" />
                   <span>Reviews</span>
-                  <SidebarMenuBadge>12</SidebarMenuBadge>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -188,16 +188,17 @@ export function DashboardSidebar({
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={activeMenu === "coupons"}
-                  onClick={() => setActiveMenu?.("coupons")}
-                  tooltip="Coupons & Discounts"
-                  className="cursor-pointer"
-                >
-                  <TicketPercent className="size-4" />
-                  <span>Coupons & Promo</span>
-                  <SidebarMenuBadge>3</SidebarMenuBadge>
-                </SidebarMenuButton>
+                <Link to="/dashboard/coupon" className="w-full">
+                  <SidebarMenuButton
+                    isActive={activeMenu === "coupons"}
+                    onClick={() => setActiveMenu?.("coupons")}
+                    tooltip="Coupons & Discounts"
+                    className="cursor-pointer"
+                  >
+                    <TicketPercent className="size-4" />
+                    <span>Coupons & Promo</span>
+                  </SidebarMenuButton>
+                </Link>
               </SidebarMenuItem>
 
               <SidebarMenuItem>
@@ -267,7 +268,6 @@ export function DashboardSidebar({
                 >
                   <Bell className="size-4" />
                   <span>Notifications</span>
-                  <SidebarMenuBadge>3</SidebarMenuBadge>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -283,7 +283,10 @@ export function DashboardSidebar({
             <SidebarMenu>
               <SidebarMenuItem>
                 <Link to="/" className="w-full">
-                  <SidebarMenuButton tooltip="Back to Storefront" className="cursor-pointer">
+                  <SidebarMenuButton
+                    tooltip="Back to Storefront"
+                    className="cursor-pointer"
+                  >
                     <Store className="size-4" />
                     <span>View Storefront</span>
                   </SidebarMenuButton>
@@ -291,51 +294,22 @@ export function DashboardSidebar({
               </SidebarMenuItem>
 
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={activeMenu === "settings"}
-                  onClick={() => setActiveMenu?.("settings")}
-                  tooltip="Store Settings"
-                  className="cursor-pointer"
-                >
-                  <Settings className="size-4" />
-                  <span>Settings</span>
-                </SidebarMenuButton>
+                <Link to="/dashboard/settings" className="w-full">
+                  <SidebarMenuButton
+                    isActive={activeMenu === "settings"}
+                    onClick={() => setActiveMenu?.("settings")}
+                    tooltip="Store Settings"
+                    className="cursor-pointer"
+                  >
+                    <Settings className="size-4" />
+                    <span>Settings</span>
+                  </SidebarMenuButton>
+                </Link>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-
-      {/* ── Footer: Admin Profile ── */}
-      <SidebarFooter className="border-t border-sidebar-border p-2">
-        <div className="flex items-center justify-between p-2 rounded-lg bg-sidebar-accent/50">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <Avatar size="sm">
-              <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
-                {user?.email?.charAt(0).toUpperCase() || "A"}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col min-w-0 group-data-[collapsible=icon]:hidden">
-              <span className="text-xs font-semibold truncate text-sidebar-foreground">
-                {user?.email || "admin@example.com"}
-              </span>
-              <span className="text-[10px] text-muted-foreground uppercase font-mono">
-                {user?.role || "Administrator"}
-              </span>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={logout}
-            title="Log out"
-            className="text-muted-foreground hover:text-destructive p-1 rounded transition-colors group-data-[collapsible=icon]:hidden cursor-pointer"
-          >
-            <LogOut className="size-4" />
-          </button>
-        </div>
-      </SidebarFooter>
-
       <SidebarRail />
     </Sidebar>
   )

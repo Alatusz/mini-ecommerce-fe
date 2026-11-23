@@ -20,10 +20,7 @@ import {
   X,
 } from "lucide-react"
 
-import {
-  dataGridFeatures,
-  type DataGridFeatures,
-} from "./tableFeatures"
+import { dataGridFeatures, type DataGridFeatures } from "./tableFeatures"
 import { useDataGridUrlSync } from "./useDataGridUrlSync"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -53,6 +50,11 @@ export interface DataGridProps<TData extends RowData> {
   className?: string
   onRowClick?: (row: TData) => void
   actions?: React.ReactNode
+
+  // Manual
+  rowCount?: number
+  manualPagination?: boolean
+  manualFiltering?: boolean
 }
 
 /**
@@ -79,6 +81,9 @@ export function DataGrid<TData extends RowData>({
   className = "",
   onRowClick,
   actions,
+  rowCount,
+  manualPagination = rowCount !== undefined,
+  manualFiltering = rowCount !== undefined,
 }: DataGridProps<TData>) {
   // Synchronize state with URL query parameters via TanStack Store external atoms
   const { paginationAtom, globalFilterAtom } = useDataGridUrlSync({
@@ -92,6 +97,9 @@ export function DataGrid<TData extends RowData>({
     data,
     columns,
     enableRowSelection,
+    manualPagination,
+    rowCount,
+    manualFiltering,
     initialState: {
       pagination: {
         pageIndex: 0,
@@ -101,7 +109,10 @@ export function DataGrid<TData extends RowData>({
     // Bind external atoms only for slices the application owns
     ...(urlSync && {
       atoms: {
-        pagination: paginationAtom as Atom<{ pageIndex: number; pageSize: number }>,
+        pagination: paginationAtom as Atom<{
+          pageIndex: number
+          pageSize: number
+        }>,
         globalFilter: globalFilterAtom as Atom<string>,
       },
     }),
@@ -119,6 +130,24 @@ export function DataGrid<TData extends RowData>({
   const rows = table.getRowModel().rows
   const headerGroups = table.getHeaderGroups()
 
+  // Search input debouncing to prevent excessive API requests
+  const [searchValue, setSearchValue] = React.useState(
+    table.state.globalFilter ?? ""
+  )
+
+  React.useEffect(() => {
+    setSearchValue(table.state.globalFilter ?? "")
+  }, [table.state.globalFilter])
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      if ((table.state.globalFilter ?? "") !== searchValue) {
+        table.setGlobalFilter(searchValue)
+      }
+    }, 350)
+    return () => clearTimeout(timer)
+  }, [searchValue])
+
   return (
     <div className={`flex flex-col gap-4 ${className}`}>
       {/* ── Toolbar: Header, Global Search, Column Visibility & Actions ── */}
@@ -126,35 +155,36 @@ export function DataGrid<TData extends RowData>({
         {(title || description) && (
           <div>
             {title && (
-              <h2 className="text-lg font-bold text-foreground">
-                {title}
-              </h2>
+              <h2 className="text-lg font-bold text-foreground">{title}</h2>
             )}
             {description && (
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <p className="mt-0.5 text-xs text-muted-foreground">
                 {description}
               </p>
             )}
           </div>
         )}
 
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="ml-auto flex items-center gap-2">
           {/* Global Search Input */}
           {enableSearch && (
             <div className="relative w-64">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder={searchPlaceholder}
-                value={table.state.globalFilter ?? ""}
-                onChange={(e) => table.setGlobalFilter(e.target.value)}
-                className="h-9 pl-8 pr-7 text-xs bg-background"
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                className="h-9 bg-background pr-7 pl-8 text-xs"
                 aria-label="Filter records"
               />
-              {table.state.globalFilter && (
+              {searchValue && (
                 <button
                   type="button"
-                  onClick={() => table.setGlobalFilter("")}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                  onClick={() => {
+                    setSearchValue("")
+                    table.setGlobalFilter("")
+                  }}
+                  className="absolute top-1/2 right-2 -translate-y-1/2 cursor-pointer text-muted-foreground hover:text-foreground"
                   aria-label="Clear search"
                 >
                   <X className="size-3.5" />
@@ -163,6 +193,9 @@ export function DataGrid<TData extends RowData>({
             </div>
           )}
 
+          {/* Custom Action Slots (เช่น ปุ่ม Filter วางไว้ก่อนปุ่ม Columns) */}
+          {actions}
+
           {/* Column Visibility Selector */}
           {enableColumnVisibility && (
             <DropdownMenu>
@@ -170,7 +203,7 @@ export function DataGrid<TData extends RowData>({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-9 gap-1.5 text-xs cursor-pointer border-border/70"
+                  className="h-9 cursor-pointer gap-1.5 border-border/70 text-xs"
                 >
                   <SlidersHorizontal className="size-3.5" />
                   <span>Columns</span>
@@ -179,7 +212,9 @@ export function DataGrid<TData extends RowData>({
 
               <DropdownMenuContent align="end" className="w-44">
                 <DropdownMenuGroup>
-                  <DropdownMenuLabel className="text-xs">Toggle Columns</DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-xs">
+                    Toggle Columns
+                  </DropdownMenuLabel>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
@@ -189,9 +224,11 @@ export function DataGrid<TData extends RowData>({
                     .map((column) => (
                       <DropdownMenuCheckboxItem
                         key={column.id}
-                        className="capitalize text-xs cursor-pointer"
+                        className="cursor-pointer text-xs capitalize"
                         checked={column.getIsVisible()}
-                        onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                        onCheckedChange={(value) =>
+                          column.toggleVisibility(!!value)
+                        }
                       >
                         {column.id}
                       </DropdownMenuCheckboxItem>
@@ -200,24 +237,28 @@ export function DataGrid<TData extends RowData>({
               </DropdownMenuContent>
             </DropdownMenu>
           )}
-
-          {/* Custom Action Slots */}
-          {actions}
         </div>
       </div>
 
       {/* ── Semantic HTML Table Container ── */}
-      <div className="relative rounded-xl border border-border/60 bg-card overflow-hidden shadow-2xs">
+      <div className="relative overflow-hidden rounded-xl border border-border/60 bg-card shadow-2xs">
         <div className="w-full overflow-x-auto">
           <table
-            className="w-full caption-bottom text-xs border-collapse"
+            className="w-full caption-bottom border-collapse text-xs"
             role="table"
             aria-label={title || "Data Table"}
           >
             {/* Semantic <thead> */}
-            <thead className="border-b border-border/60 bg-muted/40" role="rowgroup">
+            <thead
+              className="border-b border-border/60 bg-muted/40"
+              role="rowgroup"
+            >
               {headerGroups.map((headerGroup) => (
-                <tr key={headerGroup.id} className="border-b border-border/40" role="row">
+                <tr
+                  key={headerGroup.id}
+                  className="border-b border-border/40"
+                  role="row"
+                >
                   {headerGroup.headers.map((header) => {
                     const canSort = header.column.getCanSort()
                     const sortDirection = header.column.getIsSorted()
@@ -232,11 +273,13 @@ export function DataGrid<TData extends RowData>({
                           sortDirection === "asc"
                             ? "ascending"
                             : sortDirection === "desc"
-                            ? "descending"
-                            : "none"
+                              ? "descending"
+                              : "none"
                         }
-                        className={`h-10 px-4 text-left font-medium text-foreground whitespace-nowrap select-none ${
-                          canSort ? "cursor-pointer hover:bg-muted/70 transition-colors" : ""
+                        className={`h-10 px-4 text-left font-medium whitespace-nowrap text-foreground select-none ${
+                          canSort
+                            ? "cursor-pointer transition-colors hover:bg-muted/70"
+                            : ""
                         }`}
                         onClick={header.column.getToggleSortingHandler()}
                       >
@@ -267,7 +310,10 @@ export function DataGrid<TData extends RowData>({
             </thead>
 
             {/* Semantic <tbody> */}
-            <tbody className="divide-y divide-border/40 bg-card" role="rowgroup">
+            <tbody
+              className="divide-y divide-border/40 bg-card"
+              role="rowgroup"
+            >
               {rows.length > 0 ? (
                 rows.map((row) => {
                   const isSelected = row.getIsSelected()
@@ -286,7 +332,7 @@ export function DataGrid<TData extends RowData>({
                         <td
                           key={cell.id}
                           role="cell"
-                          className="px-4 py-3 align-middle text-foreground whitespace-nowrap"
+                          className="px-4 py-3 align-middle whitespace-nowrap text-foreground"
                         >
                           {/* Render cell using TanStack V9 FlexRender */}
                           <table.FlexRender cell={cell} />
@@ -305,9 +351,12 @@ export function DataGrid<TData extends RowData>({
                   >
                     <div className="flex flex-col items-center justify-center gap-2">
                       <Inbox className="size-8 text-muted-foreground/60" />
-                      <span className="text-xs font-medium">No records found</span>
+                      <span className="text-xs font-medium">
+                        No records found
+                      </span>
                       <span className="text-[11px] text-muted-foreground/70">
-                        Try adjusting your search criteria or clearing active filters.
+                        Try adjusting your search criteria or clearing active
+                        filters.
                       </span>
                     </div>
                   </td>
@@ -318,7 +367,7 @@ export function DataGrid<TData extends RowData>({
         </div>
 
         {/* ── Footer: Granular Reactive Subscription & Pagination ── */}
-        <div className="flex items-center justify-between gap-3 border-t border-border/50 px-4 py-3 text-xs bg-muted/15">
+        <div className="flex items-center justify-between gap-3 border-t border-border/50 bg-muted/15 px-4 py-3 text-xs">
           {/* TanStack Table Subscribe for Reactive Row Selection Counts */}
           {enableRowSelection ? (
             <table.Subscribe
@@ -352,14 +401,14 @@ export function DataGrid<TData extends RowData>({
 
           {/* Pagination Controls */}
           {enablePagination && (
-            <div className="flex items-center gap-6 ml-auto">
+            <div className="ml-auto flex items-center gap-6">
               {/* Page Size Selector */}
               <div className="flex items-center gap-1.5">
                 <span className="text-muted-foreground">Rows per page:</span>
                 <select
                   value={table.state.pagination.pageSize}
                   onChange={(e) => table.setPageSize(Number(e.target.value))}
-                  className="h-8 rounded-md border border-border/70 bg-background px-2 text-xs text-foreground cursor-pointer outline-none"
+                  className="h-8 cursor-pointer rounded-md border border-border/70 bg-background px-2 text-xs text-foreground outline-none"
                   aria-label="Rows per page"
                 >
                   {[5, 10, 20, 50].map((pageSize) => (
@@ -380,7 +429,7 @@ export function DataGrid<TData extends RowData>({
                 {({ pageIndex }) => {
                   const pageCount = table.getPageCount() || 1
                   return (
-                    <div className="text-muted-foreground font-medium">
+                    <div className="font-medium text-muted-foreground">
                       Page {pageIndex + 1} of {pageCount}
                     </div>
                   )

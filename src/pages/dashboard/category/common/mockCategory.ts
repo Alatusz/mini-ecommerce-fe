@@ -2,9 +2,9 @@ export interface CategoryItem {
   id: string
   name: string
   slug: string
-  itemCount: number
+  productCount?: number
   image?: string
-  status?: "Active" | "Archived"
+  status?: "active" | "archived" | "draft" | "Active" | "Archived"
   icon?: string
 }
 
@@ -13,7 +13,7 @@ export const initialCategories: CategoryItem[] = [
     id: "category-1",
     name: "Smartphones",
     slug: "smartphones",
-    itemCount: 142,
+    productCount: 142,
     image: "/images/detail-purple.png",
     status: "Active",
   },
@@ -21,7 +21,7 @@ export const initialCategories: CategoryItem[] = [
     id: "category-2",
     name: "Audio & Headphones",
     slug: "audio",
-    itemCount: 88,
+    productCount: 88,
     image: "/images/hero-airpods.png",
     status: "Active",
   },
@@ -29,7 +29,7 @@ export const initialCategories: CategoryItem[] = [
     id: "category-3",
     name: "Wearables & Watches",
     slug: "wearables",
-    itemCount: 64,
+    productCount: 64,
     image: "/images/cart-watch.png",
     status: "Active",
   },
@@ -37,7 +37,7 @@ export const initialCategories: CategoryItem[] = [
     id: "category-4",
     name: "Computers & Laptops",
     slug: "computers",
-    itemCount: 52,
+    productCount: 52,
     image: "/images/hero-macbook.png",
     status: "Active",
   },
@@ -45,7 +45,7 @@ export const initialCategories: CategoryItem[] = [
     id: "category-5",
     name: "Gaming & Consoles",
     slug: "gaming",
-    itemCount: 45,
+    productCount: 45,
     image: "/images/hero-ps5.png",
     status: "Active",
   },
@@ -53,7 +53,7 @@ export const initialCategories: CategoryItem[] = [
     id: "category-6",
     name: "Accessories",
     slug: "accessories",
-    itemCount: 180,
+    productCount: 180,
     image: "/images/showcase-gadgets.png",
     status: "Active",
   },
@@ -61,7 +61,7 @@ export const initialCategories: CategoryItem[] = [
     id: "category-7",
     name: "Photography & Cameras",
     slug: "cameras",
-    itemCount: 29,
+    productCount: 29,
     image: "/images/showcase-foldable.png",
     status: "Active",
   },
@@ -69,7 +69,7 @@ export const initialCategories: CategoryItem[] = [
     id: "category-8",
     name: "Smart Home",
     slug: "smart-home",
-    itemCount: 38,
+    productCount: 38,
     image: "/images/showcase-ipad.png",
     status: "Active",
   },

@@ -63,10 +63,14 @@ export function DashboardNavbar({
   if (!activeMenu) {
     if (location.pathname === "/dashboard" || location.pathname === "/dashboard/") {
       activeMenu = "dashboard"
+    } else if (location.pathname.startsWith("/dashboard/order")) {
+      activeMenu = "orders"
     } else if (location.pathname.startsWith("/dashboard/category")) {
       activeMenu = "categories"
     } else if (location.pathname.startsWith("/dashboard/product")) {
       activeMenu = "products"
+    } else if (location.pathname.startsWith("/dashboard/coupon")) {
+      activeMenu = "coupons"
     } else if (location.pathname.startsWith("/dashboard/user-management")) {
       activeMenu = "customers"
     } else {
@@ -154,7 +158,19 @@ export function DashboardNavbar({
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
-            {location.pathname === "/dashboard/category/create" ? (
+            {location.pathname.startsWith("/dashboard/order/edit") ? (
+              <>
+                <BreadcrumbItem>
+                  <BreadcrumbLink render={<Link to="/dashboard/order" />}>
+                    Orders Management
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Edit Order</BreadcrumbPage>
+                </BreadcrumbItem>
+              </>
+            ) : location.pathname === "/dashboard/category/create" ? (
               <>
                 <BreadcrumbItem>
                   <BreadcrumbLink render={<Link to="/dashboard/category" />}>
@@ -202,28 +218,28 @@ export function DashboardNavbar({
                   <BreadcrumbPage>Edit Product</BreadcrumbPage>
                 </BreadcrumbItem>
               </>
-            ) : location.pathname === "/dashboard/user-management/create" ? (
+            ) : location.pathname === "/dashboard/coupon/create" ? (
               <>
                 <BreadcrumbItem>
-                  <BreadcrumbLink render={<Link to="/dashboard/user-management" />}>
-                    User Management
+                  <BreadcrumbLink render={<Link to="/dashboard/coupon" />}>
+                    Coupons & Discounts
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Create User</BreadcrumbPage>
+                  <BreadcrumbPage>Create Coupon</BreadcrumbPage>
                 </BreadcrumbItem>
               </>
-            ) : location.pathname.startsWith("/dashboard/user-management/edit") ? (
+            ) : location.pathname.startsWith("/dashboard/coupon/edit") ? (
               <>
                 <BreadcrumbItem>
-                  <BreadcrumbLink render={<Link to="/dashboard/user-management" />}>
-                    User Management
+                  <BreadcrumbLink render={<Link to="/dashboard/coupon" />}>
+                    Coupons & Discounts
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Edit User</BreadcrumbPage>
+                  <BreadcrumbPage>Edit Coupon</BreadcrumbPage>
                 </BreadcrumbItem>
               </>
             ) : (

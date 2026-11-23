@@ -1,116 +1,150 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import { useMutation } from "@tanstack/react-query"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
 import { useNavigate } from "react-router-dom"
-import { addCategoryToStore, type CategoryItem } from "../common/mockCategory"
+import type { z } from "zod"
 
-export interface CategoryFormState {
-  name: string
-  slug: string
-  image: string
-  status: "Active" | "Archived"
-}
+import { QUERY_KEYS } from "@/lib/constants"
+import { queryClient } from "@/lib/queryClient"
+import { showToast } from "@/lib/toast"
+import { createCategory } from "@/services/category.services"
+import { uploadImage } from "@/services/upload.services"
+import {
+  categoryCreateSchema,
+  type CategoryCreateFormValues,
+} from "../common/Category.shema"
 
 export function useCategoryCreate() {
   const navigate = useNavigate()
 
-  const [formData, setFormData] = useState<CategoryFormState>({
-    name: "",
-    slug: "",
-    image: "",
-    status: "Active",
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
+  const [useUrlInput, setUseUrlInput] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const { control, handleSubmit, watch } = useForm<
+    z.input<typeof categoryCreateSchema>,
+    CategoryCreateFormValues
+  >({
+    defaultValues: {
+      name: "",
+      image: "",
+      status: "active",
+    },
+    mode: "onChange",
+    resolver: zodResolver(categoryCreateSchema),
   })
 
-  const [errors, setErrors] = useState<Partial<Record<keyof CategoryFormState, string>>>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const currentImage = watch("image")
 
-  const handleNameChange = (name: string) => {
-    const autoSlug = name
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-
-    setFormData((prev) => {
-      const prevAuto = prev.name
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "")
-
-      const shouldSyncSlug = !prev.slug || prev.slug === prevAuto
-
-      return {
-        ...prev,
-        name,
-        slug: shouldSyncSlug ? autoSlug : prev.slug,
+  // Cleanup object URL on unmount
+  useEffect(() => {
+    return () => {
+      if (currentImage?.startsWith("blob:")) {
+        URL.revokeObjectURL(currentImage)
       }
-    })
-
-    if (errors.name) {
-      setErrors((prev) => ({ ...prev, name: undefined }))
     }
-  }
+  }, [currentImage])
 
-  const handleFieldChange = <K extends keyof CategoryFormState>(
-    field: K,
-    value: CategoryFormState[K]
+  const handleFileSelect = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    onChange: (val: string) => void
   ) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }))
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith("image/")) {
+      showToast.error("Only image files are allowed")
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showToast.error("File size exceeds 5MB limit")
+      return
+    }
+
+    if (currentImage?.startsWith("blob:")) {
+      URL.revokeObjectURL(currentImage)
+    }
+
+    setSelectedFile(file)
+    const localBlobUrl = URL.createObjectURL(file)
+    onChange(localBlobUrl)
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
     }
   }
 
-  const validate = (): boolean => {
-    const newErrors: Partial<Record<keyof CategoryFormState, string>> = {}
-
-    if (!formData.name.trim()) {
-      newErrors.name = "Category name is required"
+  const handleRemoveImage = (
+    onChange: (val: string) => void,
+    currentValue: string
+  ) => {
+    if (currentValue?.startsWith("blob:")) {
+      URL.revokeObjectURL(currentValue)
     }
+    setSelectedFile(null)
+    onChange("")
 
-    if (!formData.slug.trim()) {
-      newErrors.slug = "URL slug identifier is required"
-    } else if (!/^[a-z0-9-]+$/.test(formData.slug.trim())) {
-      newErrors.slug = "Slug must contain only lowercase alphanumeric characters and hyphens"
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
     }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e?: React.FormEvent) => {
-    e?.preventDefault()
-    if (!validate()) return
+  const createCategoryMutation = useMutation({
+    mutationFn: createCategory,
+    onSuccess: async () => {
+      showToast.success("Category created successfully")
 
-    setIsSubmitting(true)
+      await queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.DASHBOARD.CATEGORIES_LIST],
+      })
 
-    const newCategory: CategoryItem = {
-      id: `category-${Date.now().toString(36)}`,
-      name: formData.name.trim(),
-      slug: formData.slug.trim(),
-      image: formData.image.trim() || "/images/showcase-gadgets.png",
-      itemCount: 0,
-      status: formData.status,
-    }
-
-    addCategoryToStore(newCategory)
-
-    setTimeout(() => {
-      setIsSubmitting(false)
       navigate("/dashboard/category")
-    }, 250)
-  }
+    },
+    onError: (err) => {
+      console.error("Failed to create category:", err)
+      showToast.error("Failed to create category")
+    },
+  })
 
-  const handleCancel = () => {
-    navigate("/dashboard/category")
-  }
+  const onSubmit = handleSubmit(async (data) => {
+    try {
+      let finalImageUrl = data.image || ""
+
+      if (selectedFile) {
+        setIsUploading(true)
+        const uploadRes = await uploadImage(selectedFile)
+        finalImageUrl = uploadRes.url
+      }
+      createCategoryMutation.mutate({
+        ...data,
+        image: finalImageUrl,
+      })
+    } catch (error) {
+      console.error("Upload error:", error)
+      showToast.error("Failed to upload image before saving")
+    } finally {
+      setIsUploading(false)
+    }
+  })
 
   return {
-    formData,
-    errors,
-    isSubmitting,
-    handleNameChange,
-    handleFieldChange,
-    handleSubmit,
-    handleCancel,
+    control,
+    handleSubmit: onSubmit,
+    createCategoryMutation,
+    isError: createCategoryMutation.isError,
+
+    // File / Attachment
+    selectedFile,
+    isSubmitting: isUploading || createCategoryMutation.isPending,
+    useUrlInput,
+    setUseUrlInput,
+    toggleUseUrlInput: () => setUseUrlInput((prev) => !prev),
+    fileInputRef,
+    openFileDialog: () => fileInputRef.current?.click(),
+    handleFileSelect,
+    handleRemoveImage,
   }
 }
