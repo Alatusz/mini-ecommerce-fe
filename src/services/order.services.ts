@@ -1,5 +1,44 @@
 import apiClient from "@/config/axios.config"
 
+export interface OrderStatusSummary {
+  status: string
+  count: number
+  total: number
+}
+
+export interface GetOrdersParams {
+  page?: number
+  limit?: number
+  search?: string
+  searchBy?: string
+  status?: string
+  paymentStatus?: string
+  paymentMethod?: string
+  startDate?: string
+  endDate?: string
+  tz?: string
+}
+
+export interface OrderItem {
+  id: string
+  orderNumber?: string
+  totalAmount?: number
+  total?: number
+  status: string
+  paymentMethod?: string
+  paymentStatus?: string
+  createdAt: string
+  user?: {
+    id: string
+    email: string
+    firstName?: string | null
+    lastName?: string | null
+  }
+  _count?: {
+    items: number
+  }
+}
+
 export interface CreateOrderPayload {
   addressId: string
   paymentMethod?: "cod" | "credit_card" | "promptpay" | string
@@ -37,8 +76,8 @@ export const cancelOrder = async (id: string) => {
 }
 
 // 5. ADMIN: ดูรายการคำสั่งซื้อทั้งหมดในระบบ (GET /api/orders)
-export const getOrders = async () => {
-  const response = await apiClient.get("/orders")
+export const getOrdersList = async (params?: GetOrdersParams) => {
+  const response = await apiClient.get("/orders", { params })
 
   return response.data
 }
