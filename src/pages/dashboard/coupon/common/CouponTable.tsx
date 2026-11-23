@@ -75,17 +75,10 @@ export function CouponTable({
     () => [
       couponColumnHelper.accessor("code", {
         header: "Code Name",
-        cell: ({ row }) => (
-          <div className="min-w-0">
-            <p className="font-mono text-xs font-semibold text-foreground">
-              {row.original.code}
-            </p>
-            {row.original.description && (
-              <p className="max-w-[220px] truncate text-xs text-muted-foreground">
-                {row.original.description}
-              </p>
-            )}
-          </div>
+        cell: (info) => (
+          <span className="font-mono text-xs font-semibold text-foreground">
+            {info.getValue()}
+          </span>
         ),
       }),
       couponColumnHelper.accessor("discountType", {
