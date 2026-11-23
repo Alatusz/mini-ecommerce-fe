@@ -5,12 +5,11 @@
  * - Quiet & Salience: monochrome KPI icons, slim 3px LTV share bars, warm red only on Suspended accounts.
  */
 import { useMemo } from "react"
+import { Link } from "react-router-dom"
 import {
-  Users,
   Plus,
   Pencil,
   Trash2,
-  DollarSign,
   ShieldCheck,
   UserCheck,
   Search,
@@ -49,18 +48,9 @@ const userColumnHelper = createColumnHelper<DataGridFeatures, UserItem>()
 export default function DashboardUserManagementPage() {
   const {
     users,
-    searchQuery,
-    setSearchQuery,
-    roleFilter,
-    setRoleFilter,
-    statusFilter,
-    setStatusFilter,
-    isAddOpen,
-    setIsAddOpen,
-    editingUser,
-    setEditingUser,
     deletingUser,
     setDeletingUser,
+    handleDeleteUser,
   } = useUserManagement()
 
   const activeCount = users.filter((u) => u.status === "Active").length
@@ -248,7 +238,7 @@ export default function DashboardUserManagementPage() {
         enableSorting: false,
       }),
     ],
-    [setEditingUser, setDeletingUser]
+    [setDeletingUser]
   )
 
   return (
