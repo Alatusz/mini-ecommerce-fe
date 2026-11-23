@@ -21,6 +21,7 @@ export default function DashboardOrderPage() {
     handleFilterReset,
     handleDateRangeChange,
     handleStatusChange,
+    handleEditOrder,
     handleDeleteOrder,
   } = useOrder()
 
@@ -49,6 +50,7 @@ export default function DashboardOrderPage() {
         onFilterReset={handleFilterReset}
         onStatusChange={handleStatusChange}
         isUpdatingStatus={isUpdatingStatus}
+        onEdit={handleEditOrder}
         onDelete={setDeletingOrder}
       />
 

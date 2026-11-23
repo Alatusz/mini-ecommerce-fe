@@ -1,62 +1,62 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import {
-  getOrderById,
-  updateOrderInStore,
-  deleteOrderFromStore,
+  useOrderDetailQuery,
+  useUpdateOrderStatusMutation,
   type OrderItem,
-} from "../common/mockOrder"
+  type UpdateOrderStatusPayload,
+} from "../useHubs"
+
+export type OrderStatus = NonNullable<UpdateOrderStatusPayload["status"]>
+export type PaymentStatus = NonNullable<
+  UpdateOrderStatusPayload["paymentStatus"]
+>
 
 export interface OrderStep {
   step: number
-  key: "Pending" | "Processing" | "Shipped" | "Completed"
+  key: Exclude<OrderStatus, "cancelled">
   label: string
   subLabel: string
-  description: string
 }
 
 export const orderSteps: OrderStep[] = [
   {
     step: 1,
-    key: "Pending",
+    key: "pending",
     label: "Pending",
     subLabel: "Order Placed",
-    description: "Customer has submitted the order; awaiting payment verification.",
   },
   {
     step: 2,
-    key: "Processing",
-    label: "Processing",
-    subLabel: "Packaging",
-    description: "Order confirmed; warehouse staff is preparing and packing the merchandise.",
+    key: "paid",
+    label: "Paid",
+    subLabel: "Payment Verified",
   },
   {
     step: 3,
-    key: "Shipped",
+    key: "shipped",
     label: "Shipped",
     subLabel: "In Transit",
-    description: "Package has been dispatched and handed over to the courier service.",
   },
   {
     step: 4,
-    key: "Completed",
-    label: "Completed",
-    subLabel: "Delivered",
-    description: "Shipment delivered to the customer destination. Order fulfilled and completed.",
+    key: "delivered",
+    label: "Delivered",
+    subLabel: "Completed",
   },
 ]
 
-export const getStepNumber = (status: OrderItem["status"]): number => {
+export const getStepNumber = (status: string): number => {
   switch (status) {
-    case "Pending":
+    case "pending":
       return 1
-    case "Processing":
+    case "paid":
       return 2
-    case "Shipped":
+    case "shipped":
       return 3
-    case "Completed":
+    case "delivered":
       return 4
-    case "Cancelled":
+    default:
       return 0
   }
 }
@@ -65,64 +65,56 @@ export function useOrderEdit() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
-  const [order, setOrder] = useState<OrderItem | null>(null)
-  const [isNotFound, setIsNotFound] = useState(false)
-  const [status, setStatus] = useState<OrderItem["status"]>("Pending")
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
+  const { data, isLoading, isError } = useOrderDetailQuery(id)
+  const updateStatusMutation = useUpdateOrderStatusMutation()
+
+  const order: OrderItem | undefined = data?.data
+
+  const [status, setStatus] = useState<OrderStatus>("pending")
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("pending")
 
   useEffect(() => {
-    if (!id) {
-      setIsNotFound(true)
-      return
-    }
+    if (!order) return
+    setStatus((order.status as OrderStatus) || "pending")
+    setPaymentStatus((order.paymentStatus as PaymentStatus) || "pending")
+  }, [order])
 
-    const found = getOrderById(id)
-    if (!found) {
-      setIsNotFound(true)
-      return
-    }
+  const isLockedCancelled = order?.status === "cancelled"
 
-    setOrder(found)
-    setStatus(found.status)
-    setIsNotFound(false)
-  }, [id])
-
-  const handleStatusChange = (newStatus: OrderItem["status"]) => {
+  const handleStatusChange = (newStatus: OrderStatus) => {
+    if (isLockedCancelled) return
     setStatus(newStatus)
   }
 
   const handleSetStep = (stepNumber: number) => {
+    if (isLockedCancelled) return
     const target = orderSteps.find((s) => s.step === stepNumber)
     if (target) {
       setStatus(target.key)
     }
   }
 
-  const handleSubmit = (e?: React.FormEvent) => {
-    e?.preventDefault()
-    if (!id) return
-
-    setIsSubmitting(true)
-
-    updateOrderInStore(id, {
-      status,
-    })
-
-    setTimeout(() => {
-      setIsSubmitting(false)
-      navigate("/dashboard/order")
-    }, 250)
+  const handlePaymentStatusChange = (newPaymentStatus: PaymentStatus) => {
+    setPaymentStatus(newPaymentStatus)
   }
 
-  const handleDelete = () => {
-    if (!id) return
-    setIsDeleting(true)
-    deleteOrderFromStore(id)
-    setTimeout(() => {
-      setIsDeleting(false)
-      navigate("/dashboard/order")
-    }, 250)
+  const handleSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault()
+    if (!id || !order) return
+
+    const payload: UpdateOrderStatusPayload = {
+      paymentStatus,
+      ...(isLockedCancelled ? {} : { status }),
+    }
+
+    updateStatusMutation.mutate(
+      { id, payload },
+      {
+        onSuccess: () => {
+          navigate("/dashboard/order")
+        },
+      }
+    )
   }
 
   const handleCancel = () => {
@@ -132,15 +124,17 @@ export function useOrderEdit() {
   return {
     id,
     order,
-    isNotFound,
+    isLoading,
+    isNotFound: !isLoading && (isError || !order),
+    isLockedCancelled,
     status,
+    paymentStatus,
     currentStepNumber: getStepNumber(status),
-    isSubmitting,
-    isDeleting,
+    isSubmitting: updateStatusMutation.isPending,
     handleStatusChange,
     handleSetStep,
+    handlePaymentStatusChange,
     handleSubmit,
-    handleDelete,
     handleCancel,
   }
 }

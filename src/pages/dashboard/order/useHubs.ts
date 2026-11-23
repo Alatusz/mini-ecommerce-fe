@@ -2,15 +2,22 @@ import { useMutation, useQuery, keepPreviousData } from "@tanstack/react-query"
 import { QUERY_KEYS } from "@/lib/constants"
 import {
   getOrdersList,
+  getOrderDetails,
   updateOrderStatus,
   type OrderItem,
+  type OrderLineItem,
   type OrderStatusSummary,
   type UpdateOrderStatusPayload,
 } from "@/services/order.services"
 import { queryClient } from "@/lib/queryClient"
 import { showToast } from "@/lib/toast"
 
-export type { OrderItem, OrderStatusSummary, UpdateOrderStatusPayload }
+export type {
+  OrderItem,
+  OrderLineItem,
+  OrderStatusSummary,
+  UpdateOrderStatusPayload,
+}
 
 export const ORDER_STATUS_OPTIONS = [
   { id: "pending", label: "Pending", dot: "bg-amber-500" },
@@ -68,6 +75,14 @@ export function useOrdersListQuery(params: {
         tz: params.startDate && params.endDate ? params.tz : undefined,
       }),
     placeholderData: keepPreviousData,
+  })
+}
+
+export function useOrderDetailQuery(id?: string) {
+  return useQuery({
+    queryKey: [QUERY_KEYS.DASHBOARD.ORDERS_LIST, "detail", id],
+    queryFn: () => getOrderDetails(id!),
+    enabled: Boolean(id),
   })
 }
 

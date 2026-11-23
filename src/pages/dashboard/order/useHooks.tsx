@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react"
-import { useSearchParams } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import type { DateRange } from "react-day-picker"
 import {
   useOrdersListQuery,
@@ -21,6 +21,7 @@ const parseCsv = (raw: string) =>
     : []
 
 export function useOrder() {
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [deletingOrder, setDeletingOrder] = useState<OrderItem | null>(null)
 
@@ -138,6 +139,10 @@ export function useOrder() {
     })
   }
 
+  const handleEditOrder = (order: OrderItem) => {
+    navigate(`/dashboard/order/edit/${order.id}`)
+  }
+
   const handleDeleteOrder = (_id: string) => {
     setDeletingOrder(null)
   }
@@ -158,6 +163,7 @@ export function useOrder() {
     handleFilterReset,
     handleDateRangeChange,
     handleStatusChange,
+    handleEditOrder,
     handleDeleteOrder,
   }
 }

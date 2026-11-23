@@ -1,5 +1,5 @@
 import { useMemo } from "react"
-import { MoreHorizontal, Trash2 } from "lucide-react"
+import { Eye, MoreHorizontal, Trash2 } from "lucide-react"
 import {
   DataGrid,
   createColumnHelper,
@@ -42,6 +42,7 @@ interface OrderTableProps {
   onFilterReset: () => void
   onStatusChange: (id: string, status: string) => void
   isUpdatingStatus?: boolean
+  onEdit: (order: OrderItem) => void
   onDelete: (order: OrderItem) => void
 }
 
@@ -56,6 +57,7 @@ export function OrderTable({
   onFilterReset,
   onStatusChange,
   isUpdatingStatus = false,
+  onEdit,
   onDelete,
 }: OrderTableProps) {
   const columns = useMemo(
@@ -192,6 +194,13 @@ export function OrderTable({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40">
                   <DropdownMenuItem
+                    className="cursor-pointer"
+                    onClick={() => onEdit(order)}
+                  >
+                    <Eye className="mr-2 h-3.5 w-3.5" />
+                    View / Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
                     className="cursor-pointer text-destructive focus:text-destructive"
                     onClick={() => onDelete(order)}
                   >
@@ -205,7 +214,7 @@ export function OrderTable({
         },
       }),
     ],
-    [onStatusChange, isUpdatingStatus, onDelete]
+    [onStatusChange, isUpdatingStatus, onEdit, onDelete]
   )
 
   return (

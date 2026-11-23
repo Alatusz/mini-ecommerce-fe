@@ -19,6 +19,20 @@ export interface GetOrdersParams {
   tz?: string
 }
 
+export interface OrderLineItem {
+  id: string
+  orderId: string
+  productId: string
+  quantity: number
+  price: number
+  product?: {
+    id: string
+    name: string
+    imageUrl?: string | null
+    price?: number
+  }
+}
+
 export interface OrderItem {
   id: string
   orderNumber?: string
@@ -27,13 +41,17 @@ export interface OrderItem {
   status: string
   paymentMethod?: string
   paymentStatus?: string
+  shippingAddress?: string | null
+  shippingPhone?: string | null
   createdAt: string
   user?: {
     id: string
     email: string
     firstName?: string | null
     lastName?: string | null
+    phone?: string | null
   }
+  items?: OrderLineItem[]
   _count?: {
     items: number
   }
