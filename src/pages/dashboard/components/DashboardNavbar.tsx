@@ -36,6 +36,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import ThemeToggle from "@/components/shares/Theme-toggle"
+import LanguageToggle from "@/components/shares/Language-toggle"
+import { useLanguage } from "@/context/LanguageContext"
 
 interface NotificationItem {
   id: string
@@ -57,6 +59,8 @@ export function DashboardNavbar({
   activeMenu: propActiveMenu,
 }: DashboardNavbarProps = {}) {
   const { user, logout } = useAuth()
+  const { dict } = useLanguage()
+  const n = dict.navbar
   const location = useLocation()
 
   let activeMenu = propActiveMenu
@@ -119,21 +123,7 @@ export function DashboardNavbar({
     setNotifications((prev) => prev.map((n) => ({ ...n, read: false })))
   }
 
-  const menuTitles: Record<string, string> = {
-    dashboard: "Overview",
-    orders: "Orders Management",
-    products: "Products Catalog",
-    categories: "Product Categories",
-    customers: "Customers Directory",
-    reviews: "Reviews & Ratings",
-    coupons: "Coupons & Discounts",
-    banners: "Banners & CMS",
-    analytics: "Sales & Revenue",
-    inventory: "Inventory & Stock",
-    shipping: "Shipping Rates",
-    notifications: "System Notifications",
-    settings: "Store Settings",
-  }
+  const menuTitles: Record<string, string> = n.titles
 
   const formattedMenuTitle =
     menuTitles[activeMenu] ||
@@ -149,12 +139,12 @@ export function DashboardNavbar({
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink render={<Link to="/" />}>Store</BreadcrumbLink>
+              <BreadcrumbLink render={<Link to="/" />}>{n.store}</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbLink render={<Link to="/dashboard" />}>
-                Admin
+                {n.admin}
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
@@ -162,84 +152,84 @@ export function DashboardNavbar({
               <>
                 <BreadcrumbItem>
                   <BreadcrumbLink render={<Link to="/dashboard/order" />}>
-                    Orders Management
+                    {n.titles.orders}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Edit Order</BreadcrumbPage>
+                  <BreadcrumbPage>{n.breadcrumbs.editOrder}</BreadcrumbPage>
                 </BreadcrumbItem>
               </>
             ) : location.pathname === "/dashboard/category/create" ? (
               <>
                 <BreadcrumbItem>
                   <BreadcrumbLink render={<Link to="/dashboard/category" />}>
-                    Product Categories
+                    {n.titles.categories}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Create Category</BreadcrumbPage>
+                  <BreadcrumbPage>{n.breadcrumbs.createCategory}</BreadcrumbPage>
                 </BreadcrumbItem>
               </>
             ) : location.pathname.startsWith("/dashboard/category/edit") ? (
               <>
                 <BreadcrumbItem>
                   <BreadcrumbLink render={<Link to="/dashboard/category" />}>
-                    Product Categories
+                    {n.titles.categories}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Edit Category</BreadcrumbPage>
+                  <BreadcrumbPage>{n.breadcrumbs.editCategory}</BreadcrumbPage>
                 </BreadcrumbItem>
               </>
             ) : location.pathname === "/dashboard/product/create" ? (
               <>
                 <BreadcrumbItem>
                   <BreadcrumbLink render={<Link to="/dashboard/product" />}>
-                    Products Catalog
+                    {n.titles.products}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Create Product</BreadcrumbPage>
+                  <BreadcrumbPage>{n.breadcrumbs.createProduct}</BreadcrumbPage>
                 </BreadcrumbItem>
               </>
             ) : location.pathname.startsWith("/dashboard/product/edit") ? (
               <>
                 <BreadcrumbItem>
                   <BreadcrumbLink render={<Link to="/dashboard/product" />}>
-                    Products Catalog
+                    {n.titles.products}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Edit Product</BreadcrumbPage>
+                  <BreadcrumbPage>{n.breadcrumbs.editProduct}</BreadcrumbPage>
                 </BreadcrumbItem>
               </>
             ) : location.pathname === "/dashboard/coupon/create" ? (
               <>
                 <BreadcrumbItem>
                   <BreadcrumbLink render={<Link to="/dashboard/coupon" />}>
-                    Coupons & Discounts
+                    {n.titles.coupons}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Create Coupon</BreadcrumbPage>
+                  <BreadcrumbPage>{n.breadcrumbs.createCoupon}</BreadcrumbPage>
                 </BreadcrumbItem>
               </>
             ) : location.pathname.startsWith("/dashboard/coupon/edit") ? (
               <>
                 <BreadcrumbItem>
                   <BreadcrumbLink render={<Link to="/dashboard/coupon" />}>
-                    Coupons & Discounts
+                    {n.titles.coupons}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Edit Coupon</BreadcrumbPage>
+                  <BreadcrumbPage>{n.breadcrumbs.editCoupon}</BreadcrumbPage>
                 </BreadcrumbItem>
               </>
             ) : (
@@ -257,7 +247,7 @@ export function DashboardNavbar({
         <div className="relative w-64">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
-            placeholder="Search dashboard..."
+            placeholder={n.searchPlaceholder}
             value={searchQuery}
             onChange={(e) => setSearchQuery?.(e.target.value)}
             className="h-9 pl-8 text-xs bg-muted/40 rounded-lg border-border/60"
@@ -268,7 +258,7 @@ export function DashboardNavbar({
         <Link to="/" className="inline-flex">
           <Button variant="outline" size="sm" className="gap-1.5 cursor-pointer">
             <Store className="size-3.5" />
-            <span>View Store</span>
+            <span>{n.viewStore}</span>
           </Button>
         </Link>
 
@@ -374,7 +364,8 @@ export function DashboardNavbar({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Theme Toggle */}
+        {/* Language & Theme Toggle */}
+        <LanguageToggle />
         <ThemeToggle />
 
         {/* Admin Profile Dropdown */}
@@ -402,16 +393,18 @@ export function DashboardNavbar({
             <DropdownMenuGroup>
               <DropdownMenuItem className="cursor-pointer">
                 <UserIcon />
-                <span>Admin Profile</span>
+                <span>{n.adminProfile}</span>
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
-                <Settings />
-                <span>Store Settings</span>
-              </DropdownMenuItem>
+              <Link to="/dashboard/settings">
+                <DropdownMenuItem className="cursor-pointer">
+                  <Settings />
+                  <span>{n.storeSettings}</span>
+                </DropdownMenuItem>
+              </Link>
               <Link to="/">
                 <DropdownMenuItem className="cursor-pointer">
                   <Store />
-                  <span>Go to Storefront</span>
+                  <span>{n.goToStorefront}</span>
                 </DropdownMenuItem>
               </Link>
             </DropdownMenuGroup>
@@ -424,7 +417,7 @@ export function DashboardNavbar({
               className="cursor-pointer"
             >
               <LogOut />
-              <span>Log out</span>
+              <span>{n.logout}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

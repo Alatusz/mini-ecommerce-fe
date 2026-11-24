@@ -1,0 +1,205 @@
+{
+  "shares": {
+    "actions": {
+      "save": "บันทึก",
+      "saveChanges": "บันทึกการเปลี่ยนแปลง",
+      "saving": "กำลังบันทึก...",
+      "create": "สร้าง",
+      "creating": "กำลังสร้าง...",
+      "edit": "แก้ไข",
+      "delete": "ลบ",
+      "cancel": "ยกเลิก",
+      "back": "ย้อนกลับ",
+      "reset": "รีเซ็ต",
+      "apply": "ใช้งาน",
+      "search": "ค้นหา",
+      "viewAll": "ดูทั้งหมด",
+      "loading": "กำลังโหลด..."
+    },
+    "status": {
+      "active": "เปิดใช้งาน",
+      "draft": "ฉบับร่าง",
+      "archived": "เก็บถาวร",
+      "published": "เผยแพร่แล้ว",
+      "pending": "รอดำเนินการ",
+      "paid": "ชำระเงินแล้ว",
+      "shipped": "กำลังจัดส่ง",
+      "delivered": "จัดส่งสำเร็จ",
+      "cancelled": "ยกเลิกแล้ว"
+    }
+  },
+  "sidebar": {
+    "console": "ระบบจัดการหลังบ้าน",
+    "groups": {
+      "storeManagement": "จัดการร้านค้า",
+      "marketingSales": "การตลาดและโปรโมชัน",
+      "analyticsLogistics": "วิเคราะห์และขนส่ง",
+      "systemStore": "ระบบและหน้าร้าน"
+    },
+    "items": {
+      "dashboard": "ภาพรวมระบบ",
+      "orders": "คำสั่งซื้อ",
+      "products": "สินค้าทั้งหมด",
+      "categories": "หมวดหมู่สินค้า",
+      "customers": "ลูกค้าและผู้ใช้",
+      "reviews": "รีวิวสินค้า",
+      "coupons": "คูปองและโปรโมชัน",
+      "banners": "แบนเนอร์และเนื้อหา",
+      "analytics": "รายงานวิเคราะห์",
+      "inventory": "คลังสินค้า",
+      "shipping": "อัตราค่าจัดส่ง",
+      "notifications": "การแจ้งเตือน",
+      "viewStorefront": "ไปหน้าเว็บไซต์",
+      "settings": "ตั้งค่าระบบ"
+    }
+  },
+  "navbar": {
+    "store": "หน้าร้าน",
+    "admin": "แอดมิน",
+    "searchPlaceholder": "ค้นหาในระบบหลังบ้าน...",
+    "viewStore": "ดูหน้าร้าน",
+    "notifications": "การแจ้งเตือน",
+    "newCount": "ใหม่",
+    "markAllRead": "อ่านทั้งหมดแล้ว",
+    "adminProfile": "โปรไฟล์แอดมิน",
+    "storeSettings": "ตั้งค่าร้านค้า",
+    "goToStorefront": "ไปยังหน้าร้านค้า",
+    "logout": "ออกจากระบบ",
+    "titles": {
+      "dashboard": "ภาพรวมระบบ",
+      "orders": "จัดการคำสั่งซื้อ",
+      "products": "จัดการสินค้า",
+      "categories": "จัดการหมวดหมู่",
+      "customers": "จัดการผู้ใช้งาน",
+      "reviews": "รีวิวและคะแนน",
+      "coupons": "คูปองและส่วนลด",
+      "banners": "แบนเนอร์และเนื้อหา",
+      "analytics": "ยอดขายและรายได้",
+      "inventory": "คลังสินค้าและสต็อก",
+      "shipping": "อัตราค่าจัดส่ง",
+      "notifications": "การแจ้งเตือนระบบ",
+      "settings": "ตั้งค่าระบบร้านค้า"
+    },
+    "breadcrumbs": {
+      "editOrder": "แก้ไขคำสั่งซื้อ",
+      "createCategory": "สร้างหมวดหมู่",
+      "editCategory": "แก้ไขหมวดหมู่",
+      "createProduct": "เพิ่มสินค้าใหม่",
+      "editProduct": "แก้ไขสินค้า",
+      "createCoupon": "สร้างคูปองใหม่",
+      "editCoupon": "แก้ไขคูปอง"
+    }
+  },
+  "dashboard": {
+    "overview": {
+      "title": "ภาพรวมระบบ",
+      "description": "ติดตามประสิทธิภาพร้านค้า รายได้ และคำสั่งซื้อล่าสุด"
+    },
+    "products": {
+      "title": "สินค้า",
+      "description": "จัดการรายการสินค้า สต็อก และราคาจำหน่าย",
+      "addProduct": "เพิ่มสินค้า",
+      "createTitle": "เพิ่มสินค้าใหม่",
+      "editTitle": "แก้ไขสินค้า"
+    },
+    "orders": {
+      "title": "คำสั่งซื้อ",
+      "description": "จัดการคำสั่งซื้อ สถานะการชำระเงิน และการจัดส่งพัสดุ",
+      "orderDetail": "รายละเอียดคำสั่งซื้อ"
+    },
+    "categories": {
+      "title": "หมวดหมู่สินค้า",
+      "description": "จัดระเบียบหมวดหมู่สินค้าสำหรับหน้าร้านค้า",
+      "addCategory": "เพิ่มหมวดหมู่",
+      "createTitle": "สร้างหมวดหมู่",
+      "editTitle": "แก้ไขหมวดหมู่"
+    },
+    "customers": {
+      "title": "ลูกค้าและผู้ใช้งาน",
+      "description": "จัดการบัญชีผู้ใช้ บทบาท และสถานะการใช้งาน",
+      "addUser": "เพิ่มผู้ใช้งาน"
+    },
+    "coupons": {
+      "title": "คูปองและโปรโมชัน",
+      "description": "สร้างและจัดการโค้ดส่วนลดสำหรับลูกค้า",
+      "addCoupon": "เพิ่มคูปอง",
+      "createTitle": "สร้างคูปองใหม่",
+      "editTitle": "แก้ไขคูปอง"
+    },
+    "settings": {
+      "title": "ตั้งค่าร้านค้า",
+      "description": "ปรับแต่งหน้าตาระบบหลังบ้าน ชุดสีแบรนด์ และภาษา",
+      "languageTitle": "ภาษา (Language)",
+      "languageDescription": "สลับภาษาการแสดงผลระหว่างภาษาไทยและภาษาอังกฤษ"
+    }
+  },
+  "storefront": {
+    "navbar": {
+      "home": "หน้าแรก",
+      "products": "สินค้าทั้งหมด",
+      "myOrders": "คำสั่งซื้อของฉัน",
+      "wishlist": "รายการโปรด",
+      "cart": "ตะกร้าสินค้า",
+      "profile": "โปรไฟล์ของฉัน",
+      "orderHistory": "ประวัติการสั่งซื้อ",
+      "dashboard": "จัดการระบบ",
+      "login": "เข้าสู่ระบบ",
+      "register": "สมัครสมาชิก",
+      "logout": "ออกจากระบบ"
+    },
+    "home": {
+      "browseByCategory": "เลือกดูตามหมวดหมู่",
+      "allProducts": "สินค้าทั้งหมด",
+      "newArrival": "สินค้ามาใหม่",
+      "onSale": "สินค้าลดราคา",
+      "discounts": "ลดราคาสูงสุด -50%"
+    },
+    "products": {
+      "addToCart": "เพิ่มลงตะกร้า",
+      "adding": "กำลังเพิ่ม...",
+      "outOfStock": "สินค้าหมด",
+      "filters": "ตัวกรอง",
+      "price": "ช่วงราคา",
+      "categories": "หมวดหมู่"
+    },
+    "cart": {
+      "title": "ตะกร้าสินค้า",
+      "clearCart": "ล้างตะกร้า",
+      "empty": "ไม่มีสินค้าในตะกร้า",
+      "checkout": "ดำเนินการชำระเงิน"
+    },
+    "checkout": {
+      "address": "ที่อยู่จัดส่ง",
+      "shipping": "วิธีจัดส่ง",
+      "payment": "การชำระเงิน",
+      "payNow": "ชำระเงินตอนนี้"
+    },
+    "profile": {
+      "personalInfo": "ข้อมูลส่วนตัว",
+      "addresses": "ที่อยู่จัดส่ง",
+      "security": "ความปลอดภัยและรหัสผ่าน"
+    },
+    "myOrders": {
+      "title": "คำสั่งซื้อของฉัน",
+      "subtitle": "ติดตามสถานะพัสดุ ตรวจสอบประวัติการสั่งซื้อ และจัดการรายการคำสั่งซื้อของคุณ"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "เข้าสู่ระบบ",
+      "subtitle": "กรอกอีเมลและรหัสผ่านเพื่อเข้าใช้งานบัญชีของคุณ",
+      "email": "อีเมล",
+      "password": "รหัสผ่าน",
+      "submit": "เข้าสู่ระบบ",
+      "submitting": "กำลังเข้าสู่ระบบ..."
+    },
+    "register": {
+      "title": "สร้างบัญชีใหม่",
+      "subtitle": "กรอกข้อมูลด้านล่างเพื่อสมัครสมาชิก",
+      "email": "อีเมล",
+      "password": "รหัสผ่าน",
+      "confirmPassword": "ยืนยันรหัสผ่าน",
+      "submit": "สมัครสมาชิก"
+    }
+  }
+}

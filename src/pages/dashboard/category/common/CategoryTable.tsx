@@ -1,6 +1,6 @@
 import { useMemo } from "react"
 import { Link } from "react-router-dom"
-import { Tags, Pencil, Trash2, MoreHorizontal } from "lucide-react"
+import { Pencil, Trash2, MoreHorizontal } from "lucide-react"
 import { cn } from "cn"
 import { capitalizeFirstLetter } from "@/lib/capitalizeFirstLetter"
 import { FALLBACK_IMAGE } from "@/lib/constants"

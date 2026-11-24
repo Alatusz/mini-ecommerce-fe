@@ -7,7 +7,19 @@ import {
   createColumnHelper,
   type DataGridFeatures,
 } from "@/components/common/data-grid"
-import type { ProductItem } from "@/services/product.services"
+import type {
+  ProductItem,
+  ProductPublishStatus,
+} from "@/services/product.services"
+import { FALLBACK_IMAGE } from "@/lib/constants"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
 const STOCK_STATUS_COLORS = {
   in_stock: {
     textClass: "text-emerald-600 dark:text-emerald-400 font-medium",
@@ -25,27 +37,6 @@ const getStockTextColor = (stock: number): string => {
   if (stock <= 10) return STOCK_STATUS_COLORS.low_stock.textClass
   return STOCK_STATUS_COLORS.in_stock.textClass
 }
-
-const PRODUCT_STATUS_CONFIG = {
-  published: {
-    label: "Published",
-    badgeClass:
-      "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
-    dotClass: "bg-emerald-500",
-  },
-  draft: {
-    label: "Draft",
-    badgeClass:
-      "border-zinc-500/30 bg-zinc-500/10 text-zinc-600 dark:text-zinc-400",
-    dotClass: "bg-zinc-400",
-  },
-  archived: {
-    label: "Archived",
-    badgeClass:
-      "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
-    dotClass: "bg-amber-500",
-  },
-} as const
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
