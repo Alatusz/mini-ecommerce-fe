@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom"
 import {
-  ArrowLeft,
   AlertCircle,
   Check,
   ImageIcon,
@@ -45,25 +44,6 @@ export default function DashboardCategoryCreatePage() {
   return (
     <PageContent>
       <div className="mx-auto max-w-2xl space-y-4 pt-1">
-        {/* ── Header ── */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">
-              New Category
-            </h1>
-          </div>
-          <Link to="/dashboard/category">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 cursor-pointer gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="size-3.5" />
-              <span>Categories</span>
-            </Button>
-          </Link>
-        </div>
-
         {/* ── Form Card ── */}
         <Card className="border-border/60 bg-card shadow-2xs">
           <CardContent className="p-6">

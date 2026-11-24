@@ -1,185 +1,97 @@
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import {
-  getCouponById,
-  updateCouponInStore,
-  deleteCouponFromStore,
+  useCouponDetailQuery,
+  useUpdateCouponMutation,
+  useDeleteCouponMutation,
   type CouponItem,
-} from "../common/mockCoupon"
+} from "../useHubs"
+import {
+  couponFormSchema,
+  type CouponFormState,
+} from "../create/useHooks"
 
-export interface CouponEditFormState {
-  code: string
-  description: string
-  discountType: "percent" | "fixed"
-  discountValue: string
-  minSpend: string
-  usageLimit: string
-  startDate: string
-  expiredDate: string
-}
+export type CouponEditFormState = CouponFormState
 
 export function useCouponEdit() {
-  const { id } = useParams<{ id: string }>()
+  const { id = "" } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
-  const [coupon, setCoupon] = useState<CouponItem | null>(null)
-  const [isNotFound, setIsNotFound] = useState(false)
-  const [formData, setFormData] = useState<CouponEditFormState>({
-    code: "",
-    description: "",
-    discountType: "percent",
-    discountValue: "",
-    minSpend: "",
-    usageLimit: "",
-    startDate: "",
-    expiredDate: "",
+  const { data, isLoading, isError } = useCouponDetailQuery(id)
+  const updateMutation = useUpdateCouponMutation(id)
+  const deleteMutation = useDeleteCouponMutation(() =>
+    navigate("/dashboard/coupon")
+  )
+
+  const coupon: CouponItem | null = data?.data ?? null
+  const isNotFound = !isLoading && (!id || isError || !coupon)
+
+  const form = useForm<CouponEditFormState>({
+    resolver: zodResolver(couponFormSchema),
+    defaultValues: {
+      code: "",
+      description: "",
+      discountType: "percent",
+      discountValue: "",
+      minSpend: "",
+      usageLimit: "",
+      startDate: "",
+      expiredDate: "",
+    },
   })
 
-  const [errors, setErrors] = useState<Partial<Record<keyof CouponEditFormState, string>>>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-
   useEffect(() => {
-    if (!id) {
-      setIsNotFound(true)
-      return
-    }
-
-    const found = getCouponById(id)
-    if (!found) {
-      setIsNotFound(true)
-      return
-    }
-
-    setCoupon(found)
-    setFormData({
-      code: found.code,
-      description: found.description || "",
-      discountType: found.discountType,
-      discountValue: String(found.discountValue),
-      minSpend: found.minSpend !== undefined ? String(found.minSpend) : "",
-      usageLimit: found.usageLimit !== undefined ? String(found.usageLimit) : "",
-      startDate: found.startDate,
-      expiredDate: found.expiredDate,
+    if (!coupon) return
+    form.reset({
+      code: coupon.code,
+      description: coupon.description || "",
+      discountType: coupon.discountType,
+      discountValue: String(coupon.discountValue),
+      minSpend: coupon.minSpend !== undefined ? String(coupon.minSpend) : "",
+      usageLimit:
+        coupon.usageLimit !== null && coupon.usageLimit !== undefined
+          ? String(coupon.usageLimit)
+          : "",
+      startDate: coupon.startDate ? coupon.startDate.slice(0, 10) : "",
+      expiredDate: coupon.expiredDate ? coupon.expiredDate.slice(0, 10) : "",
     })
-    setIsNotFound(false)
-  }, [id])
+  }, [coupon, form])
 
-  const handleFieldChange = <K extends keyof CouponEditFormState>(
-    field: K,
-    value: CouponEditFormState[K]
-  ) => {
-    setFormData((prev) => {
-      if (field === "code" && typeof value === "string") {
-        return { ...prev, code: value.toUpperCase().replace(/\s+/g, "") }
-      }
-      return { ...prev, [field]: value }
+  const handleSubmit = form.handleSubmit((values) => {
+    if (!id) return
+    updateMutation.mutate({
+      code: values.code.trim().toUpperCase(),
+      description: values.description.trim(),
+      discountType: values.discountType,
+      discountValue: Number(values.discountValue),
+      minSpend: values.minSpend.trim() ? Number(values.minSpend) : 0,
+      usageLimit: values.usageLimit.trim() ? Number(values.usageLimit) : null,
+      startDate: values.startDate,
+      expiredDate: values.expiredDate,
     })
-
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }))
-    }
-  }
-
-  const validate = (): boolean => {
-    const newErrors: Partial<Record<keyof CouponEditFormState, string>> = {}
-
-    if (!formData.code.trim()) {
-      newErrors.code = "Coupon code is required"
-    } else if (formData.code.trim().length < 3) {
-      newErrors.code = "Coupon code must be at least 3 characters"
-    }
-
-    if (!formData.discountValue.trim()) {
-      newErrors.discountValue = "Discount value is required"
-    } else {
-      const num = Number(formData.discountValue)
-      if (isNaN(num) || num <= 0) {
-        newErrors.discountValue = "Discount value must be greater than 0"
-      } else if (formData.discountType === "percent" && num > 100) {
-        newErrors.discountValue = "Percentage discount cannot exceed 100%"
-      }
-    }
-
-    if (!formData.startDate) {
-      newErrors.startDate = "Start date is required"
-    }
-
-    if (!formData.expiredDate) {
-      newErrors.expiredDate = "Expired date is required"
-    } else if (formData.startDate && formData.expiredDate < formData.startDate) {
-      newErrors.expiredDate = "Expired date must be after or equal to start date"
-    }
-
-    if (formData.minSpend.trim()) {
-      const minNum = Number(formData.minSpend)
-      if (isNaN(minNum) || minNum < 0) {
-        newErrors.minSpend = "Minimum spend must be a valid positive amount"
-      }
-    }
-
-    if (formData.usageLimit.trim()) {
-      const limitNum = Number(formData.usageLimit)
-      if (isNaN(limitNum) || limitNum <= 0) {
-        newErrors.usageLimit = "Usage limit must be a positive number"
-      }
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!validate() || !id) return
-
-    setIsSubmitting(true)
-
-    const discountVal = Number(formData.discountValue)
-    const minSpendVal = formData.minSpend.trim() ? Number(formData.minSpend) : undefined
-    const usageLimitVal = formData.usageLimit.trim() ? Number(formData.usageLimit) : undefined
-
-    setTimeout(() => {
-      updateCouponInStore(id, {
-        code: formData.code.trim().toUpperCase(),
-        description: formData.description.trim(),
-        discountType: formData.discountType,
-        discountValue: discountVal,
-        minSpend: minSpendVal,
-        usageLimit: usageLimitVal,
-        startDate: formData.startDate,
-        expiredDate: formData.expiredDate,
-      })
-
-      setIsSubmitting(false)
-      navigate("/dashboard/coupon")
-    }, 400)
-  }
+  })
 
   const handleDelete = () => {
     if (!id) return
-    setIsDeleting(true)
-    setTimeout(() => {
-      deleteCouponFromStore(id)
-      setIsDeleting(false)
-      navigate("/dashboard/coupon")
-    }, 300)
+    deleteMutation.mutate(id)
   }
 
   const handleCancel = () => {
     navigate("/dashboard/coupon")
   }
 
+  const watchedValues = form.watch()
+
   return {
     id,
     coupon,
     isNotFound,
-    formData,
-    errors,
-    isSubmitting,
-    isDeleting,
-    handleFieldChange,
+    control: form.control,
+    watchedValues,
+    isSubmitting: updateMutation.isPending,
+    isDeleting: deleteMutation.isPending,
     handleSubmit,
     handleDelete,
     handleCancel,

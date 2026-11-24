@@ -10,6 +10,10 @@ import {
 import { queryClient } from "@/lib/queryClient"
 import { showToast } from "@/lib/toast"
 import { useSearchParams } from "react-router-dom"
+import {
+  type CategoryFilterState,
+  type CategorySearchTarget,
+} from "./common/CategoryFilterDrawer"
 
 export type { CategoryItem }
 
@@ -22,6 +26,7 @@ export function useCategory() {
   const limit = Math.max(1, Number(searchParams.get("limit")) || 10)
   const search = searchParams.get("search") || ""
   const rawStatus = searchParams.get("status") || ""
+  const rawSearchBy = searchParams.get("searchBy") || ""
 
   // แปลงค่า status จาก URL comma string เช่น "active,draft" เป็น string[]
   const selectedStatuses = useMemo(() => {
@@ -30,13 +35,30 @@ export function useCategory() {
       : []
   }, [rawStatus])
 
+  const selectedSearchBy = useMemo(() => {
+    return (
+      rawSearchBy
+        ? rawSearchBy
+            .split(",")
+            .map((s) => s.trim().toLowerCase())
+            .filter((s): s is CategorySearchTarget => s === "name" || s === "slug")
+        : []
+    )
+  }, [rawSearchBy])
+
   // ── 2. ดึงข้อมูลผ่าน React Query (ยิง API ใหม่อัตโนมัติเมื่อ params เปลี่ยน) ──
   const { data, isLoading, isPlaceholderData } = useQuery({
     queryKey: [
       QUERY_KEYS.DASHBOARD.CATEGORIES_LIST,
-      { page, limit, search, status: rawStatus },
+      { page, limit, search, status: rawStatus, searchBy: rawSearchBy },
     ],
-    queryFn: () => getCategories({ page, limit, search, status: rawStatus || undefined }),
+    queryFn: () =>
+      getCategories({
+        page,
+        limit,
+        search,
+        status: rawStatus || undefined,
+      }),
     placeholderData: keepPreviousData, // คงข้อมูลหน้าเดิมไว้ระหว่างรอโหลด เพื่อไม่ให้หน้าจอกระพริบ
   })
 
@@ -142,11 +164,28 @@ export function useCategory() {
     })
   }
 
+  const handleFilterApply = (filters: CategoryFilterState) => {
+    updateUrlParams({
+      status: filters.status.length > 0 ? filters.status.join(",") : undefined,
+      searchBy: filters.searchBy.length > 0 ? filters.searchBy.join(",") : undefined,
+      page: 1,
+    })
+  }
+
+  const handleFilterReset = () => {
+    updateUrlParams({
+      status: undefined,
+      searchBy: undefined,
+      page: 1,
+    })
+  }
+
   return {
     categories,
     total,
     status: rawStatus,
     selectedStatuses,
+    selectedSearchBy,
     page,
     limit,
     search,
@@ -168,5 +207,7 @@ export function useCategory() {
     handleLimitChange,
     handleSearchChange,
     handleStatusFilterChange,
+    handleFilterApply,
+    handleFilterReset,
   }
 }

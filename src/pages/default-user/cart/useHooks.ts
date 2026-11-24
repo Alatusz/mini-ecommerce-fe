@@ -1,8 +1,16 @@
 import { useState, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
+import {
+  useMyCartQuery,
+  useUpdateCartQtyMutation,
+  useRemoveCartItemMutation,
+  useClearCartMutation,
+  type ApiCartItem,
+} from "@/hooks/use-cartHubs"
 
 export interface CartItem {
   id: string
+  productId: string
   name: string
   sku: string
   price: number
@@ -10,65 +18,53 @@ export interface CartItem {
   image: string
 }
 
-export const initialCartItems: CartItem[] = [
-  {
-    id: "cart-1",
-    name: "Apple iPhone 14 Pro Max 128Gb Deep Purple",
-    sku: "#25139526913984",
-    price: 1399,
-    quantity: 1,
-    image: "/images/detail-purple.png",
-  },
-  {
-    id: "cart-2",
-    name: "AirPods Max Silver",
-    sku: "#53459358345",
-    price: 549,
-    quantity: 1,
-    image: "/images/hero-airpods.png",
-  },
-  {
-    id: "cart-3",
-    name: "Apple Watch Series 9 GPS 41mm Starlight Aluminium",
-    sku: "#63632324",
-    price: 399,
-    quantity: 1,
-    image: "/images/cart-watch.png",
-  },
-]
-
 export function useCart() {
-  const [cartItems, setCartItems] = useState<CartItem[]>(initialCartItems)
+  const navigate = useNavigate()
+  const { data, isLoading } = useMyCartQuery()
+  const updateQtyMutation = useUpdateCartQtyMutation()
+  const removeMutation = useRemoveCartItemMutation()
+  const clearMutation = useClearCartMutation()
+
   const [promoCode, setPromoCode] = useState<string>("")
   const [bonusCard, setBonusCard] = useState<string>("")
   const [discount, setDiscount] = useState<number>(0)
   const isCheckingOut = false
 
+  const cartItems: CartItem[] = useMemo(() => {
+    const items: ApiCartItem[] = data?.data?.items ?? []
+    return items.map((item) => ({
+      id: item.id,
+      productId: item.productId,
+      name: item.product.name,
+      sku: item.product.slug ? item.product.slug.toUpperCase() : item.productId,
+      price: Number(item.product.sellPrice ?? 0),
+      quantity: item.quantity,
+      image: item.product.images?.[0] || "/alatusz-logo.svg",
+    }))
+  }, [data])
+
   const increaseQuantity = (id: string) => {
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, quantity: item.quantity + 1 } : item
-      )
-    )
+    const target = cartItems.find((item) => item.id === id)
+    if (!target) return
+    updateQtyMutation.mutate({ itemId: id, quantity: target.quantity + 1 })
   }
 
   const decreaseQuantity = (id: string) => {
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.id === id && item.quantity > 1
-          ? { ...item, quantity: item.quantity - 1 }
-          : item
-      )
-    )
+    const target = cartItems.find((item) => item.id === id)
+    if (!target || target.quantity <= 1) return
+    updateQtyMutation.mutate({ itemId: id, quantity: target.quantity - 1 })
   }
 
   const removeItem = (id: string) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id))
+    removeMutation.mutate(id)
+  }
+
+  const handleClearCart = () => {
+    clearMutation.mutate()
   }
 
   const handleApplyBonusCard = () => {
     if (bonusCard.trim()) {
-      // 5% bonus discount
       setDiscount(50)
     }
   }
@@ -87,14 +83,14 @@ export function useCart() {
   const shipping = cartItems.length > 0 ? 29 : 0
   const total = Math.max(0, subtotal + tax + shipping - discount)
 
-  const navigate = useNavigate()
-
   const handleCheckout = () => {
     navigate("/checkout")
   }
 
   return {
     cartItems,
+    isLoading,
+    isClearing: clearMutation.isPending,
     promoCode,
     bonusCard,
     subtotal,
@@ -108,6 +104,7 @@ export function useCart() {
     increaseQuantity,
     decreaseQuantity,
     removeItem,
+    handleClearCart,
     handleApplyBonusCard,
     handleApplyPromoCode,
     handleCheckout,

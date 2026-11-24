@@ -1,71 +1,128 @@
 import { useState, useMemo } from "react"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import {
-  getStoredCoupons,
-  deleteCouponFromStore,
+  useCouponsListQuery,
+  usePatchCouponStatusMutation,
+  useDeleteCouponMutation,
   type CouponItem,
-} from "./common/mockCoupon"
+  type CouponSearchTarget,
+  type CouponStatus,
+  type CouponStatusSummary,
+} from "./useHubs"
+import { type CouponFilterState } from "./common/CouponFilterDrawer"
+
+export type { CouponItem, CouponStatusSummary }
+
+const parseCsv = (raw: string) =>
+  raw
+    ? raw
+        .split(",")
+        .map((s) => s.trim().toLowerCase())
+        .filter(Boolean)
+    : []
 
 export function useCoupon() {
-  const [coupons, setCoupons] = useState<CouponItem[]>(() => getStoredCoupons())
-  const [filterStatus, setFilterStatus] = useState<string>("All")
-  const [filterType, setFilterType] = useState<string>("All")
+  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [deletingCoupon, setDeletingCoupon] = useState<CouponItem | null>(null)
-  const [copiedCode, setCopiedCode] = useState<string | null>(null)
 
-  const handleCopyCode = (code: string) => {
-    navigator.clipboard.writeText(code)
-    setCopiedCode(code)
-    setTimeout(() => {
-      setCopiedCode((prev) => (prev === code ? null : prev))
-    }, 2000)
+  const page = Math.max(1, Number(searchParams.get("page")) || 1)
+  const limit = Math.max(1, Number(searchParams.get("limit")) || 10)
+  const search = searchParams.get("search") || ""
+  const rawSearchBy = searchParams.get("searchBy") || ""
+  const rawType = searchParams.get("type") || ""
+  const rawStatus = searchParams.get("status") || ""
+
+  const selectedSearchBy = useMemo(
+    () =>
+      parseCsv(rawSearchBy).filter(
+        (s): s is CouponSearchTarget => s === "code" || s === "description"
+      ),
+    [rawSearchBy]
+  )
+  const selectedTypes = useMemo(() => parseCsv(rawType), [rawType])
+  const selectedStatuses = useMemo(() => parseCsv(rawStatus), [rawStatus])
+
+  const { data, isLoading } = useCouponsListQuery({
+    page,
+    limit,
+    search,
+    searchBy: rawSearchBy,
+    type: rawType,
+    status: rawStatus,
+  })
+
+  const coupons: CouponItem[] = data?.coupons ?? data?.data ?? []
+  const total: number = data?.total ?? coupons.length
+  const summaryByStatus: CouponStatusSummary[] = data?.summaryByStatus ?? []
+
+  const patchStatusMutation = usePatchCouponStatusMutation()
+  const deleteMutation = useDeleteCouponMutation(() => setDeletingCoupon(null))
+
+  const updateUrlParams = (
+    newParams: Record<string, string | number | undefined>
+  ) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        Object.entries(newParams).forEach(([key, val]) => {
+          if (val === undefined || val === "" || val === null) {
+            next.delete(key)
+          } else {
+            next.set(key, String(val))
+          }
+        })
+        return next
+      },
+      { replace: true }
+    )
   }
 
-  const handleDeleteCoupon = (id: string) => {
-    deleteCouponFromStore(id)
-    setCoupons(getStoredCoupons())
-    setDeletingCoupon(null)
-  }
-
-  const filteredCoupons = useMemo(() => {
-    return coupons.filter((item) => {
-      if (filterStatus !== "All" && item.status !== filterStatus) {
-        return false
-      }
-      if (filterType !== "All" && item.discountType !== filterType) {
-        return false
-      }
-      return true
+  const handleFilterApply = (filters: CouponFilterState) => {
+    updateUrlParams({
+      searchBy:
+        filters.searchBy.length > 0 ? filters.searchBy.join(",") : undefined,
+      type: filters.type.length > 0 ? filters.type.join(",") : undefined,
+      status: filters.status.length > 0 ? filters.status.join(",") : undefined,
+      page: 1,
     })
-  }, [coupons, filterStatus, filterType])
+  }
 
-  const stats = useMemo(() => {
-    const total = coupons.length
-    const active = coupons.filter((c) => c.status === "Active").length
-    const scheduled = coupons.filter((c) => c.status === "Scheduled").length
-    const expired = coupons.filter((c) => c.status === "Expired").length
-    const totalRedemptions = coupons.reduce((acc, c) => acc + c.usageCount, 0)
+  const handleFilterReset = () => {
+    updateUrlParams({
+      searchBy: undefined,
+      type: undefined,
+      status: undefined,
+      page: 1,
+    })
+  }
 
-    return {
-      total,
-      active,
-      scheduled,
-      expired,
-      totalRedemptions,
-    }
-  }, [coupons])
+  const handleStatusChange = (id: string, status: CouponStatus) => {
+    patchStatusMutation.mutate({ id, status })
+  }
+
+  const handleCreate = () => navigate("/dashboard/coupon/create")
+  const handleEdit = (coupon: CouponItem) =>
+    navigate(`/dashboard/coupon/edit/${coupon.id}`)
+  const handleDeleteConfirm = (id: string) => deleteMutation.mutate(id)
 
   return {
-    coupons: filteredCoupons,
-    rawCoupons: coupons,
-    filterStatus,
-    setFilterStatus,
-    filterType,
-    setFilterType,
+    coupons,
+    total,
+    summaryByStatus,
+    selectedSearchBy,
+    selectedTypes,
+    selectedStatuses,
+    isLoading,
+    isUpdatingStatus: patchStatusMutation.isPending,
     deletingCoupon,
     setDeletingCoupon,
-    copiedCode,
-    handleCopyCode,
-    handleDeleteCoupon,
-    stats,
+    isDeleting: deleteMutation.isPending,
+    handleFilterApply,
+    handleFilterReset,
+    handleStatusChange,
+    handleCreate,
+    handleEdit,
+    handleDeleteConfirm,
   }
 }

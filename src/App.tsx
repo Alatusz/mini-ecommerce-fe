@@ -24,6 +24,7 @@ import DashboardCouponPage from "@/pages/dashboard/coupon/Index"
 import DashboardCouponCreatePage from "@/pages/dashboard/coupon/create/Index"
 import DashboardCouponEditPage from "@/pages/dashboard/coupon/edit/Index"
 import DashboardSettingsPage from "@/pages/dashboard/settings/Index"
+import { RequireAuth, GuestOnly } from "@/components/guards/AuthGuard"
 
 const NotFoundPage = () => (
   <div className="p-6 text-xl text-red-500">404 - ไม่พบหน้า</div>
@@ -38,42 +39,48 @@ export function App() {
         <Route path="products" element={<ProductListPage />} />
         <Route path="products/:id" element={<ProductDetailPage />} />
         <Route path="product-detail/:id" element={<ProductDetailPage />} />
-        <Route path="cart" element={<CartPage />} />
-        <Route path="checkout" element={<CheckoutPage />} />
-        <Route path="profile" element={<UserProfilePage />} />
-        <Route path="my-orders" element={<MyOrdersPage />} />
+        <Route element={<RequireAuth />}>
+          <Route path="cart" element={<CartPage />} />
+          <Route path="checkout" element={<CheckoutPage />} />
+          <Route path="profile" element={<UserProfilePage />} />
+          <Route path="my-orders" element={<MyOrdersPage />} />
+        </Route>
       </Route>
 
       {/* หน้าจัดการระบบ Dashboard */}
-      <Route path="/dashboard" element={<DashboardLayout />}>
-        <Route index element={<DashboardPage />} />
-        <Route path="order" element={<DashboardOrderPage />} />
-        <Route path="order/edit/:id" element={<DashboardOrderEditPage />} />
-        <Route path="category" element={<DashboardCategoryPage />} />
-        <Route
-          path="category/create"
-          element={<DashboardCategoryCreatePage />}
-        />
-        <Route
-          path="category/edit/:id"
-          element={<DashboardCategoryEditPage />}
-        />
-        <Route path="product" element={<DashboardProductPage />} />
-        <Route path="product/create" element={<DashboardProductCreatePage />} />
-        <Route path="product/edit/:id" element={<DashboardProductEditPage />} />
-        <Route path="coupon" element={<DashboardCouponPage />} />
-        <Route path="coupon/create" element={<DashboardCouponCreatePage />} />
-        <Route path="coupon/edit/:id" element={<DashboardCouponEditPage />} />
-        <Route
-          path="user-management"
-          element={<DashboardUserManagementPage />}
-        />
-        <Route path="settings" element={<DashboardSettingsPage />} />
+      <Route element={<RequireAuth allowedRoles={["admin", "staff"]} />}>
+        <Route path="/dashboard" element={<DashboardLayout />}>
+          <Route index element={<DashboardPage />} />
+          <Route path="order" element={<DashboardOrderPage />} />
+          <Route path="order/edit/:id" element={<DashboardOrderEditPage />} />
+          <Route path="category" element={<DashboardCategoryPage />} />
+          <Route
+            path="category/create"
+            element={<DashboardCategoryCreatePage />}
+          />
+          <Route
+            path="category/edit/:id"
+            element={<DashboardCategoryEditPage />}
+          />
+          <Route path="product" element={<DashboardProductPage />} />
+          <Route path="product/create" element={<DashboardProductCreatePage />} />
+          <Route path="product/edit/:id" element={<DashboardProductEditPage />} />
+          <Route path="coupon" element={<DashboardCouponPage />} />
+          <Route path="coupon/create" element={<DashboardCouponCreatePage />} />
+          <Route path="coupon/edit/:id" element={<DashboardCouponEditPage />} />
+          <Route
+            path="user-management"
+            element={<DashboardUserManagementPage />}
+          />
+          <Route path="settings" element={<DashboardSettingsPage />} />
+        </Route>
       </Route>
 
       {/* เข้าสู่ระบบ */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+      <Route element={<GuestOnly />}>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+      </Route>
 
       {/* ถ้าพิมพ์ path มั่ว ให้วิ่งกลับหน้าแรก */}
       <Route path="/404" element={<NotFoundPage />} />

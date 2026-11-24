@@ -1,26 +1,60 @@
-import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import {
-  addCouponToStore,
-  computeCouponStatus,
-  type CouponItem,
-} from "../common/mockCoupon"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+import { useCreateCouponMutation } from "../useHubs"
 
-export interface CouponFormState {
-  code: string
-  description: string
-  discountType: "percent" | "fixed"
-  discountValue: string
-  minSpend: string
-  usageLimit: string
-  startDate: string
-  expiredDate: string
-}
+export const couponFormSchema = z
+  .object({
+    code: z
+      .string()
+      .trim()
+      .min(1, "Coupon code is required")
+      .min(3, "Coupon code must be at least 3 characters"),
+    description: z.string(),
+    discountType: z.enum(["percent", "fixed"]),
+    discountValue: z
+      .string()
+      .trim()
+      .min(1, "Discount value is required")
+      .refine(
+        (v) => !Number.isNaN(Number(v)) && Number(v) > 0,
+        "Discount value must be greater than 0"
+      ),
+    minSpend: z
+      .string()
+      .refine(
+        (v) => v.trim() === "" || (!Number.isNaN(Number(v)) && Number(v) >= 0),
+        "Minimum spend must be a valid positive amount"
+      ),
+    usageLimit: z
+      .string()
+      .refine(
+        (v) => v.trim() === "" || (!Number.isNaN(Number(v)) && Number(v) > 0),
+        "Usage limit must be a positive number"
+      ),
+    startDate: z.string().min(1, "Start date is required"),
+    expiredDate: z.string().min(1, "Expired date is required"),
+  })
+  .refine(
+    (data) =>
+      data.discountType !== "percent" || Number(data.discountValue) <= 100,
+    {
+      message: "Percentage discount cannot exceed 100%",
+      path: ["discountValue"],
+    }
+  )
+  .refine(
+    (data) => !data.startDate || !data.expiredDate || data.expiredDate >= data.startDate,
+    {
+      message: "Expired date must be after or equal to start date",
+      path: ["expiredDate"],
+    }
+  )
 
-const getTodayString = (): string => {
-  const d = new Date()
-  return d.toISOString().split("T")[0]
-}
+export type CouponFormState = z.infer<typeof couponFormSchema>
+
+const getTodayString = (): string => new Date().toISOString().split("T")[0]
 
 const getFutureDateString = (daysAhead = 30): string => {
   const d = new Date()
@@ -30,140 +64,59 @@ const getFutureDateString = (daysAhead = 30): string => {
 
 export function useCouponCreate() {
   const navigate = useNavigate()
+  const createMutation = useCreateCouponMutation()
 
-  const [formData, setFormData] = useState<CouponFormState>({
-    code: "",
-    description: "",
-    discountType: "percent",
-    discountValue: "15",
-    minSpend: "",
-    usageLimit: "500",
-    startDate: getTodayString(),
-    expiredDate: getFutureDateString(30),
+  const form = useForm<CouponFormState>({
+    resolver: zodResolver(couponFormSchema),
+    defaultValues: {
+      code: "",
+      description: "",
+      discountType: "percent",
+      discountValue: "15",
+      minSpend: "",
+      usageLimit: "500",
+      startDate: getTodayString(),
+      expiredDate: getFutureDateString(30),
+    },
   })
 
-  const [errors, setErrors] = useState<Partial<Record<keyof CouponFormState, string>>>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
   const generateRandomCode = () => {
-    const prefixes = ["PROMO", "SAVE", "FLASH", "DEAL", "OFFER", "MEGA", "SPECIAL"]
+    const prefixes = [
+      "PROMO",
+      "SAVE",
+      "FLASH",
+      "DEAL",
+      "OFFER",
+      "MEGA",
+      "SPECIAL",
+    ]
     const prefix = prefixes[Math.floor(Math.random() * prefixes.length)]
     const randomNum = Math.floor(1000 + Math.random() * 9000)
-    const newCode = `${prefix}${randomNum}`
-
-    setFormData((prev) => ({ ...prev, code: newCode }))
-    if (errors.code) {
-      setErrors((prev) => ({ ...prev, code: undefined }))
-    }
+    form.setValue("code", `${prefix}${randomNum}`, { shouldValidate: true })
   }
 
-  const handleFieldChange = <K extends keyof CouponFormState>(
-    field: K,
-    value: CouponFormState[K]
-  ) => {
-    setFormData((prev) => {
-      // Auto uppercase code
-      if (field === "code" && typeof value === "string") {
-        return { ...prev, code: value.toUpperCase().replace(/\s+/g, "") }
-      }
-      return { ...prev, [field]: value }
+  const handleSubmit = form.handleSubmit((values) => {
+    createMutation.mutate({
+      code: values.code.trim().toUpperCase(),
+      description: values.description.trim() || undefined,
+      discountType: values.discountType,
+      discountValue: Number(values.discountValue),
+      minSpend: values.minSpend.trim() ? Number(values.minSpend) : 0,
+      usageLimit: values.usageLimit.trim() ? Number(values.usageLimit) : null,
+      startDate: values.startDate,
+      expiredDate: values.expiredDate,
     })
-
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }))
-    }
-  }
-
-  const validate = (): boolean => {
-    const newErrors: Partial<Record<keyof CouponFormState, string>> = {}
-
-    if (!formData.code.trim()) {
-      newErrors.code = "Coupon code is required"
-    } else if (formData.code.trim().length < 3) {
-      newErrors.code = "Coupon code must be at least 3 characters"
-    }
-
-    if (!formData.discountValue.trim()) {
-      newErrors.discountValue = "Discount value is required"
-    } else {
-      const num = Number(formData.discountValue)
-      if (isNaN(num) || num <= 0) {
-        newErrors.discountValue = "Discount value must be greater than 0"
-      } else if (formData.discountType === "percent" && num > 100) {
-        newErrors.discountValue = "Percentage discount cannot exceed 100%"
-      }
-    }
-
-    if (!formData.startDate) {
-      newErrors.startDate = "Start date is required"
-    }
-
-    if (!formData.expiredDate) {
-      newErrors.expiredDate = "Expired date is required"
-    } else if (formData.startDate && formData.expiredDate < formData.startDate) {
-      newErrors.expiredDate = "Expired date must be after or equal to start date"
-    }
-
-    if (formData.minSpend.trim()) {
-      const minNum = Number(formData.minSpend)
-      if (isNaN(minNum) || minNum < 0) {
-        newErrors.minSpend = "Minimum spend must be a valid positive amount"
-      }
-    }
-
-    if (formData.usageLimit.trim()) {
-      const limitNum = Number(formData.usageLimit)
-      if (isNaN(limitNum) || limitNum <= 0) {
-        newErrors.usageLimit = "Usage limit must be a positive number"
-      }
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!validate()) return
-
-    setIsSubmitting(true)
-
-    const discountVal = Number(formData.discountValue)
-    const minSpendVal = formData.minSpend.trim() ? Number(formData.minSpend) : undefined
-    const usageLimitVal = formData.usageLimit.trim() ? Number(formData.usageLimit) : undefined
-
-    const newCoupon: CouponItem = {
-      id: `cpn-${Date.now()}`,
-      code: formData.code.trim().toUpperCase(),
-      description: formData.description.trim() || `${discountVal}${formData.discountType === "percent" ? "%" : "$"} discount coupon`,
-      discountType: formData.discountType,
-      discountValue: discountVal,
-      minSpend: minSpendVal,
-      usageLimit: usageLimitVal,
-      usageCount: 0,
-      startDate: formData.startDate,
-      expiredDate: formData.expiredDate,
-      status: computeCouponStatus(formData.startDate, formData.expiredDate),
-    }
-
-    setTimeout(() => {
-      addCouponToStore(newCoupon)
-      setIsSubmitting(false)
-      navigate("/dashboard/coupon")
-    }, 400)
-  }
+  })
 
   const handleCancel = () => {
     navigate("/dashboard/coupon")
   }
 
   return {
-    formData,
-    errors,
-    isSubmitting,
+    control: form.control,
+    discountType: form.watch("discountType"),
+    isSubmitting: createMutation.isPending,
     generateRandomCode,
-    handleFieldChange,
     handleSubmit,
     handleCancel,
   }

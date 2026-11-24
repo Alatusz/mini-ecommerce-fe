@@ -1,114 +1,177 @@
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { useAuth } from "@/context/AuthContext"
-import { defaultAddresses, type AddressItem } from "../checkout/useHooks"
+import { type AddressItem } from "../checkout/useHooks"
+import {
+  useProfileQuery,
+  useUpdateProfileMutation,
+  useChangePasswordMutation,
+  useAddressesQuery,
+  useCreateAddressMutation,
+  useUpdateAddressMutation,
+  useDeleteAddressMutation,
+  useSetDefaultAddressMutation,
+  type ApiAddressItem,
+} from "@/hooks/use-profileHubs"
 
-export interface UserProfileState {
-  firstName: string
-  lastName: string
-  email: string
-  phone: string
-  bio?: string
+export const profileSchema = z.object({
+  firstName: z.string().trim().min(1, "กรุณากรอกชื่อจริง"),
+  lastName: z.string().trim().min(1, "กรุณากรอกนามสกุล"),
+  email: z.string(),
+  phone: z.string().optional(),
+  bio: z.string().optional(),
+})
+
+export const passwordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "กรุณากรอกรหัสผ่านปัจจุบัน"),
+    newPassword: z
+      .string()
+      .min(6, "รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร"),
+    confirmPassword: z.string().min(1, "กรุณายืนยันรหัสผ่านใหม่"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน",
+    path: ["confirmPassword"],
+  })
+
+export const addressSchema = z.object({
+  title: z.string().trim().min(1, "กรุณากรอกชื่อที่อยู่"),
+  tag: z.enum(["HOME", "OFFICE", "OTHER"]),
+  address: z.string().trim().min(1, "กรุณากรอกที่อยู่โดยละเอียด"),
+  phone: z.string().trim().min(1, "กรุณากรอกเบอร์โทรศัพท์ผู้รับ"),
+})
+
+export type ProfileFormValues = z.infer<typeof profileSchema>
+export type PasswordFormValues = z.infer<typeof passwordSchema>
+export type AddressFormValues = z.infer<typeof addressSchema>
+
+const normalizeTag = (tag?: string): "HOME" | "OFFICE" | "OTHER" => {
+  const upper = (tag || "").toUpperCase()
+  if (upper === "HOME" || upper === "OFFICE") return upper
+  return "OTHER"
 }
 
 export function useUserProfile() {
   const { user } = useAuth()
+  const { data: profileRes, isLoading: isLoadingProfile } = useProfileQuery()
+  const updateProfileMutation = useUpdateProfileMutation()
+  const changePasswordMutation = useChangePasswordMutation()
 
-  // Extract initial name from email or defaults
-  const emailPrefix = user?.email ? user.email.split("@")[0] : "sarah"
-  const defaultFirst = emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1)
+  const { data: addressesRes } = useAddressesQuery()
+  const createAddressMutation = useCreateAddressMutation()
+  const updateAddressMutation = useUpdateAddressMutation()
+  const deleteAddressMutation = useDeleteAddressMutation()
+  const setDefaultAddressMutation = useSetDefaultAddressMutation()
 
-  const [activeTab, setActiveTab] = useState<"profile" | "addresses" | "security">("profile")
-
-  // Personal Info Form
-  const [profileForm, setProfileForm] = useState<UserProfileState>({
-    firstName: defaultFirst || "Sarah",
-    lastName: "Williams",
-    email: user?.email || "sarah.w@example.com",
-    phone: "+66 81 234 5678",
-    bio: "Tech enthusiast & online shopping fan.",
-  })
-  const [isSavingProfile, setIsSavingProfile] = useState(false)
+  const [activeTab, setActiveTab] = useState<
+    "profile" | "addresses" | "security"
+  >("profile")
   const [profileSuccess, setProfileSuccess] = useState(false)
-
-  const handleProfileFieldChange = <K extends keyof UserProfileState>(
-    field: K,
-    value: UserProfileState[K]
-  ) => {
-    setProfileForm((prev) => ({ ...prev, [field]: value }))
-    if (profileSuccess) setProfileSuccess(false)
-  }
-
-  const handleSaveProfile = (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSavingProfile(true)
-    setTimeout(() => {
-      setIsSavingProfile(false)
-      setProfileSuccess(true)
-      setTimeout(() => setProfileSuccess(false), 3000)
-    }, 500)
-  }
-
-  // Password Change Form
-  const [passwordForm, setPasswordForm] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  })
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [passwordSuccess, setPasswordSuccess] = useState(false)
-  const [isChangingPassword, setIsChangingPassword] = useState(false)
-
-  const handlePasswordChange = (e: React.FormEvent) => {
-    e.preventDefault()
-    setPasswordError(null)
-
-    if (!passwordForm.currentPassword) {
-      setPasswordError("กรุณากรอกรหัสผ่านปัจจุบัน")
-      return
-    }
-
-    if (passwordForm.newPassword.length < 6) {
-      setPasswordError("รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร")
-      return
-    }
-
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setPasswordError("รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน")
-      return
-    }
-
-    setIsChangingPassword(true)
-    setTimeout(() => {
-      setIsChangingPassword(false)
-      setPasswordSuccess(true)
-      setPasswordForm({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      })
-      setTimeout(() => setPasswordSuccess(false), 3000)
-    }, 600)
-  }
-
-  // Address Management
-  const [addresses, setAddresses] = useState<AddressItem[]>([...defaultAddresses])
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false)
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null)
-  const [addressForm, setAddressForm] = useState<{
-    title: string
-    tag: "HOME" | "OFFICE" | "OTHER"
-    address: string
-    phone: string
-  }>({
-    title: "",
-    tag: "HOME",
-    address: "",
-    phone: "",
+
+  const profileForm = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      firstName: profileRes?.firstName || "",
+      lastName: profileRes?.lastName || "",
+      email: profileRes?.email || "",
+      phone: profileRes?.phone || "",
+      bio: profileRes?.bio || "",
+    },
   })
+
+  const passwordForm = useForm<PasswordFormValues>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  })
+
+  const addressForm = useForm<AddressFormValues>({
+    resolver: zodResolver(addressSchema),
+    defaultValues: {
+      title: "",
+      tag: "HOME",
+      address: "",
+      phone: "",
+    },
+  })
+
+  const { reset: resetProfileForm } = profileForm
+
+  useEffect(() => {
+    const p = profileRes?.data
+    if (!p) return
+    resetProfileForm({
+      firstName: p.firstName || "",
+      lastName: p.lastName || "",
+      email: p.email || user?.email || "",
+      phone: p.phone || "",
+      bio: p.bio || "",
+    })
+  }, [profileRes, user?.email, resetProfileForm])
+
+  const handleSaveProfile = profileForm.handleSubmit((values) => {
+    updateProfileMutation.mutate(
+      {
+        firstName: values.firstName,
+        lastName: values.lastName,
+        phone: values.phone || "",
+        bio: values.bio || "",
+      },
+      {
+        onSuccess: () => {
+          setProfileSuccess(true)
+          setTimeout(() => setProfileSuccess(false), 3000)
+        },
+      }
+    )
+  })
+
+  const handlePasswordChange = passwordForm.handleSubmit((values) => {
+    setPasswordError(null)
+    changePasswordMutation.mutate(
+      {
+        currentPassword: values.currentPassword,
+        newPassword: values.newPassword,
+      },
+      {
+        onSuccess: () => {
+          setPasswordSuccess(true)
+          passwordForm.reset()
+          setTimeout(() => setPasswordSuccess(false), 3000)
+        },
+        onError: (err: any) => {
+          setPasswordError(
+            err?.response?.data?.message || "ไม่สามารถเปลี่ยนรหัสผ่านได้"
+          )
+        },
+      }
+    )
+  })
+
+  const addresses: AddressItem[] = useMemo(() => {
+    const raw: ApiAddressItem[] = addressesRes?.data ?? []
+    return raw.map((a) => ({
+      id: a.id,
+      title: a.title,
+      tag: normalizeTag(a.tag),
+      address: a.address,
+      phone: a.phone,
+    }))
+  }, [addressesRes])
 
   const handleOpenAddAddress = () => {
     setEditingAddressId(null)
-    setAddressForm({
+    addressForm.reset({
       title: "",
       tag: "HOME",
       address: "",
@@ -119,7 +182,7 @@ export function useUserProfile() {
 
   const handleOpenEditAddress = (addr: AddressItem) => {
     setEditingAddressId(addr.id)
-    setAddressForm({
+    addressForm.reset({
       title: addr.title,
       tag: addr.tag,
       address: addr.address,
@@ -128,65 +191,60 @@ export function useUserProfile() {
     setIsAddressModalOpen(true)
   }
 
-  const handleSaveAddress = () => {
-    if (!addressForm.title.trim() || !addressForm.address.trim()) return
-
-    if (editingAddressId) {
-      setAddresses((prev) =>
-        prev.map((a) =>
-          a.id === editingAddressId
-            ? {
-                ...a,
-                title: addressForm.title,
-                tag: addressForm.tag,
-                address: addressForm.address,
-                phone: addressForm.phone,
-              }
-            : a
-        )
-      )
-    } else {
-      const newAddr: AddressItem = {
-        id: `addr-${Date.now()}`,
-        title: addressForm.title,
-        tag: addressForm.tag,
-        address: addressForm.address,
-        phone: addressForm.phone,
-      }
-      setAddresses((prev) => [...prev, newAddr])
+  const handleSaveAddress = addressForm.handleSubmit((values) => {
+    const payload = {
+      title: values.title,
+      tag: values.tag.toLowerCase(),
+      address: values.address,
+      phone: values.phone,
     }
 
-    setIsAddressModalOpen(false)
-  }
+    if (editingAddressId) {
+      updateAddressMutation.mutate(
+        { id: editingAddressId, data: payload },
+        { onSuccess: () => setIsAddressModalOpen(false) }
+      )
+    } else {
+      createAddressMutation.mutate(payload, {
+        onSuccess: () => setIsAddressModalOpen(false),
+      })
+    }
+  })
 
   const handleDeleteAddress = (id: string) => {
-    setAddresses((prev) => prev.filter((a) => a.id !== id))
+    deleteAddressMutation.mutate(id)
+  }
+
+  const handleSetDefaultAddress = (id: string) => {
+    setDefaultAddressMutation.mutate(id)
   }
 
   return {
     user,
+    profile: profileRes?.data,
+    isLoadingProfile,
     activeTab,
     setActiveTab,
-    profileForm,
-    handleProfileFieldChange,
+    profileControl: profileForm.control,
     handleSaveProfile,
-    isSavingProfile,
+    isSavingProfile: updateProfileMutation.isPending,
     profileSuccess,
-    passwordForm,
-    setPasswordForm,
+    passwordControl: passwordForm.control,
     passwordError,
     passwordSuccess,
-    isChangingPassword,
+    isChangingPassword: changePasswordMutation.isPending,
     handlePasswordChange,
     addresses,
     isAddressModalOpen,
     setIsAddressModalOpen,
     editingAddressId,
-    addressForm,
-    setAddressForm,
+    addressControl: addressForm.control,
+    isSavingAddress:
+      createAddressMutation.isPending || updateAddressMutation.isPending,
     handleOpenAddAddress,
     handleOpenEditAddress,
     handleSaveAddress,
     handleDeleteAddress,
+    handleSetDefaultAddress,
   }
 }

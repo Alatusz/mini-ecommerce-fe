@@ -15,8 +15,7 @@ import {
   ChevronRight,
 } from "lucide-react"
 
-import { useMyOrders } from "./useHooks"
-import type { OrderItem } from "@/pages/dashboard/order/common/mockOrder"
+import { useMyOrders, type OrderItem } from "./useHooks"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -373,10 +372,10 @@ export default function MyOrdersPage() {
 
                           <div className="text-right shrink-0">
                             <span className="text-xs sm:text-sm font-bold text-foreground">
-                              ${(item.price * item.quantity).toFixed(2)}
+                              ฿{(item.price * item.quantity).toLocaleString()}
                             </span>
                             <span className="text-[11px] text-muted-foreground block">
-                              (${item.price.toFixed(2)} / ชิ้น)
+                              (฿{item.price.toLocaleString()} / ชิ้น)
                             </span>
                           </div>
                         </div>
@@ -387,7 +386,7 @@ export default function MyOrdersPage() {
                           รายการสินค้าจำนวน {order.itemsCount} ชิ้น
                         </span>
                         <span className="font-bold text-foreground">
-                          ${order.total.toFixed(2)}
+                          ฿{order.total.toLocaleString()}
                         </span>
                       </div>
                     )}
@@ -423,7 +422,7 @@ export default function MyOrdersPage() {
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-muted-foreground">ยอดรวมคำสั่งซื้อ:</span>
                       <span className="text-base sm:text-lg font-bold text-foreground">
-                        ${order.total.toFixed(2)}
+                        ฿{order.total.toLocaleString()}
                       </span>
                       <Badge variant="secondary" className="text-[10px] ml-1">
                         ชำระผ่าน {order.paymentMethod}
