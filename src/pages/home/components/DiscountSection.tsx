@@ -1,7 +1,22 @@
-import { mockDiscountProducts } from "../mockLandingPage"
+import { useMemo } from "react"
+import {
+  useStorefrontProductsQuery,
+  mapProductToCard,
+} from "../useHubs"
 import ProductCard from "./ProductCard"
+import { Skeleton } from "@/components/ui/skeleton"
 
 function DiscountSection() {
+  const { data, isLoading } = useStorefrontProductsQuery({ limit: 12 })
+
+  const discountProducts = useMemo(() => {
+    const mapped = (data?.data ?? []).map(mapProductToCard)
+    const onSale = mapped.filter(
+      (p) => p.originalPrice && p.originalPrice > p.price
+    )
+    return (onSale.length > 0 ? onSale : mapped).slice(0, 6)
+  }, [data])
+
   return (
     <section className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -10,12 +25,19 @@ function DiscountSection() {
         </h2>
       </div>
 
-      {/* Product Grid - 6 Columns on Desktop */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-        {mockDiscountProducts.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-64 rounded-lg" />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+          {discountProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      )}
     </section>
   )
 }

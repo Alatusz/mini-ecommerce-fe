@@ -1,11 +1,22 @@
 import { useState, useMemo } from "react"
-import { Link } from "react-router-dom"
-import { ChevronRight, SlidersHorizontal, RotateCcw } from "lucide-react"
+import { Link, useSearchParams } from "react-router-dom"
+import {
+  ChevronRight,
+  SlidersHorizontal,
+  RotateCcw,
+  Search,
+} from "lucide-react"
 
-import { mockProductList } from "./mockProductList"
 import ProductCard from "@/components/shares/ProductCard"
 import FilterSidebar from "./components/FilterSidebar"
+import {
+  useProductsCatalogQuery,
+  useProductCategoriesQuery,
+} from "./useHubs"
+import { mapProductToCard } from "@/pages/home/useHubs"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Select,
   SelectContent,
@@ -24,72 +35,97 @@ import {
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
 
-type SortOption = "rating" | "price-asc" | "price-desc" | "name"
+type SortOption = "newest" | "price-asc" | "price-desc" | "name"
+
+const DEFAULT_PRICE_RANGE: [number, number] = [0, 100000]
+const ITEMS_PER_PAGE = 15
 
 function ProductListPage() {
-  const [selectedBrands, setSelectedBrands] = useState<string[]>(["Apple"])
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 70000])
-  const [sortBy, setSortBy] = useState<SortOption>("rating")
-  const [currentPage, setCurrentPage] = useState<number>(1)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [priceRange, setPriceRange] =
+    useState<[number, number]>(DEFAULT_PRICE_RANGE)
+  const [sortBy, setSortBy] = useState<SortOption>("newest")
 
-  const handleToggleBrand = (brand: string) => {
-    setSelectedBrands((prev) =>
-      prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]
+  const currentPage = Math.max(1, Number(searchParams.get("page")) || 1)
+  const search = searchParams.get("search") || ""
+  const rawCategory = searchParams.get("category") || ""
+  const selectedCategories = useMemo(
+    () =>
+      rawCategory
+        ? rawCategory
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [],
+    [rawCategory]
+  )
+
+  const updateParams = (
+    updates: Record<string, string | number | undefined>
+  ) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        Object.entries(updates).forEach(([k, v]) => {
+          if (v === undefined || v === "" || v === null) {
+            next.delete(k)
+          } else {
+            next.set(k, String(v))
+          }
+        })
+        return next
+      },
+      { replace: true }
     )
   }
 
-  const handleResetFilters = () => {
-    setSelectedBrands([])
-    setPriceRange([0, 70000])
-    setSortBy("rating")
-    setCurrentPage(1)
+  const { data: categoriesData, isLoading: isLoadingCategories } =
+    useProductCategoriesQuery()
+  const categories = categoriesData?.data ?? []
+
+  const { data: productsData, isLoading: isLoadingProducts } =
+    useProductsCatalogQuery({
+      page: currentPage,
+      limit: ITEMS_PER_PAGE,
+      search: search || undefined,
+      category:
+        selectedCategories.length > 0
+          ? selectedCategories.join(",")
+          : undefined,
+      minPrice: priceRange[0] > 0 ? priceRange[0] : undefined,
+      maxPrice:
+        priceRange[1] < DEFAULT_PRICE_RANGE[1] ? priceRange[1] : undefined,
+      sort: sortBy,
+    })
+
+  const handleToggleCategory = (categoryId: string) => {
+    const next = selectedCategories.includes(categoryId)
+      ? selectedCategories.filter((id) => id !== categoryId)
+      : [...selectedCategories, categoryId]
+    updateParams({
+      category: next.length > 0 ? next.join(",") : undefined,
+      page: 1,
+    })
   }
 
-  // Filter & Sort Logic
-  const filteredProducts = useMemo(() => {
-    return mockProductList
-      .filter((product) => {
-        // Brand filter
-        if (
-          selectedBrands.length > 0 &&
-          !selectedBrands.includes(product.brand)
-        ) {
-          return false
-        }
-        // Price filter
-        if (
-          product.price < priceRange[0] ||
-          product.price > priceRange[1]
-        ) {
-          return false
-        }
-        return true
-      })
-      .sort((a, b) => {
-        if (sortBy === "rating") return b.rating - a.rating
-        if (sortBy === "price-asc") return a.price - b.price
-        if (sortBy === "price-desc") return b.price - a.price
-        if (sortBy === "name") return a.name.localeCompare(b.name)
-        return 0
-      })
-  }, [selectedBrands, priceRange, sortBy])
+  const handleResetFilters = () => {
+    setPriceRange(DEFAULT_PRICE_RANGE)
+    setSortBy("newest")
+    updateParams({ category: undefined, search: undefined, page: 1 })
+  }
 
-  // Pagination slice (e.g. 18 items per page)
-  const itemsPerPage = 18
-  const totalPages = 12 // Matches attachment mockup with pages up to 12
-  const paginatedProducts = filteredProducts.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  )
-  const displayProducts =
-    paginatedProducts.length > 0 ? paginatedProducts : filteredProducts
+  const displayProducts = useMemo(() => {
+    return (productsData?.data ?? []).map(mapProductToCard)
+  }, [productsData])
+
+  const totalCount = productsData?.total ?? displayProducts.length
+  const totalPages = Math.max(1, productsData?.totalPages ?? 1)
 
   return (
     <div className="flex flex-col gap-6 py-2">
@@ -107,18 +143,19 @@ function ProductListPage() {
         {/* Desktop Left Sidebar Filter */}
         <div className="hidden lg:block w-64 xl:w-72 shrink-0">
           <FilterSidebar
-            selectedBrands={selectedBrands}
-            onToggleBrand={handleToggleBrand}
+            categories={categories}
+            selectedCategories={selectedCategories}
+            onToggleCategory={handleToggleCategory}
             priceRange={priceRange}
             onPriceChange={setPriceRange}
-            onClearFilters={handleResetFilters}
+            isLoadingCategories={isLoadingCategories}
           />
         </div>
 
         {/* Right Product Grid Area */}
         <div className="flex flex-1 min-w-0 w-full flex-col gap-6">
-          {/* Top Bar: Counter & Sort */}
-          <div className="flex items-center justify-between gap-4 border-b border-border/40 pb-4">
+          {/* Top Bar: Search, Counter & Sort */}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/40 pb-4">
             <div className="flex items-center gap-3">
               {/* Mobile Filter Drawer Trigger */}
               <div className="lg:hidden">
@@ -141,18 +178,19 @@ function ProductListPage() {
                     </DrawerHeader>
                     <div className="max-h-[70vh] overflow-y-auto px-4 py-2">
                       <FilterSidebar
-                        selectedBrands={selectedBrands}
-                        onToggleBrand={handleToggleBrand}
+                        categories={categories}
+                        selectedCategories={selectedCategories}
+                        onToggleCategory={handleToggleCategory}
                         priceRange={priceRange}
                         onPriceChange={setPriceRange}
-                        onClearFilters={handleResetFilters}
+                        isLoadingCategories={isLoadingCategories}
                       />
                     </div>
                     <div className="p-4 border-t">
                       <DrawerClose
                         render={
                           <Button className="w-full cursor-pointer">
-                            View Results ({filteredProducts.length})
+                            View Results ({displayProducts.length})
                           </Button>
                         }
                       />
@@ -161,17 +199,28 @@ function ProductListPage() {
                 </Drawer>
               </div>
 
-              {/* Selected Products Count */}
               <div className="text-sm text-muted-foreground">
-                Selected Products:{" "}
-                <span className="font-bold text-foreground">
-                  {filteredProducts.length}
-                </span>
+                Products:{" "}
+                <span className="font-bold text-foreground">{totalCount}</span>
               </div>
             </div>
 
-            {/* Sort Dropdown */}
             <div className="flex items-center gap-2">
+              <div className="relative w-44 sm:w-56">
+                <Search className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Search products..."
+                  value={search}
+                  onChange={(e) =>
+                    updateParams({
+                      search: e.target.value || undefined,
+                      page: 1,
+                    })
+                  }
+                  className="h-9 pl-8 text-xs"
+                />
+              </div>
+
               <Select
                 value={sortBy}
                 onValueChange={(val) => setSortBy(val as SortOption)}
@@ -180,7 +229,7 @@ function ProductListPage() {
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent align="end">
-                  <SelectItem value="rating">By rating</SelectItem>
+                  <SelectItem value="newest">Newest</SelectItem>
                   <SelectItem value="price-asc">Price: Low to High</SelectItem>
                   <SelectItem value="price-desc">Price: High to Low</SelectItem>
                   <SelectItem value="name">Product Name</SelectItem>
@@ -189,8 +238,14 @@ function ProductListPage() {
             </div>
           </div>
 
-          {/* Product Grid - 6 Columns on Desktop */}
-          {displayProducts.length > 0 ? (
+          {/* Product Grid */}
+          {isLoadingProducts ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <Skeleton key={i} className="h-64 rounded-lg" />
+              ))}
+            </div>
+          ) : displayProducts.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
               {displayProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
@@ -202,7 +257,7 @@ function ProductListPage() {
                 ไม่พบสินค้าตามเงื่อนไขที่เลือก
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                ลองปรับช่วงราคาหรือตัวเลือกแบรนด์เพื่อค้นหาสินค้า
+                ลองปรับช่วงราคา หมวดหมู่ หรือคำค้นหาใหม่
               </p>
               <Button
                 variant="outline"
@@ -216,94 +271,62 @@ function ProductListPage() {
             </div>
           )}
 
-          {/* Pagination Matching Attachment */}
-          <div className="mt-6 flex justify-center">
-            <Pagination>
-              <PaginationContent className="gap-1 sm:gap-1.5">
-                <PaginationItem>
-                  <PaginationPrevious
-                    text=""
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    className={`cursor-pointer size-8 p-0 flex items-center justify-center ${
-                      currentPage === 1 ? "pointer-events-none opacity-40" : ""
-                    }`}
-                  />
-                </PaginationItem>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-6 flex justify-center">
+              <Pagination>
+                <PaginationContent className="gap-1 sm:gap-1.5">
+                  <PaginationItem>
+                    <PaginationPrevious
+                      text=""
+                      onClick={() =>
+                        updateParams({ page: Math.max(1, currentPage - 1) })
+                      }
+                      className={`cursor-pointer size-8 p-0 flex items-center justify-center ${
+                        currentPage === 1
+                          ? "pointer-events-none opacity-40"
+                          : ""
+                      }`}
+                    />
+                  </PaginationItem>
 
-                <PaginationItem>
-                  <PaginationLink
-                    isActive={currentPage === 1}
-                    onClick={() => setCurrentPage(1)}
-                    className={`size-8 text-xs cursor-pointer ${
-                      currentPage === 1
-                        ? "bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black"
-                        : ""
-                    }`}
-                  >
-                    1
-                  </PaginationLink>
-                </PaginationItem>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (p) => (
+                      <PaginationItem key={p}>
+                        <PaginationLink
+                          isActive={currentPage === p}
+                          onClick={() => updateParams({ page: p })}
+                          className={`size-8 text-xs cursor-pointer ${
+                            currentPage === p
+                              ? "bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black"
+                              : ""
+                          }`}
+                        >
+                          {p}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )
+                  )}
 
-                <PaginationItem>
-                  <PaginationLink
-                    isActive={currentPage === 2}
-                    onClick={() => setCurrentPage(2)}
-                    className={`size-8 text-xs cursor-pointer ${
-                      currentPage === 2
-                        ? "bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black"
-                        : ""
-                    }`}
-                  >
-                    2
-                  </PaginationLink>
-                </PaginationItem>
-
-                <PaginationItem>
-                  <PaginationLink
-                    isActive={currentPage === 3}
-                    onClick={() => setCurrentPage(3)}
-                    className={`size-8 text-xs cursor-pointer ${
-                      currentPage === 3
-                        ? "bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black"
-                        : ""
-                    }`}
-                  >
-                    3
-                  </PaginationLink>
-                </PaginationItem>
-
-                <PaginationItem>
-                  <PaginationEllipsis />
-                </PaginationItem>
-
-                <PaginationItem>
-                  <PaginationLink
-                    isActive={currentPage === totalPages}
-                    onClick={() => setCurrentPage(totalPages)}
-                    className={`size-8 text-xs cursor-pointer ${
-                      currentPage === totalPages
-                        ? "bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black"
-                        : ""
-                    }`}
-                  >
-                    {totalPages}
-                  </PaginationLink>
-                </PaginationItem>
-
-                <PaginationItem>
-                  <PaginationNext
-                    text=""
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    className={`cursor-pointer size-8 p-0 flex items-center justify-center ${
-                      currentPage === totalPages
-                        ? "pointer-events-none opacity-40"
-                        : ""
-                    }`}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          </div>
+                  <PaginationItem>
+                    <PaginationNext
+                      text=""
+                      onClick={() =>
+                        updateParams({
+                          page: Math.min(totalPages, currentPage + 1),
+                        })
+                      }
+                      className={`cursor-pointer size-8 p-0 flex items-center justify-center ${
+                        currentPage === totalPages
+                          ? "pointer-events-none opacity-40"
+                          : ""
+                      }`}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </div>
       </div>
     </div>
