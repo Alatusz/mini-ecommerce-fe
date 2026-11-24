@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom"
+import { Controller } from "react-hook-form"
 import {
   ArrowLeft,
   Check,
@@ -37,10 +38,8 @@ export default function DashboardCategoryEditPage() {
     productCount,
     hasProducts,
 
-    register,
+    control,
     image,
-    status,
-    errors,
     isSubmitting,
 
     selectedFile,
@@ -121,31 +120,37 @@ export default function DashboardCategoryEditPage() {
           <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Category Name */}
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor="edit-name"
-                  className="text-xs font-medium text-foreground"
-                >
-                  Name <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  {...register("name")}
-                  id="edit-name"
-                  placeholder="Category Name"
-                  aria-invalid={Boolean(errors.name)}
-                  className={`h-9 text-xs ${
-                    errors.name
-                      ? "border-destructive focus-visible:ring-destructive"
-                      : ""
-                  }`}
-                />
-                {errors.name?.message && (
-                  <p className="flex items-center gap-1 text-[11px] text-destructive">
-                    <AlertCircle className="size-3" />
-                    {errors.name.message}
-                  </p>
+              <Controller
+                name="name"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="edit-name"
+                      className="text-xs font-medium text-foreground"
+                    >
+                      Name <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      {...field}
+                      id="edit-name"
+                      placeholder="Category Name"
+                      aria-invalid={fieldState.invalid}
+                      className={`h-9 text-xs ${
+                        fieldState.invalid
+                          ? "border-destructive focus-visible:ring-destructive"
+                          : ""
+                      }`}
+                    />
+                    {fieldState.error?.message && (
+                      <p className="flex items-center gap-1 text-[11px] text-destructive">
+                        <AlertCircle className="size-3" />
+                        {fieldState.error.message}
+                      </p>
+                    )}
+                  </div>
                 )}
-              </div>
+              />
 
               {/* Category Image with Shadcn/ui Attachment */}
               <div className="space-y-1.5">
@@ -189,11 +194,18 @@ export default function DashboardCategoryEditPage() {
                         <ImageIcon className="size-4 text-muted-foreground" />
                       )}
                     </div>
-                    <Input
-                      {...register("image")}
-                      id="edit-image"
-                      placeholder="https://... or /images/..."
-                      className="h-9 font-mono text-xs"
+                    <Controller
+                      name="image"
+                      control={control}
+                      render={({ field }) => (
+                        <Input
+                          {...field}
+                          value={field.value ?? ""}
+                          id="edit-image"
+                          placeholder="https://... or /images/..."
+                          className="h-9 font-mono text-xs"
+                        />
+                      )}
                     />
                   </div>
                 ) : isSubmitting && selectedFile ? (
@@ -278,77 +290,83 @@ export default function DashboardCategoryEditPage() {
               </div>
 
               {/* Status Segmented Selection */}
-              <div className="space-y-1.5 pt-1">
-                <Label className="text-xs font-medium text-foreground">
-                  Status
-                </Label>
-                <div className="grid grid-cols-3 gap-3 pt-0.5">
-                  {[
-                    {
-                      value: "active" as const,
-                      label: "Active",
-                      tag: "Public",
-                      dotClass: "bg-emerald-500",
-                    },
-                    {
-                      value: "archived" as const,
-                      label: "Archived",
-                      tag: "Hidden",
-                      dotClass: "bg-zinc-400",
-                    },
-                    {
-                      value: "draft" as const,
-                      label: "Draft",
-                      tag: "Unpublished",
-                      dotClass: "bg-amber-500",
-                    },
-                  ].map((opt) => {
-                    const selected = status === opt.value
-                    const isBlocked = hasProducts && opt.value !== "active"
-                    return (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        disabled={isBlocked}
-                        onClick={() => handleStatusChange(opt.value)}
-                        aria-pressed={selected}
-                        title={
-                          isBlocked
-                            ? `Cannot change to ${opt.label} while ${productCount} product(s) are assigned`
-                            : undefined
-                        }
-                        className={`flex items-center justify-between rounded-lg border px-3 py-2.5 text-left transition-all ${
-                          isBlocked
-                            ? "cursor-not-allowed border-border/40 bg-muted/20 text-muted-foreground opacity-40"
-                            : selected
-                              ? "cursor-pointer border-primary/40 bg-primary/5 text-foreground ring-1 ring-primary/20"
-                              : "cursor-pointer border-border/60 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`size-2 rounded-full ${opt.dotClass}`}
-                          />
-                          <span className="text-xs font-medium text-foreground">
-                            {opt.label}
-                          </span>
-                        </div>
-                        <span className="text-[11px] text-muted-foreground">
-                          {isBlocked ? "Locked" : opt.tag}
+              <Controller
+                name="status"
+                control={control}
+                render={({ field }) => (
+                  <div className="space-y-1.5 pt-1">
+                    <Label className="text-xs font-medium text-foreground">
+                      Status
+                    </Label>
+                    <div className="grid grid-cols-3 gap-3 pt-0.5">
+                      {[
+                        {
+                          value: "active" as const,
+                          label: "Active",
+                          tag: "Public",
+                          dotClass: "bg-emerald-500",
+                        },
+                        {
+                          value: "archived" as const,
+                          label: "Archived",
+                          tag: "Hidden",
+                          dotClass: "bg-zinc-400",
+                        },
+                        {
+                          value: "draft" as const,
+                          label: "Draft",
+                          tag: "Unpublished",
+                          dotClass: "bg-amber-500",
+                        },
+                      ].map((opt) => {
+                        const selected = field.value === opt.value
+                        const isBlocked = hasProducts && opt.value !== "active"
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            disabled={isBlocked}
+                            onClick={() => handleStatusChange(opt.value)}
+                            aria-pressed={selected}
+                            title={
+                              isBlocked
+                                ? `Cannot change to ${opt.label} while ${productCount} product(s) are assigned`
+                                : undefined
+                            }
+                            className={`flex items-center justify-between rounded-lg border px-3 py-2.5 text-left transition-all ${
+                              isBlocked
+                                ? "cursor-not-allowed border-border/40 bg-muted/20 text-muted-foreground opacity-40"
+                                : selected
+                                  ? "cursor-pointer border-primary/40 bg-primary/5 text-foreground ring-1 ring-primary/20"
+                                  : "cursor-pointer border-border/60 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`size-2 rounded-full ${opt.dotClass}`}
+                              />
+                              <span className="text-xs font-medium text-foreground">
+                                {opt.label}
+                              </span>
+                            </div>
+                            <span className="text-[11px] text-muted-foreground">
+                              {isBlocked ? "Locked" : opt.tag}
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                    {hasProducts && (
+                      <p className="flex items-center gap-1.5 pt-1 text-[11px] text-amber-600 dark:text-amber-400">
+                        <AlertCircle className="size-3 shrink-0" />
+                        <span>
+                          Status is locked to Active because {productCount} product(s) are linked to this category.
                         </span>
-                      </button>
-                    )
-                  })}
-                </div>
-                {hasProducts && (
-                  <p className="flex items-center gap-1.5 pt-1 text-[11px] text-amber-600 dark:text-amber-400">
-                    <AlertCircle className="size-3 shrink-0" />
-                    <span>
-                      Status is locked to Active because {productCount} product(s) are linked to this category.
-                    </span>
-                  </p>
+                      </p>
+                    )}
+                  </div>
                 )}
-              </div>
+              />
 
               {/* Associated Products Fact */}
               <div className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/20 px-3.5 py-2 text-xs tabular-nums">
