@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { login } from "@/services/auth.services"
 import { showToast } from "@/lib/toast"
-import { useNavigate } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 import { useAuth } from "@/context/AuthContext"
 
 export const loginSchema = z.object({
@@ -15,6 +15,10 @@ export type LoginFormValues = z.infer<typeof loginSchema>
 
 export function useLogin() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const redirectTo =
+    (location.state as { from?: { pathname?: string } } | null)?.from
+      ?.pathname || "/"
 
   const { setUser } = useAuth()
 
@@ -42,7 +46,7 @@ export function useLogin() {
       })
 
       showToast.success("User logged in successfully")
-      navigate("/")
+      navigate(redirectTo, { replace: true })
     } catch (error: any) {
       showToast.error(
         error.response?.data?.message || "Failed to login user",

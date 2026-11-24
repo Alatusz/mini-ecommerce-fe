@@ -61,9 +61,10 @@ function LoginPage() {
                   <Input
                     {...field}
                     id={field.name}
+                    type="password"
                     aria-invalid={fieldState.invalid}
                     placeholder="******"
-                    autoComplete="off"
+                    autoComplete="current-password"
                   />
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
@@ -71,8 +72,8 @@ function LoginPage() {
                 </Field>
               )}
             />
-            <Button type="submit" className="w-full">
-              {isSubmitting ? "Loggin in..." : "Login"}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? "Logging in..." : "Login"}
             </Button>
           </form>
 
