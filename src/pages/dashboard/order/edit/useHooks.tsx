@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
+import { useForm } from "react-hook-form"
 import {
   useOrderDetailQuery,
   useUpdateOrderStatusMutation,
@@ -11,6 +12,11 @@ export type OrderStatus = NonNullable<UpdateOrderStatusPayload["status"]>
 export type PaymentStatus = NonNullable<
   UpdateOrderStatusPayload["paymentStatus"]
 >
+
+export interface OrderEditFormValues {
+  status: OrderStatus
+  paymentStatus: PaymentStatus
+}
 
 export interface OrderStep {
   step: number
@@ -70,41 +76,48 @@ export function useOrderEdit() {
 
   const order: OrderItem | undefined = data?.data
 
-  const [status, setStatus] = useState<OrderStatus>("pending")
-  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("pending")
+  const form = useForm<OrderEditFormValues>({
+    defaultValues: {
+      status: "pending",
+      paymentStatus: "pending",
+    },
+  })
 
   useEffect(() => {
     if (!order) return
-    setStatus((order.status as OrderStatus) || "pending")
-    setPaymentStatus((order.paymentStatus as PaymentStatus) || "pending")
-  }, [order])
+    form.reset({
+      status: (order.status as OrderStatus) || "pending",
+      paymentStatus: (order.paymentStatus as PaymentStatus) || "pending",
+    })
+  }, [order, form])
 
+  const status = form.watch("status")
+  const paymentStatus = form.watch("paymentStatus")
   const isLockedCancelled = order?.status === "cancelled"
 
   const handleStatusChange = (newStatus: OrderStatus) => {
     if (isLockedCancelled) return
-    setStatus(newStatus)
+    form.setValue("status", newStatus, { shouldDirty: true })
   }
 
   const handleSetStep = (stepNumber: number) => {
     if (isLockedCancelled) return
     const target = orderSteps.find((s) => s.step === stepNumber)
     if (target) {
-      setStatus(target.key)
+      form.setValue("status", target.key, { shouldDirty: true })
     }
   }
 
   const handlePaymentStatusChange = (newPaymentStatus: PaymentStatus) => {
-    setPaymentStatus(newPaymentStatus)
+    form.setValue("paymentStatus", newPaymentStatus, { shouldDirty: true })
   }
 
-  const handleSubmit = (e?: React.FormEvent) => {
-    e?.preventDefault()
+  const handleSubmit = form.handleSubmit((values) => {
     if (!id || !order) return
 
     const payload: UpdateOrderStatusPayload = {
-      paymentStatus,
-      ...(isLockedCancelled ? {} : { status }),
+      paymentStatus: values.paymentStatus,
+      ...(isLockedCancelled ? {} : { status: values.status }),
     }
 
     updateStatusMutation.mutate(
@@ -115,7 +128,7 @@ export function useOrderEdit() {
         },
       }
     )
-  }
+  })
 
   const handleCancel = () => {
     navigate("/dashboard/order")
@@ -124,6 +137,7 @@ export function useOrderEdit() {
   return {
     id,
     order,
+    control: form.control,
     isLoading,
     isNotFound: !isLoading && (isError || !order),
     isLockedCancelled,

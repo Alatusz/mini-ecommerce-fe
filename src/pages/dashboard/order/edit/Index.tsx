@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom"
+import { Controller } from "react-hook-form"
 import {
   ArrowLeft,
   Check,
@@ -40,16 +41,15 @@ export default function DashboardOrderEditPage() {
   const {
     id,
     order,
+    control,
     isLoading,
     isNotFound,
     isLockedCancelled,
     status,
-    paymentStatus,
     currentStepNumber,
     isSubmitting,
     handleStatusChange,
     handleSetStep,
-    handlePaymentStatusChange,
     handleSubmit,
     handleCancel,
   } = useOrderEdit()
@@ -363,27 +363,33 @@ export default function DashboardOrderEditPage() {
                       <CreditCard className="size-3.5 text-muted-foreground" />
                       <span>{paymentMethodLabel}</span>
                     </div>
-                    <Select
-                      value={paymentStatus}
-                      onValueChange={(val) =>
-                        handlePaymentStatusChange(val as PaymentStatus)
-                      }
-                    >
-                      <SelectTrigger className="h-7 w-full cursor-pointer text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PAYMENT_STATUS_OPTIONS.map((opt) => (
-                          <SelectItem
-                            key={opt.id}
-                            value={opt.id}
-                            className="cursor-pointer text-xs"
-                          >
-                            {opt.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Controller
+                      name="paymentStatus"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          value={field.value}
+                          onValueChange={(val) =>
+                            field.onChange(val as PaymentStatus)
+                          }
+                        >
+                          <SelectTrigger className="h-7 w-full cursor-pointer text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PAYMENT_STATUS_OPTIONS.map((opt) => (
+                              <SelectItem
+                                key={opt.id}
+                                value={opt.id}
+                                className="cursor-pointer text-xs"
+                              >
+                                {opt.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
                   </div>
                 </div>
               </div>
