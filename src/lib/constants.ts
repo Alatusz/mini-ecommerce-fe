@@ -1,3 +1,5 @@
+export const FALLBACK_IMAGE = "/images/image-not-found.svg"
+
 export const QUERY_KEYS = {
   AUTH: "auth",
   DASHBOARD: {

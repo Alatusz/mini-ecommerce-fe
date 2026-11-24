@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react"
 import { Link } from "react-router-dom"
+import { Controller } from "react-hook-form"
 import { ArrowLeft, Check, AlertCircle, Loader2 } from "lucide-react"
 import { cn } from "cn"
 
@@ -33,8 +34,7 @@ export default function DashboardProductEditPage() {
     id,
     isNotFound,
     isLoading,
-    formData,
-    errors,
+    control,
     categoryOptions,
     isLoadingCategories,
     isSubmitting,
@@ -46,7 +46,6 @@ export default function DashboardProductEditPage() {
     openFileDialog,
     handleFileSelect,
     handleRemoveImage,
-    handleFieldChange,
     handleSubmit,
     handleCancel,
   } = useProductEdit()
@@ -93,7 +92,9 @@ export default function DashboardProductEditPage() {
       <PageContent>
         <div className="mx-auto flex max-w-md flex-col items-center justify-center py-24 text-center">
           <Spinner className="size-6 text-muted-foreground" />
-          <p className="mt-3 text-xs text-muted-foreground">Loading product...</p>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Loading product...
+          </p>
         </div>
       </PageContent>
     )
@@ -101,7 +102,6 @@ export default function DashboardProductEditPage() {
 
   return (
     <PageContent>
-      {/* ── Stacked Single-Column Multi-Card Form Layout ── */}
       <div className="mx-auto max-w-3xl pb-10">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Card 1: General Information */}
@@ -113,39 +113,50 @@ export default function DashboardProductEditPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <FormField
-                label="Name"
-                htmlFor="edit-pname"
-                required
-                error={errors.name}
-              >
-                <Input
-                  id="edit-pname"
-                  placeholder="Product Name"
-                  value={formData.name}
-                  onChange={(e) => handleFieldChange("name", e.target.value)}
-                  className={cn(
-                    "h-9 text-xs",
-                    errors.name &&
-                      "border-destructive focus-visible:ring-destructive"
-                  )}
-                />
-              </FormField>
+              <Controller
+                name="name"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <FormField
+                    label="Name"
+                    htmlFor="edit-pname"
+                    required
+                    error={fieldState.error?.message}
+                  >
+                    <Input
+                      {...field}
+                      id="edit-pname"
+                      placeholder="Product Name"
+                      className={cn(
+                        "h-9 text-xs",
+                        fieldState.invalid &&
+                          "border-destructive focus-visible:ring-destructive"
+                      )}
+                    />
+                  </FormField>
+                )}
+              />
 
-              <FormField
-                label="Description"
-                htmlFor="edit-pdesc"
-                hint="Supports rich text formatting & emoji"
-                error={errors.description}
-              >
-                <RichTextEditor
-                  value={formData.description}
-                  onChange={(html) => handleFieldChange("description", html)}
-                  placeholder="Describe product highlights, technical specifications, or warranty details..."
-                  error={!!errors.description}
-                  disabled={isSubmitting || isDeleting}
-                />
-              </FormField>
+              <Controller
+                name="description"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <FormField
+                    label="Description"
+                    htmlFor="edit-pdesc"
+                    hint="Supports rich text formatting & emoji"
+                    error={fieldState.error?.message}
+                  >
+                    <RichTextEditor
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Describe product highlights, technical specifications, or warranty details..."
+                      error={fieldState.invalid}
+                      disabled={isSubmitting || isDeleting}
+                    />
+                  </FormField>
+                )}
+              />
             </CardContent>
           </Card>
 
@@ -158,18 +169,24 @@ export default function DashboardProductEditPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ProductImageUpload
-                value={formData.image}
-                selectedFile={selectedFile}
-                isUploading={isSubmitting && !!selectedFile}
-                useUrlInput={useUrlInput}
-                onToggleUrlInput={toggleUseUrlInput}
-                fileInputRef={fileInputRef}
-                onOpenFileDialog={openFileDialog}
-                onFileSelect={handleFileSelect}
-                onRemoveImage={handleRemoveImage}
-                onUrlChange={(url) => handleFieldChange("image", url)}
-                disabled={isSubmitting || isDeleting}
+              <Controller
+                name="image"
+                control={control}
+                render={({ field }) => (
+                  <ProductImageUpload
+                    value={field.value}
+                    selectedFile={selectedFile}
+                    isUploading={isSubmitting && !!selectedFile}
+                    useUrlInput={useUrlInput}
+                    onToggleUrlInput={toggleUseUrlInput}
+                    fileInputRef={fileInputRef}
+                    onOpenFileDialog={openFileDialog}
+                    onFileSelect={handleFileSelect}
+                    onRemoveImage={handleRemoveImage}
+                    onUrlChange={field.onChange}
+                    disabled={isSubmitting || isDeleting}
+                  />
+                )}
               />
             </CardContent>
           </Card>
@@ -184,67 +201,82 @@ export default function DashboardProductEditPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <FormField
-                  label="Price ($)"
-                  htmlFor="edit-pprice"
-                  required
-                  error={errors.price}
-                >
-                  <Input
-                    id="edit-pprice"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={(e) => handleFieldChange("price", e.target.value)}
-                    className={cn(
-                      "h-9 text-xs tabular-nums",
-                      errors.price &&
-                        "border-destructive focus-visible:ring-destructive"
-                    )}
-                  />
-                </FormField>
+                <Controller
+                  name="price"
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <FormField
+                      label="Price ($)"
+                      htmlFor="edit-pprice"
+                      required
+                      error={fieldState.error?.message}
+                    >
+                      <Input
+                        {...field}
+                        id="edit-pprice"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        className={cn(
+                          "h-9 text-xs tabular-nums",
+                          fieldState.invalid &&
+                            "border-destructive focus-visible:ring-destructive"
+                        )}
+                      />
+                    </FormField>
+                  )}
+                />
 
-                <FormField
-                  label="Stock (units)"
-                  htmlFor="edit-pstock"
-                  required
-                  error={errors.stock}
-                >
-                  <Input
-                    id="edit-pstock"
-                    type="number"
-                    min="0"
-                    value={formData.stock}
-                    onChange={(e) => handleFieldChange("stock", e.target.value)}
-                    className={cn(
-                      "h-9 text-xs tabular-nums",
-                      errors.stock &&
-                        "border-destructive focus-visible:ring-destructive"
-                    )}
-                  />
-                </FormField>
+                <Controller
+                  name="stock"
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <FormField
+                      label="Stock (units)"
+                      htmlFor="edit-pstock"
+                      required
+                      error={fieldState.error?.message}
+                    >
+                      <Input
+                        {...field}
+                        id="edit-pstock"
+                        type="number"
+                        min="0"
+                        className={cn(
+                          "h-9 text-xs tabular-nums",
+                          fieldState.invalid &&
+                            "border-destructive focus-visible:ring-destructive"
+                        )}
+                      />
+                    </FormField>
+                  )}
+                />
 
-                <FormField
-                  label="SKU"
-                  htmlFor="edit-psku"
-                  required
-                  error={errors.sku}
-                >
-                  <Input
-                    id="edit-psku"
-                    placeholder="SONY-WH-1000"
-                    value={formData.sku}
-                    onChange={(e) =>
-                      handleFieldChange("sku", e.target.value.toUpperCase())
-                    }
-                    className={cn(
-                      "h-9 font-mono text-xs uppercase tabular-nums",
-                      errors.sku &&
-                        "border-destructive focus-visible:ring-destructive"
-                    )}
-                  />
-                </FormField>
+                <Controller
+                  name="sku"
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <FormField
+                      label="SKU"
+                      htmlFor="edit-psku"
+                      required
+                      error={fieldState.error?.message}
+                    >
+                      <Input
+                        {...field}
+                        id="edit-psku"
+                        onChange={(e) =>
+                          field.onChange(e.target.value.toUpperCase())
+                        }
+                        className={cn(
+                          "h-9 font-mono text-xs uppercase",
+                          fieldState.invalid &&
+                            "border-destructive focus-visible:ring-destructive"
+                        )}
+                      />
+                    </FormField>
+                  )}
+                />
               </div>
             </CardContent>
           </Card>
@@ -258,70 +290,80 @@ export default function DashboardProductEditPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <FormField
-                label="Category"
-                htmlFor="edit-pcat"
-                required
-                error={errors.categoryId}
-              >
-                <Select
-                  value={formData.categoryId || undefined}
-                  onValueChange={(val) =>
-                    handleFieldChange("categoryId", val ?? "")
-                  }
-                  disabled={isLoadingCategories || isSubmitting || isDeleting}
-                >
-                  <SelectTrigger
-                    id="edit-pcat"
-                    className={cn(
-                      "w-full",
-                      errors.categoryId &&
-                        "border-destructive focus-visible:ring-destructive"
-                    )}
+              <Controller
+                name="categoryId"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <FormField
+                    label="Category"
+                    htmlFor="edit-pcat"
+                    required
+                    error={fieldState.error?.message}
                   >
-                    <SelectValue>
-                      {(val: string) =>
-                        categoryOptions.find((c) => c.id === val)?.name ||
-                        (isLoadingCategories
-                          ? "Loading categories..."
-                          : "Select category")
-                      }
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent alignItemWithTrigger={false}>
-                    <div className="border-b p-1.5">
-                      <Input
-                        type="text"
-                        placeholder="Search categories..."
-                        value={categorySearch}
-                        onChange={(e) => setCategorySearch(e.target.value)}
-                        onKeyDown={(e) => e.stopPropagation()}
-                      />
-                    </div>
-                    <SelectGroup className="max-h-56 overflow-y-auto p-1">
-                      {filteredCategoryOptions.length === 0 ? (
-                        <div className="py-3 text-center text-xs text-muted-foreground">
-                          No categories found
+                    <Select
+                      value={field.value || undefined}
+                      onValueChange={(val) => field.onChange(val ?? "")}
+                      disabled={isLoadingCategories || isSubmitting || isDeleting}
+                    >
+                      <SelectTrigger
+                        id="edit-pcat"
+                        className={cn(
+                          "w-full",
+                          fieldState.invalid &&
+                            "border-destructive focus-visible:ring-destructive"
+                        )}
+                      >
+                        <SelectValue>
+                          {(val: string) =>
+                            categoryOptions.find((c) => c.id === val)?.name ||
+                            (isLoadingCategories
+                              ? "Loading categories..."
+                              : "Select category")
+                          }
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent alignItemWithTrigger={false}>
+                        <div className="border-b p-1.5">
+                          <Input
+                            type="text"
+                            placeholder="Search categories..."
+                            value={categorySearch}
+                            onChange={(e) => setCategorySearch(e.target.value)}
+                            onKeyDown={(e) => e.stopPropagation()}
+                          />
                         </div>
-                      ) : (
-                        filteredCategoryOptions.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </FormField>
+                        <SelectGroup className="max-h-56 overflow-y-auto p-1">
+                          {filteredCategoryOptions.length === 0 ? (
+                            <div className="py-3 text-center text-xs text-muted-foreground">
+                              No categories found
+                            </div>
+                          ) : (
+                            filteredCategoryOptions.map((cat) => (
+                              <SelectItem key={cat.id} value={cat.id}>
+                                {cat.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </FormField>
+                )}
+              />
 
-              <FormField label="Product Status">
-                <ProductStatusSelector
-                  value={formData.status}
-                  onChange={(status) => handleFieldChange("status", status)}
-                  disabled={isSubmitting || isDeleting}
-                />
-              </FormField>
+              <Controller
+                name="status"
+                control={control}
+                render={({ field }) => (
+                  <FormField label="Product Status">
+                    <ProductStatusSelector
+                      value={field.value}
+                      onChange={field.onChange}
+                      disabled={isSubmitting || isDeleting}
+                    />
+                  </FormField>
+                )}
+              />
             </CardContent>
           </Card>
 

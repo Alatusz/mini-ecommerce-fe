@@ -1,114 +1,104 @@
 import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { useMutation } from "@tanstack/react-query"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { QUERY_KEYS } from "@/lib/constants"
 import { useCategoryOptions } from "../useHooks"
 import {
   createProduct,
   type IProduct,
-  type ProductPublishStatus,
 } from "@/services/product.services"
 import { uploadImage } from "@/services/upload.services"
 import { queryClient } from "@/lib/queryClient"
 import { showToast } from "@/lib/toast"
 
-export interface ProductFormState {
-  name: string
-  sku: string
-  categoryId: string
-  price: string
-  stock: string
-  image: string
-  description: string
-  status: ProductPublishStatus
-}
+export const productFormSchema = z.object({
+  name: z.string().trim().min(1, "Product name is required"),
+  sku: z.string().trim().min(1, "SKU is required"),
+  categoryId: z.string().min(1, "Category is required"),
+  price: z
+    .string()
+    .trim()
+    .refine(
+      (v) => v !== "" && !Number.isNaN(Number(v)) && Number(v) >= 0,
+      "Valid price is required"
+    ),
+  stock: z
+    .string()
+    .trim()
+    .refine(
+      (v) => v !== "" && !Number.isNaN(Number(v)) && Number(v) >= 0,
+      "Valid stock is required"
+    ),
+  image: z.string(),
+  description: z.string(),
+  status: z.enum(["draft", "published", "archived"]),
+})
+
+export type ProductFormState = z.infer<typeof productFormSchema>
+
+const toAutoSku = (name: string) =>
+  name
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9\s]/g, "")
+    .split(/\s+/)
+    .slice(0, 3)
+    .join("-")
 
 export function useProductCreate() {
   const navigate = useNavigate()
 
-  // ── 1. ดึงตัวเลือกหมวดหมู่สำหรับใส่ Dropdown ({feature}Options Convention) ──
   const { data: categoryOptions = [], isLoading: isLoadingCategories } =
     useCategoryOptions(100)
 
-  // ── 2. Image Upload & File Attachment State (อ้างอิง Category) ──
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [useUrlInput, setUseUrlInput] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [formData, setFormData] = useState<ProductFormState>({
-    name: "",
-    sku: "",
-    categoryId: "",
-    price: "",
-    stock: "50",
-    image: "",
-    description : "",
-    status: "published",
+  const form = useForm<ProductFormState>({
+    resolver: zodResolver(productFormSchema),
+    defaultValues: {
+      name: "",
+      sku: "",
+      categoryId: "",
+      price: "",
+      stock: "50",
+      image: "",
+      description: "",
+      status: "published",
+    },
   })
 
-  const [errors, setErrors] = useState<
-    Partial<Record<keyof ProductFormState, string>>
-  >({})
+  const image = form.watch("image")
+  const categoryId = form.watch("categoryId")
 
-  // Auto-select first category เมื่อ options โหลดเสร็จ
   useEffect(() => {
-    if (!formData.categoryId && categoryOptions.length > 0) {
-      setFormData((prev) => ({
-        ...prev,
-        categoryId: prev.categoryId || categoryOptions[0].id,
-      }))
+    if (!categoryId && categoryOptions.length > 0) {
+      form.setValue("categoryId", categoryOptions[0].id)
     }
-  }, [categoryOptions, formData.categoryId])
+  }, [categoryOptions, categoryId, form])
 
-  // Cleanup blob URL on unmount
   useEffect(() => {
     return () => {
-      if (formData.image?.startsWith("blob:")) {
-        URL.revokeObjectURL(formData.image)
+      if (image?.startsWith("blob:")) {
+        URL.revokeObjectURL(image)
       }
     }
-  }, [formData.image])
+  }, [image])
 
   const handleNameChange = (name: string) => {
-    const suggestedSku = name
-      .trim()
-      .toUpperCase()
-      .replace(/[^A-Z0-9\s]/g, "")
-      .split(/\s+/)
-      .slice(0, 3)
-      .join("-")
+    const prevName = form.getValues("name")
+    const prevSku = form.getValues("sku")
+    const prevAuto = toAutoSku(prevName)
+    const suggestedSku = toAutoSku(name)
 
-    setFormData((prev) => {
-      const prevAuto = prev.name
-        .trim()
-        .toUpperCase()
-        .replace(/[^A-Z0-9\s]/g, "")
-        .split(/\s+/)
-        .slice(0, 3)
-        .join("-")
-
-      const shouldSyncSku = !prev.sku || prev.sku === prevAuto
-
-      return {
-        ...prev,
-        name,
-        sku: shouldSyncSku && suggestedSku ? suggestedSku : prev.sku,
-      }
-    })
-
-    if (errors.name) {
-      setErrors((prev) => ({ ...prev, name: undefined }))
-    }
-  }
-
-  const handleFieldChange = <K extends keyof ProductFormState>(
-    field: K,
-    value: ProductFormState[K]
-  ) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }))
+    form.setValue("name", name, { shouldValidate: true })
+    if ((!prevSku || prevSku === prevAuto) && suggestedSku) {
+      form.setValue("sku", suggestedSku, { shouldValidate: true })
     }
   }
 
@@ -126,13 +116,13 @@ export function useProductCreate() {
       return
     }
 
-    if (formData.image?.startsWith("blob:")) {
-      URL.revokeObjectURL(formData.image)
+    if (image?.startsWith("blob:")) {
+      URL.revokeObjectURL(image)
     }
 
     setSelectedFile(file)
     const localBlobUrl = URL.createObjectURL(file)
-    setFormData((prev) => ({ ...prev, image: localBlobUrl }))
+    form.setValue("image", localBlobUrl)
 
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
@@ -140,47 +130,17 @@ export function useProductCreate() {
   }
 
   const handleRemoveImage = () => {
-    if (formData.image?.startsWith("blob:")) {
-      URL.revokeObjectURL(formData.image)
+    if (image?.startsWith("blob:")) {
+      URL.revokeObjectURL(image)
     }
     setSelectedFile(null)
-    setFormData((prev) => ({ ...prev, image: "" }))
+    form.setValue("image", "")
 
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
     }
   }
 
-  const validate = (): boolean => {
-    const newErrors: Partial<Record<keyof ProductFormState, string>> = {}
-
-    if (!formData.name.trim()) {
-      newErrors.name = "Product name is required"
-    }
-
-    if (!formData.sku.trim()) {
-      newErrors.sku = "SKU is required"
-    }
-
-    const priceNum = Number(formData.price)
-    if (!formData.price.trim() || isNaN(priceNum) || priceNum < 0) {
-      newErrors.price = "Valid price is required"
-    }
-
-    const stockNum = Number(formData.stock)
-    if (!formData.stock.trim() || isNaN(stockNum) || stockNum < 0) {
-      newErrors.stock = "Valid stock is required"
-    }
-
-    if (!formData.categoryId) {
-      newErrors.categoryId = "Category is required"
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  // ── 3. Mutation สำหรับสร้างสินค้าใหม่ผ่าน API ──
   const createProductMutation = useMutation({
     mutationFn: (payload: IProduct) => createProduct(payload),
     onSuccess: () => {
@@ -196,33 +156,29 @@ export function useProductCreate() {
     },
   })
 
-  const handleSubmit = async (e?: React.FormEvent) => {
-    e?.preventDefault()
-    if (!validate()) return
-
+  const handleSubmit = form.handleSubmit(async (values) => {
     try {
-      let finalImageUrl = formData.image || ""
+      let finalImageUrl = values.image || ""
 
-      // ถ้าผู้ใช้เลือกไฟล์ ให้ Upload ไปยัง /upload/single ก่อนบันทึก
       if (selectedFile) {
         setIsUploading(true)
         const uploadRes = await uploadImage(selectedFile)
         finalImageUrl = uploadRes.url
       }
 
-      const priceNum = Number(formData.price) || 0
-      const stockNum = Number(formData.stock) || 0
+      const priceNum = Number(values.price) || 0
+      const stockNum = Number(values.stock) || 0
 
       createProductMutation.mutate({
-        name: formData.name.trim(),
-        description: formData.description.trim() || undefined,
-        slug: formData.sku.trim().toLowerCase(),
+        name: values.name.trim(),
+        description: values.description.trim() || undefined,
+        slug: values.sku.trim().toLowerCase(),
         sellPrice: priceNum,
         originalPrice: priceNum,
         stock: stockNum,
         images: finalImageUrl ? [finalImageUrl] : [],
-        status: formData.status,
-        categoryId: formData.categoryId,
+        status: values.status,
+        categoryId: values.categoryId,
       })
     } catch (error) {
       console.error("Upload error:", error)
@@ -230,15 +186,14 @@ export function useProductCreate() {
     } finally {
       setIsUploading(false)
     }
-  }
+  })
 
   const handleCancel = () => {
     navigate("/dashboard/product")
   }
 
   return {
-    formData,
-    errors,
+    control: form.control,
     categoryOptions,
     isLoadingCategories,
     isSubmitting: isUploading || createProductMutation.isPending,
@@ -250,7 +205,6 @@ export function useProductCreate() {
     handleFileSelect,
     handleRemoveImage,
     handleNameChange,
-    handleFieldChange,
     handleSubmit,
     handleCancel,
   }

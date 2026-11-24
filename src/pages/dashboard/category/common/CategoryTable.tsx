@@ -3,6 +3,7 @@ import { Link } from "react-router-dom"
 import { Tags, Pencil, Trash2, MoreHorizontal } from "lucide-react"
 import { cn } from "cn"
 import { capitalizeFirstLetter } from "@/lib/capitalizeFirstLetter"
+import { FALLBACK_IMAGE } from "@/lib/constants"
 
 import {
   DataGrid,
@@ -92,15 +93,15 @@ export function CategoryTable({
         cell: (info) => (
           <div className="flex items-center gap-3">
             <div className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border/40 bg-muted/50 p-1">
-              {info.row.original.image ? (
-                <img
-                  src={info.row.original.image}
-                  alt={info.getValue()}
-                  className="max-h-full max-w-full object-contain"
-                />
-              ) : (
-                <Tags className="size-3.5 text-muted-foreground" />
-              )}
+              <img
+                src={info.row.original.image || FALLBACK_IMAGE}
+                alt={info.getValue()}
+                onError={(e) => {
+                  e.currentTarget.onerror = null
+                  e.currentTarget.src = FALLBACK_IMAGE
+                }}
+                className="max-h-full max-w-full object-contain"
+              />
             </div>
             <span className="truncate text-xs font-medium text-foreground">
               {info.getValue()}
