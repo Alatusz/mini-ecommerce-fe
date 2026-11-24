@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom"
-import { X, ShoppingBag } from "lucide-react"
+import { X, ShoppingBag, Trash2 } from "lucide-react"
 
 import { useCart } from "./useHooks"
 import { Button } from "@/components/ui/button"
@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input"
 function CartPage() {
   const {
     cartItems,
+    isLoading,
+    isClearing,
     promoCode,
     bonusCard,
     subtotal,
@@ -21,6 +23,7 @@ function CartPage() {
     increaseQuantity,
     decreaseQuantity,
     removeItem,
+    handleClearCart,
     handleApplyBonusCard,
     handleApplyPromoCode,
     handleCheckout,
@@ -31,11 +34,30 @@ function CartPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-start">
         {/* Left: Shopping Cart Items List (7 cols) */}
         <div className="lg:col-span-7 xl:col-span-7 flex flex-col">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground mb-6">
-            Shopping Cart
-          </h1>
+          <div className="mb-6 flex items-center justify-between gap-3">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+              Shopping Cart
+            </h1>
+            {cartItems.length > 0 && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={isClearing}
+                onClick={handleClearCart}
+                className="cursor-pointer gap-1.5 text-xs text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 className="size-3.5" />
+                <span>Clear Cart</span>
+              </Button>
+            )}
+          </div>
 
-          {cartItems.length > 0 ? (
+          {isLoading ? (
+            <div className="py-12 text-center text-sm text-muted-foreground">
+              Loading cart...
+            </div>
+          ) : cartItems.length > 0 ? (
             <div className="divide-y divide-border/40">
               {cartItems.map((item) => (
                 <div
@@ -45,7 +67,7 @@ function CartPage() {
                   {/* Product Thumbnail & Details */}
                   <div className="flex items-center gap-4 sm:gap-5 min-w-0">
                     <Link
-                      to={`/products/${item.id}`}
+                      to={`/products/${item.productId}`}
                       className="size-20 sm:size-24 rounded-xl bg-[#f9f9f9] dark:bg-zinc-900 p-2 shrink-0 flex items-center justify-center border border-border/40 hover:border-foreground/30 transition-colors"
                       title={item.name}
                     >
@@ -58,7 +80,7 @@ function CartPage() {
 
                     <div className="flex flex-col gap-1 min-w-0">
                       <Link
-                        to={`/products/${item.id}`}
+                        to={`/products/${item.productId}`}
                         className="hover:underline transition-colors"
                         title={item.name}
                       >
@@ -101,7 +123,7 @@ function CartPage() {
 
                     {/* Price */}
                     <div className="text-base sm:text-lg font-bold text-foreground min-w-[70px] text-right">
-                      ${item.price * item.quantity}
+                      ฿{(item.price * item.quantity).toLocaleString()}
                     </div>
 
                     {/* Remove Item */}

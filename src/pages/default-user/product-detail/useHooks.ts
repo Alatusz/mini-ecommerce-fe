@@ -1,7 +1,10 @@
 import { useState, useMemo } from "react"
-import { useParams } from "react-router-dom"
-import { mockProductList } from "@/pages/products/mockProductList"
-import { mockProducts } from "@/pages/home/mockLandingPage"
+import { useLocation, useNavigate, useParams } from "react-router-dom"
+import { useQuery } from "@tanstack/react-query"
+import { getProductById, type ProductItem } from "@/services/product.services"
+import { useAuth } from "@/context/AuthContext"
+import { useAddToCartMutation } from "@/hooks/use-cartHubs"
+import { showToast } from "@/lib/toast"
 
 export interface ColorOption {
   id: string
@@ -17,11 +20,31 @@ export interface StorageOption {
 }
 
 export const colorOptions: ColorOption[] = [
-  { id: "black", name: "Space Black", hex: "#1f2022", image: "/images/detail-black.png" },
-  { id: "purple", name: "Deep Purple", hex: "#5e2d91", image: "/images/detail-purple.png" },
+  {
+    id: "black",
+    name: "Space Black",
+    hex: "#1f2022",
+    image: "/images/detail-black.png",
+  },
+  {
+    id: "purple",
+    name: "Deep Purple",
+    hex: "#5e2d91",
+    image: "/images/detail-purple.png",
+  },
   { id: "red", name: "Red", hex: "#e11a2a", image: "/images/detail-red.png" },
-  { id: "gold", name: "Gold", hex: "#e5a900", image: "/images/detail-gold.png" },
-  { id: "silver", name: "Silver", hex: "#e3e4e6", image: "/images/detail-silver.png" },
+  {
+    id: "gold",
+    name: "Gold",
+    hex: "#e5a900",
+    image: "/images/detail-gold.png",
+  },
+  {
+    id: "silver",
+    name: "Silver",
+    hex: "#e3e4e6",
+    image: "/images/detail-silver.png",
+  },
 ]
 
 export const storageOptions: StorageOption[] = [
@@ -34,18 +57,37 @@ export const storageOptions: StorageOption[] = [
 export function useProductDetail() {
   const { id } = useParams<{ id: string }>()
 
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const addToCartMutation = useAddToCartMutation()
+
+  const { data: productRes, isLoading } = useQuery({
+    queryKey: ["PRODUCT_DETAIL", id],
+    queryFn: () => getProductById(id!),
+    enabled: Boolean(id),
+  })
+
+  const apiProduct: ProductItem | undefined = productRes?.data
   const product = useMemo(() => {
-    if (!id) return null
-    return (
-      mockProductList.find((p) => p.id === id) ||
-      mockProducts.find((p) => p.id === id) ||
-      null
-    )
-  }, [id])
+    if (!apiProduct) return null
+    return {
+      ...apiProduct,
+      price: Number(apiProduct.sellPrice ?? apiProduct.originalPrice ?? 0),
+      originalPrice: apiProduct.originalPrice
+        ? Number(apiProduct.originalPrice)
+        : undefined,
+      image: apiProduct.images?.[0] || "/alatusz-logo.svg",
+    }
+  }, [apiProduct])
 
   // Active state: purple and 1TB by default to match attachment design
-  const [selectedColor, setSelectedColor] = useState<ColorOption>(colorOptions[1])
-  const [selectedStorage, setSelectedStorage] = useState<StorageOption>(storageOptions[3])
+  const [selectedColor, setSelectedColor] = useState<ColorOption>(
+    colorOptions[1]
+  )
+  const [selectedStorage, setSelectedStorage] = useState<StorageOption>(
+    storageOptions[3]
+  )
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0)
   const [isWishlist, setIsWishlist] = useState<boolean>(false)
   const [isMoreDesc, setIsMoreDesc] = useState<boolean>(false)
@@ -53,13 +95,8 @@ export function useProductDetail() {
 
   // Thumbnails matching product image or attachment design
   const thumbnails = useMemo(() => {
-    if (product?.image && !product.image.includes("detail-")) {
-      return [
-        product.image,
-        "/images/thumb-front.png",
-        "/images/thumb-back.png",
-        "/images/thumb-side.png",
-      ]
+    if (product?.images && product.images.length > 0) {
+      return product.images
     }
     return [
       selectedColor.image,
@@ -69,6 +106,24 @@ export function useProductDetail() {
     ]
   }, [product, selectedColor.image])
 
+  const handleAddToCart = () => {
+    if (!id) return
+    if (!user) {
+      showToast.error("กรุณาเข้าสู่ระบบก่อนเพิ่มสินค้าลงตะกร้า")
+      navigate("/login", { state: { from: location } })
+      return
+    }
+    addToCartMutation.mutate(
+      { productId: id, quantity: 1 },
+      {
+        onSuccess: () => {
+          setIsAddedToCart(true)
+          setTimeout(() => setIsAddedToCart(false), 2500)
+        },
+      }
+    )
+  }
+
   const handleSelectColor = (color: ColorOption) => {
     setSelectedColor(color)
     setActiveImageIndex(0)
@@ -76,11 +131,6 @@ export function useProductDetail() {
 
   const handleToggleWishlist = () => {
     setIsWishlist((prev) => !prev)
-  }
-
-  const handleAddToCart = () => {
-    setIsAddedToCart(true)
-    setTimeout(() => setIsAddedToCart(false), 2500)
   }
 
   const [isDetailsExpanded, setIsDetailsExpanded] = useState<boolean>(false)
@@ -93,12 +143,15 @@ export function useProductDetail() {
   const currentPrice = product?.price || selectedStorage.price
   const currentOriginalPrice =
     product?.originalPrice ||
-    (product?.price ? Math.round(product.price * 1.15) : selectedStorage.originalPrice)
+    (product?.price
+      ? Math.round(product.price * 1.15)
+      : selectedStorage.originalPrice)
   const isThaiPrice = !!product?.price && product.price > 2000
 
   return {
     id,
     product,
+    isLoading,
     productName,
     currentPrice,
     currentOriginalPrice,
