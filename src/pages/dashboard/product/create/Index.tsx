@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react"
+import { Controller } from "react-hook-form"
 import { Check, Loader2 } from "lucide-react"
 import { cn } from "cn"
 
@@ -28,8 +29,7 @@ import { ProductStatusSelector } from "../common/ProductStatusSelector"
 
 export default function DashboardProductCreatePage() {
   const {
-    formData,
-    errors,
+    control,
     categoryOptions,
     isLoadingCategories,
     isSubmitting,
@@ -41,7 +41,6 @@ export default function DashboardProductCreatePage() {
     handleFileSelect,
     handleRemoveImage,
     handleNameChange,
-    handleFieldChange,
     handleSubmit,
     handleCancel,
   } = useProductCreate()
@@ -57,7 +56,6 @@ export default function DashboardProductCreatePage() {
 
   return (
     <PageContent>
-      {/* ── Stacked Single-Column Multi-Card Form Layout ── */}
       <div className="mx-auto max-w-3xl pb-10">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Card 1: General Information */}
@@ -69,39 +67,51 @@ export default function DashboardProductCreatePage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <FormField
-                label="Product Name"
-                htmlFor="prod-name"
-                required
-                error={errors.name}
-              >
-                <Input
-                  id="prod-name"
-                  placeholder="e.g. Sony WH-1000XM5 Wireless Headphones"
-                  value={formData.name}
-                  onChange={(e) => handleNameChange(e.target.value)}
-                  className={cn(
-                    "h-9 text-xs",
-                    errors.name &&
-                      "border-destructive focus-visible:ring-destructive"
-                  )}
-                />
-              </FormField>
+              <Controller
+                name="name"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <FormField
+                    label="Product Name"
+                    htmlFor="prod-name"
+                    required
+                    error={fieldState.error?.message}
+                  >
+                    <Input
+                      {...field}
+                      id="prod-name"
+                      placeholder="e.g. Sony WH-1000XM5 Wireless Headphones"
+                      onChange={(e) => handleNameChange(e.target.value)}
+                      className={cn(
+                        "h-9 text-xs",
+                        fieldState.invalid &&
+                          "border-destructive focus-visible:ring-destructive"
+                      )}
+                    />
+                  </FormField>
+                )}
+              />
 
-              <FormField
-                label="Description"
-                htmlFor="prod-desc"
-                hint="Supports rich text formatting & emoji"
-                error={errors.description}
-              >
-                <RichTextEditor
-                  value={formData.description}
-                  onChange={(html) => handleFieldChange("description", html)}
-                  placeholder="Describe product highlights, technical specifications, or warranty details..."
-                  error={!!errors.description}
-                  disabled={isSubmitting}
-                />
-              </FormField>
+              <Controller
+                name="description"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <FormField
+                    label="Description"
+                    htmlFor="prod-desc"
+                    hint="Supports rich text formatting & emoji"
+                    error={fieldState.error?.message}
+                  >
+                    <RichTextEditor
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Describe product highlights, technical specifications, or warranty details..."
+                      error={fieldState.invalid}
+                      disabled={isSubmitting}
+                    />
+                  </FormField>
+                )}
+              />
             </CardContent>
           </Card>
 
@@ -114,18 +124,24 @@ export default function DashboardProductCreatePage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ProductImageUpload
-                value={formData.image}
-                selectedFile={selectedFile}
-                isUploading={isSubmitting && !!selectedFile}
-                useUrlInput={useUrlInput}
-                onToggleUrlInput={toggleUseUrlInput}
-                fileInputRef={fileInputRef}
-                onOpenFileDialog={openFileDialog}
-                onFileSelect={handleFileSelect}
-                onRemoveImage={handleRemoveImage}
-                onUrlChange={(url) => handleFieldChange("image", url)}
-                disabled={isSubmitting}
+              <Controller
+                name="image"
+                control={control}
+                render={({ field }) => (
+                  <ProductImageUpload
+                    value={field.value}
+                    selectedFile={selectedFile}
+                    isUploading={isSubmitting && !!selectedFile}
+                    useUrlInput={useUrlInput}
+                    onToggleUrlInput={toggleUseUrlInput}
+                    fileInputRef={fileInputRef}
+                    onOpenFileDialog={openFileDialog}
+                    onFileSelect={handleFileSelect}
+                    onRemoveImage={handleRemoveImage}
+                    onUrlChange={field.onChange}
+                    disabled={isSubmitting}
+                  />
+                )}
               />
             </CardContent>
           </Card>
@@ -140,69 +156,85 @@ export default function DashboardProductCreatePage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <FormField
-                  label="Price ($)"
-                  htmlFor="prod-price"
-                  required
-                  error={errors.price}
-                >
-                  <Input
-                    id="prod-price"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="299.00"
-                    value={formData.price}
-                    onChange={(e) => handleFieldChange("price", e.target.value)}
-                    className={cn(
-                      "h-9 text-xs tabular-nums",
-                      errors.price &&
-                        "border-destructive focus-visible:ring-destructive"
-                    )}
-                  />
-                </FormField>
+                <Controller
+                  name="price"
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <FormField
+                      label="Price ($)"
+                      htmlFor="prod-price"
+                      required
+                      error={fieldState.error?.message}
+                    >
+                      <Input
+                        {...field}
+                        id="prod-price"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="299.00"
+                        className={cn(
+                          "h-9 text-xs tabular-nums",
+                          fieldState.invalid &&
+                            "border-destructive focus-visible:ring-destructive"
+                        )}
+                      />
+                    </FormField>
+                  )}
+                />
 
-                <FormField
-                  label="Stock (units)"
-                  htmlFor="prod-stock"
-                  required
-                  error={errors.stock}
-                >
-                  <Input
-                    id="prod-stock"
-                    type="number"
-                    min="0"
-                    placeholder="50"
-                    value={formData.stock}
-                    onChange={(e) => handleFieldChange("stock", e.target.value)}
-                    className={cn(
-                      "h-9 text-xs tabular-nums",
-                      errors.stock &&
-                        "border-destructive focus-visible:ring-destructive"
-                    )}
-                  />
-                </FormField>
+                <Controller
+                  name="stock"
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <FormField
+                      label="Stock (units)"
+                      htmlFor="prod-stock"
+                      required
+                      error={fieldState.error?.message}
+                    >
+                      <Input
+                        {...field}
+                        id="prod-stock"
+                        type="number"
+                        min="0"
+                        placeholder="50"
+                        className={cn(
+                          "h-9 text-xs tabular-nums",
+                          fieldState.invalid &&
+                            "border-destructive focus-visible:ring-destructive"
+                        )}
+                      />
+                    </FormField>
+                  )}
+                />
 
-                <FormField
-                  label="SKU"
-                  htmlFor="prod-sku"
-                  required
-                  error={errors.sku}
-                >
-                  <Input
-                    id="prod-sku"
-                    placeholder="SONY-WH-1000"
-                    value={formData.sku}
-                    onChange={(e) =>
-                      handleFieldChange("sku", e.target.value.toUpperCase())
-                    }
-                    className={cn(
-                      "h-9 font-mono text-xs uppercase",
-                      errors.sku &&
-                        "border-destructive focus-visible:ring-destructive"
-                    )}
-                  />
-                </FormField>
+                <Controller
+                  name="sku"
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <FormField
+                      label="SKU"
+                      htmlFor="prod-sku"
+                      required
+                      error={fieldState.error?.message}
+                    >
+                      <Input
+                        {...field}
+                        id="prod-sku"
+                        placeholder="SONY-WH-1000"
+                        onChange={(e) =>
+                          field.onChange(e.target.value.toUpperCase())
+                        }
+                        className={cn(
+                          "h-9 font-mono text-xs uppercase",
+                          fieldState.invalid &&
+                            "border-destructive focus-visible:ring-destructive"
+                        )}
+                      />
+                    </FormField>
+                  )}
+                />
               </div>
             </CardContent>
           </Card>
@@ -216,70 +248,80 @@ export default function DashboardProductCreatePage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <FormField
-                label="Category"
-                htmlFor="prod-cat"
-                required
-                error={errors.categoryId}
-              >
-                <Select
-                  value={formData.categoryId || undefined}
-                  onValueChange={(val) =>
-                    handleFieldChange("categoryId", val ?? "")
-                  }
-                  disabled={isLoadingCategories || isSubmitting}
-                >
-                  <SelectTrigger
-                    id="prod-cat"
-                    className={cn(
-                      "w-full",
-                      errors.categoryId &&
-                        "border-destructive focus-visible:ring-destructive"
-                    )}
+              <Controller
+                name="categoryId"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <FormField
+                    label="Category"
+                    htmlFor="prod-cat"
+                    required
+                    error={fieldState.error?.message}
                   >
-                    <SelectValue>
-                      {(val: string) =>
-                        categoryOptions.find((c) => c.id === val)?.name ||
-                        (isLoadingCategories
-                          ? "Loading categories..."
-                          : "Select category")
-                      }
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent alignItemWithTrigger={false}>
-                    <div className="border-b p-1.5">
-                      <Input
-                        type="text"
-                        placeholder="Search categories..."
-                        value={categorySearch}
-                        onChange={(e) => setCategorySearch(e.target.value)}
-                        onKeyDown={(e) => e.stopPropagation()}
-                      />
-                    </div>
-                    <SelectGroup className="max-h-56 overflow-y-auto p-1">
-                      {filteredCategoryOptions.length === 0 ? (
-                        <div className="py-3 text-center text-xs text-muted-foreground">
-                          No categories found
+                    <Select
+                      value={field.value || undefined}
+                      onValueChange={(val) => field.onChange(val ?? "")}
+                      disabled={isLoadingCategories || isSubmitting}
+                    >
+                      <SelectTrigger
+                        id="prod-cat"
+                        className={cn(
+                          "w-full",
+                          fieldState.invalid &&
+                            "border-destructive focus-visible:ring-destructive"
+                        )}
+                      >
+                        <SelectValue>
+                          {(val: string) =>
+                            categoryOptions.find((c) => c.id === val)?.name ||
+                            (isLoadingCategories
+                              ? "Loading categories..."
+                              : "Select category")
+                          }
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent alignItemWithTrigger={false}>
+                        <div className="border-b p-1.5">
+                          <Input
+                            type="text"
+                            placeholder="Search categories..."
+                            value={categorySearch}
+                            onChange={(e) => setCategorySearch(e.target.value)}
+                            onKeyDown={(e) => e.stopPropagation()}
+                          />
                         </div>
-                      ) : (
-                        filteredCategoryOptions.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </FormField>
+                        <SelectGroup className="max-h-56 overflow-y-auto p-1">
+                          {filteredCategoryOptions.length === 0 ? (
+                            <div className="py-3 text-center text-xs text-muted-foreground">
+                              No categories found
+                            </div>
+                          ) : (
+                            filteredCategoryOptions.map((cat) => (
+                              <SelectItem key={cat.id} value={cat.id}>
+                                {cat.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </FormField>
+                )}
+              />
 
-              <FormField label="Product Status">
-                <ProductStatusSelector
-                  value={formData.status}
-                  onChange={(status) => handleFieldChange("status", status)}
-                  disabled={isSubmitting}
-                />
-              </FormField>
+              <Controller
+                name="status"
+                control={control}
+                render={({ field }) => (
+                  <FormField label="Product Status">
+                    <ProductStatusSelector
+                      value={field.value}
+                      onChange={field.onChange}
+                      disabled={isSubmitting}
+                    />
+                  </FormField>
+                )}
+              />
             </CardContent>
           </Card>
 
