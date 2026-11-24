@@ -7,8 +7,18 @@ import {
   createColumnHelper,
   type DataGridFeatures,
 } from "@/components/common/data-grid"
-import type { ProductItem } from "@/services/product.services"
-import { getStockTextColor, PRODUCT_STATUS_CONFIG } from "@/lib/constants"
+import type {
+  ProductItem,
+  ProductPublishStatus,
+} from "@/services/product.services"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { FALLBACK_IMAGE, getStockTextColor } from "@/lib/constants"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -22,6 +32,16 @@ import {
   type AdvancedFilterState,
 } from "./ProductFilterDrawer"
 
+const PRODUCT_STATUS_OPTIONS: {
+  id: ProductPublishStatus
+  label: string
+  dot: string
+}[] = [
+  { id: "published", label: "Published", dot: "bg-emerald-500" },
+  { id: "draft", label: "Draft", dot: "bg-zinc-400" },
+  { id: "archived", label: "Archived", dot: "bg-amber-500" },
+]
+
 const productColumnHelper = createColumnHelper<DataGridFeatures, ProductItem>()
 
 interface ProductTableProps {
@@ -30,6 +50,8 @@ interface ProductTableProps {
   filters: AdvancedFilterState
   onApplyFilters: (filters: AdvancedFilterState) => void
   onResetFilters: () => void
+  onStatusChange: (id: string, status: ProductPublishStatus) => void
+  isUpdatingStatus?: boolean
   onDelete: (product: ProductItem) => void
   isLoading?: boolean
 }
@@ -40,27 +62,10 @@ export function ProductTable({
   filters,
   onApplyFilters,
   onResetFilters,
+  onStatusChange,
+  isUpdatingStatus = false,
   onDelete,
 }: ProductTableProps) {
-  const getStatusBadge = (status: ProductItem["status"]) => {
-    const config = PRODUCT_STATUS_CONFIG[status]
-    if (!config) {
-      return (
-        <span className="text-xs text-muted-foreground capitalize">
-          {status}
-        </span>
-      )
-    }
-
-    return (
-      <span
-        className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium ${config.badgeClass}`}
-      >
-        <span className={`size-1.5 rounded-full ${config.dotClass}`} />
-        {config.label}
-      </span>
-    )
-  }
 
   const columns = useMemo(
     () => [
@@ -70,10 +75,12 @@ export function ProductTable({
           <div className="flex items-center gap-3">
             <div className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border/40 bg-muted/50 p-1">
               <img
-                src={
-                  info.row.original.images?.[0] || "/images/detail-purple.png"
-                }
+                src={info.row.original.images?.[0] || FALLBACK_IMAGE}
                 alt={info.getValue()}
+                onError={(e) => {
+                  e.currentTarget.onerror = null
+                  e.currentTarget.src = FALLBACK_IMAGE
+                }}
                 className="max-h-full max-w-full object-contain"
               />
             </div>
@@ -125,51 +132,127 @@ export function ProductTable({
       }),
       productColumnHelper.accessor("status", {
         header: "Status",
-        cell: (info) => getStatusBadge(info.getValue()),
+        cell: (info) => {
+          const product = info.row.original
+          const currentStatus = info.getValue() || "draft"
+          const statusOpt = PRODUCT_STATUS_OPTIONS.find(
+            (s) => s.id === currentStatus
+          )
+          const categoryStatus = product.categories?.[0]?.status ?? "active"
+          const hasValidPrice = (product.sellPrice ?? 0) > 0
+          const canPublish = categoryStatus === "active" && hasValidPrice
+          const publishBlockReason =
+            categoryStatus !== "active"
+              ? "Category must be active"
+              : !hasValidPrice
+                ? "Price must be > 0"
+                : undefined
+
+          return (
+            <Select
+              value={currentStatus}
+              disabled={isUpdatingStatus}
+              onValueChange={(val) =>
+                onStatusChange(product.id, val as ProductPublishStatus)
+              }
+            >
+              <SelectTrigger className="h-7 w-[124px] text-xs">
+                <SelectValue>
+                  <span className="flex items-center gap-1.5">
+                    <span
+                      className={`size-2 shrink-0 rounded-full ${statusOpt?.dot ?? "bg-zinc-400"}`}
+                    />
+                    <span>{statusOpt?.label ?? currentStatus}</span>
+                  </span>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {PRODUCT_STATUS_OPTIONS.map((opt) => {
+                  const isDisabled = opt.id === "published" && !canPublish
+                  return (
+                    <SelectItem
+                      key={opt.id}
+                      value={opt.id}
+                      disabled={isDisabled}
+                      title={isDisabled ? publishBlockReason : undefined}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span
+                          className={`size-2 shrink-0 rounded-full ${opt.dot}`}
+                        />
+                        <span>{opt.label}</span>
+                      </span>
+                    </SelectItem>
+                  )
+                })}
+              </SelectContent>
+            </Select>
+          )
+        },
       }),
       productColumnHelper.display({
         id: "actions",
         header: "Actions",
-        cell: ({ row }) => (
-          <div className="flex items-center">
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    className="size-7 cursor-pointer text-muted-foreground hover:text-foreground"
-                    title="Actions"
+        cell: ({ row }) => {
+          const hasOrders = (row.original.ordersCount ?? 0) > 0
+          const isPublished = row.original.status === "published"
+          const deleteDisabled = hasOrders || isPublished
+          const deleteHint = hasOrders
+            ? "Has orders · Archive instead"
+            : isPublished
+              ? "Unpublish before deleting"
+              : undefined
+
+          return (
+            <div className="flex items-center">
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      className="size-7 cursor-pointer text-muted-foreground hover:text-foreground"
+                      title="Actions"
+                    >
+                      <MoreHorizontal className="size-4" />
+                      <span className="sr-only">Actions</span>
+                    </Button>
+                  }
+                />
+                <DropdownMenuContent align="end" className="w-44">
+                  <Link to={`/dashboard/product/edit/${row.original.id}`}>
+                    <DropdownMenuItem className="cursor-pointer gap-2">
+                      <Pencil className="size-3.5 text-muted-foreground" />
+                      <span>Edit</span>
+                    </DropdownMenuItem>
+                  </Link>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    variant="destructive"
+                    disabled={deleteDisabled}
+                    title={deleteHint}
+                    onClick={() => onDelete(row.original)}
+                    className="cursor-pointer gap-2"
                   >
-                    <MoreHorizontal className="size-4" />
-                    <span className="sr-only">Actions</span>
-                  </Button>
-                }
-              />
-              <DropdownMenuContent align="end" className="w-36">
-                <Link to={`/dashboard/product/edit/${row.original.id}`}>
-                  <DropdownMenuItem className="cursor-pointer gap-2">
-                    <Pencil className="size-3.5 text-muted-foreground" />
-                    <span>Edit</span>
+                    <Trash2 className="size-3.5" />
+                    <div className="flex flex-col">
+                      <span>Delete</span>
+                      {deleteHint && (
+                        <span className="text-[10px] font-normal text-muted-foreground">
+                          {deleteHint}
+                        </span>
+                      )}
+                    </div>
                   </DropdownMenuItem>
-                </Link>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  variant="destructive"
-                  onClick={() => onDelete(row.original)}
-                  className="cursor-pointer gap-2"
-                >
-                  <Trash2 className="size-3.5" />
-                  <span>Delete</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        ),
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )
+        },
         enableSorting: false,
       }),
     ],
-    [onDelete]
+    [onStatusChange, isUpdatingStatus, onDelete]
   )
 
   return (

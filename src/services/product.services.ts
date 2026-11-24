@@ -19,6 +19,7 @@ export interface ProductCategoryItem {
   id: string
   name: string
   slug: string
+  status?: "active" | "archived" | "draft"
 }
 
 // ข้อมูลสินค้าตัวเต็มที่ส่งมาจาก Database (Response Entity)
@@ -34,6 +35,7 @@ export interface ProductItem {
   status: ProductPublishStatus
   images: string[]
   categories: ProductCategoryItem[]
+  ordersCount?: number
   createdAt: string
   updatedAt: string
 }
@@ -100,7 +102,16 @@ export const updateProduct = async (id: string, data: Partial<IProduct>) => {
   return response.data
 }
 
-// 5. ลบสินค้า (DELETE)
+// 5. อัปเดตสถานะสินค้า (PATCH /api/products/:id/status)
+export const patchProductStatus = async (
+  id: string,
+  status: ProductPublishStatus
+) => {
+  const response = await apiClient.patch(`/products/${id}/status`, { status })
+  return response.data
+}
+
+// 6. ลบสินค้า (DELETE)
 export const deleteProduct = async (id: string) => {
   const response = await apiClient.delete(`/products/${id}`)
 

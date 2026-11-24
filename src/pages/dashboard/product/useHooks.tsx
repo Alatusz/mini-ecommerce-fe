@@ -4,7 +4,9 @@ import { QUERY_KEYS } from "@/lib/constants"
 import {
   getProducts,
   deleteProduct,
+  patchProductStatus,
   type ProductItem,
+  type ProductPublishStatus,
   type ProductStats,
 } from "@/services/product.services"
 import { queryClient } from "@/lib/queryClient"
@@ -143,6 +145,32 @@ export function useProduct() {
     deleteProductMutation.mutate(id)
   }
 
+  // Mutation สำหรับอัปเดตสถานะสินค้า
+  const updateStatusMutation = useMutation({
+    mutationFn: ({
+      id,
+      status,
+    }: {
+      id: string
+      status: ProductPublishStatus
+    }) => patchProductStatus(id, status),
+    onSuccess: () => {
+      showToast.success("Product status updated")
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.DASHBOARD.PRODUCTS_LIST],
+      })
+    },
+    onError: (err: any) => {
+      const message =
+        err?.response?.data?.message || "Failed to update product status"
+      showToast.error(message)
+    },
+  })
+
+  const handleStatusChange = (id: string, status: ProductPublishStatus) => {
+    updateStatusMutation.mutate({ id, status })
+  }
+
   // URL Update Handlers
   const updateUrlParams = (
     newParams: Record<string, string | number | undefined>
@@ -225,5 +253,7 @@ export function useProduct() {
     setDeletingProduct,
     handleDeleteProduct,
     isDeleting: deleteProductMutation.isPending,
+    handleStatusChange,
+    isUpdatingStatus: updateStatusMutation.isPending,
   }
 }

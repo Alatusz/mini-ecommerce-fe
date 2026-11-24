@@ -27,6 +27,8 @@ export default function DashboardProductPage() {
     setDeletingProduct,
     handleDeleteProduct,
     isDeleting,
+    handleStatusChange,
+    isUpdatingStatus,
     isLoading,
   } = useProduct()
 
@@ -69,6 +71,8 @@ export default function DashboardProductPage() {
         }}
         onApplyFilters={handleApplyAdvancedFilters}
         onResetFilters={handleResetFilters}
+        onStatusChange={handleStatusChange}
+        isUpdatingStatus={isUpdatingStatus}
         onDelete={setDeletingProduct}
         isLoading={isLoading}
       />
