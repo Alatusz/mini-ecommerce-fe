@@ -71,6 +71,8 @@ export function DashboardNavbar({
       activeMenu = "products"
     } else if (location.pathname.startsWith("/dashboard/coupon")) {
       activeMenu = "coupons"
+    } else if (location.pathname.startsWith("/dashboard/shipping")) {
+      activeMenu = "shipping"
     } else if (location.pathname.startsWith("/dashboard/user-management")) {
       activeMenu = "customers"
     } else {

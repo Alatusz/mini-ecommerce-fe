@@ -58,6 +58,8 @@ export function DashboardSidebar({
       activeMenu = "products"
     } else if (location.pathname.startsWith("/dashboard/coupon")) {
       activeMenu = "coupons"
+    } else if (location.pathname.startsWith("/dashboard/shipping")) {
+      activeMenu = "shipping"
     } else if (location.pathname.startsWith("/dashboard/user-management")) {
       activeMenu = "customers"
     } else if (location.pathname.startsWith("/dashboard/settings")) {
@@ -248,15 +250,17 @@ export function DashboardSidebar({
               </SidebarMenuItem>
 
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={activeMenu === "shipping"}
-                  onClick={() => setActiveMenu?.("shipping")}
-                  tooltip="Shipping Methods & Rates"
-                  className="cursor-pointer"
-                >
-                  <Truck className="size-4" />
-                  <span>Shipping Rates</span>
-                </SidebarMenuButton>
+                <Link to="/dashboard/shipping" className="w-full">
+                  <SidebarMenuButton
+                    isActive={activeMenu === "shipping"}
+                    onClick={() => setActiveMenu?.("shipping")}
+                    tooltip="Shipping Methods & Rates"
+                    className="cursor-pointer"
+                  >
+                    <Truck className="size-4" />
+                    <span>Shipping Rates</span>
+                  </SidebarMenuButton>
+                </Link>
               </SidebarMenuItem>
 
               <SidebarMenuItem>

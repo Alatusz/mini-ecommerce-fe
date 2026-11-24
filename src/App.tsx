@@ -23,6 +23,9 @@ import DashboardOrderEditPage from "@/pages/dashboard/order/edit/Index"
 import DashboardCouponPage from "@/pages/dashboard/coupon/Index"
 import DashboardCouponCreatePage from "@/pages/dashboard/coupon/create/Index"
 import DashboardCouponEditPage from "@/pages/dashboard/coupon/edit/Index"
+import DashboardShippingPage from "@/pages/dashboard/shipping/Index"
+import DashboardShippingCreatePage from "@/pages/dashboard/shipping/create/Index"
+import DashboardShippingEditPage from "@/pages/dashboard/shipping/edit/Index"
 import DashboardSettingsPage from "@/pages/dashboard/settings/Index"
 import { RequireAuth, GuestOnly } from "@/components/guards/AuthGuard"
 
@@ -68,6 +71,15 @@ export function App() {
           <Route path="coupon" element={<DashboardCouponPage />} />
           <Route path="coupon/create" element={<DashboardCouponCreatePage />} />
           <Route path="coupon/edit/:id" element={<DashboardCouponEditPage />} />
+          <Route path="shipping" element={<DashboardShippingPage />} />
+          <Route
+            path="shipping/create"
+            element={<DashboardShippingCreatePage />}
+          />
+          <Route
+            path="shipping/edit/:id"
+            element={<DashboardShippingEditPage />}
+          />
           <Route
             path="user-management"
             element={<DashboardUserManagementPage />}
