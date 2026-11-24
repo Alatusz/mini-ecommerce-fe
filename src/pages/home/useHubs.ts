@@ -33,7 +33,6 @@ export function mapProductToCard(item: StorefrontProductItem): ProductCardData {
     id: item.id,
     name: item.name,
     price: Number(item.sellPrice ?? 0),
-    originalPrice: item.originalPrice ? Number(item.originalPrice) : undefined,
     image: item.image || "/alatusz-logo.svg",
     rating: 0,
     reviewCount: 0,

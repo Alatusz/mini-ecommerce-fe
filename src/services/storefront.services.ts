@@ -12,7 +12,6 @@ export interface StorefrontProductItem {
   id: string
   name: string
   slug: string
-  originalPrice: number | null
   sellPrice: number
   stock: number
   image: string | null

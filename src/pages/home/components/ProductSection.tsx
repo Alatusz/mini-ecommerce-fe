@@ -25,9 +25,7 @@ function ProductSection() {
     const mapped = raw.map(mapProductToCard)
 
     if (activeTab === "discount") {
-      return mapped.filter(
-        (p) => p.originalPrice && p.originalPrice > p.price
-      )
+      return mapped.slice(0, 6)
     }
     if (activeTab === "new") {
       return mapped.slice(0, 6)

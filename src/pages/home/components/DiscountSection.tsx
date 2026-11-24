@@ -10,11 +10,7 @@ function DiscountSection() {
   const { data, isLoading } = useStorefrontProductsQuery({ limit: 12 })
 
   const discountProducts = useMemo(() => {
-    const mapped = (data?.data ?? []).map(mapProductToCard)
-    const onSale = mapped.filter(
-      (p) => p.originalPrice && p.originalPrice > p.price
-    )
-    return (onSale.length > 0 ? onSale : mapped).slice(0, 6)
+    return (data?.data ?? []).map(mapProductToCard).slice(0, 6)
   }, [data])
 
   return (
