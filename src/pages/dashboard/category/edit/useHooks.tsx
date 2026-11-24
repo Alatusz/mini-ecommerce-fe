@@ -39,6 +39,7 @@ export function useCategoryEdit() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const {
+    control,
     register,
     watch,
     setValue,
@@ -212,6 +213,7 @@ export function useCategoryEdit() {
     hasProducts,
 
     // Form fields & state
+    control,
     register,
     image,
     status,
