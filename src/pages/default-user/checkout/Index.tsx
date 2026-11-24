@@ -26,6 +26,8 @@ import {
 function CheckoutPage() {
   const {
     currentStep,
+    isLoading,
+    cartItemsCount,
     addresses,
     selectedAddressId,
     setSelectedAddressId,
@@ -33,6 +35,7 @@ function CheckoutPage() {
     setIsAddAddressOpen,
     editingAddressId,
     addressControl,
+    isSavingAddress,
     handleOpenAddAddress,
     handleOpenEditAddress,
     handleSaveAddress,
@@ -44,6 +47,7 @@ function CheckoutPage() {
     setPaymentMethod,
     cardControl,
     isOrderCompleted,
+    createdOrderId,
     isProcessing,
     handleNext,
     handleBack,
@@ -54,6 +58,20 @@ function CheckoutPage() {
     tax,
     total,
   } = useCheckout()
+
+  if (!isLoading && cartItemsCount === 0 && !isOrderCompleted) {
+    return (
+      <div className="mx-auto max-w-md py-20 text-center space-y-4">
+        <h1 className="text-xl font-bold">Your cart is empty</h1>
+        <p className="text-xs text-muted-foreground">
+          Add some products to your cart before proceeding to checkout.
+        </p>
+        <Link to="/products">
+          <Button className="cursor-pointer">Browse Products</Button>
+        </Link>
+      </div>
+    )
+  }
 
   return (
     <div className="mx-auto max-w-5xl py-8 sm:py-12 px-4 sm:px-6">
@@ -316,7 +334,7 @@ function CheckoutPage() {
                   </div>
 
                   <div className="text-base sm:text-lg font-bold text-foreground shrink-0">
-                    {opt.price === 0 ? "Free" : `$${opt.price.toFixed(2)}`}
+                    {opt.price === 0 ? "Free" : `฿${opt.price.toLocaleString()}`}
                   </div>
                 </div>
               )
@@ -347,9 +365,9 @@ function CheckoutPage() {
               <div className="grid grid-cols-3 gap-3">
                 <button
                   type="button"
-                  onClick={() => setPaymentMethod("credit-card")}
+                  onClick={() => setPaymentMethod("credit_card")}
                   className={`p-3 sm:p-4 rounded-xl border text-center transition-all cursor-pointer ${
-                    paymentMethod === "credit-card"
+                    paymentMethod === "credit_card"
                       ? "border-black dark:border-white bg-zinc-100/70 dark:bg-zinc-800/60 font-semibold"
                       : "border-border/60 hover:bg-muted/40 text-muted-foreground"
                   }`}
@@ -360,15 +378,15 @@ function CheckoutPage() {
 
                 <button
                   type="button"
-                  onClick={() => setPaymentMethod("paypal")}
+                  onClick={() => setPaymentMethod("promptpay")}
                   className={`p-3 sm:p-4 rounded-xl border text-center transition-all cursor-pointer ${
-                    paymentMethod === "paypal"
+                    paymentMethod === "promptpay"
                       ? "border-black dark:border-white bg-zinc-100/70 dark:bg-zinc-800/60 font-semibold"
                       : "border-border/60 hover:bg-muted/40 text-muted-foreground"
                   }`}
                 >
-                  <span className="font-bold text-sm block mb-1">PayPal</span>
-                  <span className="text-xs text-muted-foreground">Digital wallet</span>
+                  <span className="font-bold text-sm block mb-1">PromptPay</span>
+                  <span className="text-xs text-muted-foreground">QR Payment</span>
                 </button>
 
                 <button
@@ -386,7 +404,7 @@ function CheckoutPage() {
               </div>
 
               {/* Credit Card Inputs */}
-              {paymentMethod === "credit-card" && (
+              {paymentMethod === "credit_card" && (
                 <div className="rounded-2xl border border-border/50 bg-card p-5 sm:p-6 flex flex-col gap-4">
                   <Controller
                     name="cardNumber"
@@ -501,11 +519,11 @@ function CheckoutPage() {
                 </div>
               )}
 
-              {paymentMethod === "paypal" && (
+              {paymentMethod === "promptpay" && (
                 <div className="rounded-2xl border border-border/50 bg-card p-6 text-center">
-                  <p className="text-sm font-semibold mb-2">PayPal Checkout</p>
+                  <p className="text-sm font-semibold mb-2">PromptPay QR</p>
                   <p className="text-xs text-muted-foreground">
-                    You will be securely redirected to PayPal to complete your payment.
+                    Scan PromptPay QR code after placing your order to complete payment.
                   </p>
                 </div>
               )}
@@ -553,7 +571,7 @@ function CheckoutPage() {
                     <span>
                       {selectedShipping?.price === 0
                         ? "Free"
-                        : `$${selectedShipping?.price.toFixed(2)}`}
+                        : `฿${selectedShipping?.price.toLocaleString()}`}
                     </span>
                   </div>
                   <span className="text-xs text-muted-foreground">
@@ -565,21 +583,27 @@ function CheckoutPage() {
                 <div className="flex flex-col gap-2.5 text-xs sm:text-sm">
                   <div className="flex justify-between text-muted-foreground">
                     <span>Subtotal</span>
-                    <span className="font-medium text-foreground">${subtotal}</span>
+                    <span className="font-medium text-foreground">
+                      ฿{subtotal.toLocaleString()}
+                    </span>
                   </div>
                   <div className="flex justify-between text-muted-foreground">
                     <span>Shipping</span>
                     <span className="font-medium text-foreground">
-                      {shippingCost === 0 ? "Free" : `$${shippingCost.toFixed(2)}`}
+                      {shippingCost === 0
+                        ? "Free"
+                        : `฿${shippingCost.toLocaleString()}`}
                     </span>
                   </div>
                   <div className="flex justify-between text-muted-foreground">
                     <span>Estimated Tax</span>
-                    <span className="font-medium text-foreground">${tax}</span>
+                    <span className="font-medium text-foreground">
+                      ฿{tax.toLocaleString()}
+                    </span>
                   </div>
                   <div className="flex justify-between pt-3 border-t border-border/40 text-base font-bold text-foreground">
                     <span>Total</span>
-                    <span>${total.toFixed(2)}</span>
+                    <span>฿{total.toLocaleString()}</span>
                   </div>
                 </div>
               </div>
@@ -731,9 +755,10 @@ function CheckoutPage() {
               </Button>
               <Button
                 type="submit"
+                disabled={isSavingAddress}
                 className="cursor-pointer bg-black text-white dark:bg-white dark:text-black"
               >
-                Save Address
+                {isSavingAddress ? "Saving..." : "Save Address"}
               </Button>
             </DialogFooter>
           </form>
@@ -753,12 +778,14 @@ function CheckoutPage() {
             </DialogTitle>
 
             <p className="text-xs sm:text-sm text-muted-foreground mt-2 max-w-xs leading-relaxed">
-              Thank you for your order. We have received your payment and are preparing your package for shipment.
+              Thank you for your order. We have received your order and are preparing your package for shipment.
             </p>
 
             <div className="w-full mt-5 p-3 rounded-lg bg-muted/60 text-xs font-mono text-muted-foreground flex justify-between">
               <span>Order Number:</span>
-              <span className="font-bold text-foreground">#ORD-289410</span>
+              <span className="font-bold text-foreground">
+                #{createdOrderId || "ORD"}
+              </span>
             </div>
           </div>
 

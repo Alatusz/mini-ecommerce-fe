@@ -1,8 +1,22 @@
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { useMutation } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
+
+import { QUERY_KEYS } from "@/lib/constants"
+import { queryClient } from "@/lib/queryClient"
+import { showToast } from "@/lib/toast"
+import { useMyCartQuery } from "@/hooks/use-cartHubs"
+import {
+  useAddressesQuery,
+  useCreateAddressMutation,
+  useUpdateAddressMutation,
+  useDeleteAddressMutation,
+  type ApiAddressItem,
+} from "@/hooks/use-profileHubs"
+import { createOrder } from "@/services/order.services"
 
 export interface AddressItem {
   id: string
@@ -10,6 +24,7 @@ export interface AddressItem {
   tag: "HOME" | "OFFICE" | "OTHER"
   address: string
   phone: string
+  isDefault?: boolean
 }
 
 export interface ShippingOption {
@@ -21,7 +36,7 @@ export interface ShippingOption {
   estimatedDate: string
 }
 
-export type PaymentMethod = "credit-card" | "paypal" | "cod"
+export type PaymentMethod = "credit_card" | "promptpay" | "cod"
 
 export const checkoutAddressSchema = z.object({
   title: z.string().trim().min(1, "Address title is required"),
@@ -41,23 +56,6 @@ export const cardDetailsSchema = z.object({
 export type CheckoutAddressValues = z.infer<typeof checkoutAddressSchema>
 export type CardDetails = z.infer<typeof cardDetailsSchema>
 
-export const defaultAddresses: AddressItem[] = [
-  {
-    id: "addr-1",
-    title: "2118 Thornridge",
-    tag: "HOME",
-    address: "2118 Thornridge Cir. Syracuse, Connecticut 35624",
-    phone: "(209) 555-0104",
-  },
-  {
-    id: "addr-2",
-    title: "Headoffice",
-    tag: "OFFICE",
-    address: "2715 Ash Dr. San Jose, South Dakota 83475",
-    phone: "(704) 555-0127",
-  },
-]
-
 export const shippingOptions: ShippingOption[] = [
   {
     id: "ship-free",
@@ -65,35 +63,70 @@ export const shippingOptions: ShippingOption[] = [
     badge: "STANDARD",
     description: "Delivery in 5-7 business days",
     price: 0,
-    estimatedDate: "Estimated delivery: 3 Nov",
+    estimatedDate: "Estimated delivery: 3-5 business days",
   },
   {
     id: "ship-regular",
     title: "Regular Delivery",
     badge: "POPULAR",
-    description: "Delivery in 3-5 business days",
-    price: 8.5,
-    estimatedDate: "Estimated delivery: 31 Oct",
+    description: "Delivery in 2-3 business days",
+    price: 50,
+    estimatedDate: "Estimated delivery: 2-3 business days",
   },
   {
     id: "ship-express",
     title: "Express Delivery",
     badge: "FAST",
-    description: "Delivery in 1-2 business days with priority tracking",
-    price: 29.0,
-    estimatedDate: "Estimated delivery: 28 Oct",
+    description: "Next-day priority delivery with tracking",
+    price: 120,
+    estimatedDate: "Estimated delivery: Tomorrow",
   },
 ]
+
+const normalizeTag = (tag?: string): "HOME" | "OFFICE" | "OTHER" => {
+  const upper = (tag || "").toUpperCase()
+  if (upper === "HOME" || upper === "OFFICE") return upper
+  return "OTHER"
+}
 
 export function useCheckout() {
   const navigate = useNavigate()
 
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1)
 
-  const [addresses, setAddresses] = useState<AddressItem[]>(defaultAddresses)
-  const [selectedAddressId, setSelectedAddressId] = useState<string>("addr-1")
+  const { data: cartRes, isLoading: isLoadingCart } = useMyCartQuery()
+  const { data: addressesRes, isLoading: isLoadingAddresses } =
+    useAddressesQuery()
+  const createAddressMutation = useCreateAddressMutation()
+  const updateAddressMutation = useUpdateAddressMutation()
+  const deleteAddressMutation = useDeleteAddressMutation()
+
+  const addresses: AddressItem[] = useMemo(() => {
+    const raw: ApiAddressItem[] = addressesRes?.data ?? []
+    return raw.map((a) => ({
+      id: a.id,
+      title: a.title,
+      tag: normalizeTag(a.tag),
+      address: a.address,
+      phone: a.phone,
+      isDefault: a.isDefault,
+    }))
+  }, [addressesRes])
+
+  const [selectedAddressId, setSelectedAddressId] = useState<string>("")
   const [isAddAddressOpen, setIsAddAddressOpen] = useState<boolean>(false)
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (addresses.length === 0) {
+      setSelectedAddressId("")
+      return
+    }
+    if (!selectedAddressId || !addresses.some((a) => a.id === selectedAddressId)) {
+      const def = addresses.find((a) => a.isDefault) ?? addresses[0]
+      setSelectedAddressId(def.id)
+    }
+  }, [addresses, selectedAddressId])
 
   const addressForm = useForm<CheckoutAddressValues>({
     resolver: zodResolver(checkoutAddressSchema),
@@ -109,21 +142,40 @@ export function useCheckout() {
     useState<string>("ship-free")
 
   const [paymentMethod, setPaymentMethod] =
-    useState<PaymentMethod>("credit-card")
+    useState<PaymentMethod>("credit_card")
 
   const cardForm = useForm<CardDetails>({
     resolver: zodResolver(cardDetailsSchema),
     defaultValues: {
-      cardNumber: "4242 •••• •••• 4242",
-      cardHolder: "Alex Johnson",
-      expiryDate: "12/28",
-      cvv: "321",
+      cardNumber: "",
+      cardHolder: "",
+      expiryDate: "",
+      cvv: "",
       sameAsBilling: true,
     },
   })
 
   const [isOrderCompleted, setIsOrderCompleted] = useState<boolean>(false)
-  const [isProcessing, setIsProcessing] = useState<boolean>(false)
+  const [createdOrderId, setCreatedOrderId] = useState<string>("")
+
+  const createOrderMutation = useMutation({
+    mutationFn: createOrder,
+    onSuccess: (res) => {
+      setCreatedOrderId(res?.data?.id || "")
+      setIsOrderCompleted(true)
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.STOREFRONT.CART],
+      })
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.DASHBOARD.ORDERS_LIST],
+      })
+    },
+    onError: (err: any) => {
+      showToast.error(
+        err?.response?.data?.message || "Failed to place order"
+      )
+    },
+  })
 
   const handleOpenAddAddress = () => {
     setEditingAddressId(null)
@@ -148,38 +200,40 @@ export function useCheckout() {
   }
 
   const handleSaveAddress = addressForm.handleSubmit((values) => {
-    if (editingAddressId) {
-      setAddresses((prev) =>
-        prev.map((item) =>
-          item.id === editingAddressId ? { ...item, ...values } : item
-        )
-      )
-    } else {
-      const newId = `addr-${Date.now()}`
-      const newAddr: AddressItem = {
-        id: newId,
-        ...values,
-      }
-      setAddresses((prev) => [...prev, newAddr])
-      setSelectedAddressId(newId)
+    const payload = {
+      title: values.title,
+      tag: values.tag.toLowerCase(),
+      address: values.address,
+      phone: values.phone,
     }
 
-    setIsAddAddressOpen(false)
+    if (editingAddressId) {
+      updateAddressMutation.mutate(
+        { id: editingAddressId, data: payload },
+        { onSuccess: () => setIsAddAddressOpen(false) }
+      )
+    } else {
+      createAddressMutation.mutate(payload, {
+        onSuccess: (res) => {
+          if (res?.data?.id) {
+            setSelectedAddressId(res.data.id)
+          }
+          setIsAddAddressOpen(false)
+        },
+      })
+    }
   })
 
   const handleDeleteAddress = (id: string) => {
-    setAddresses((prev) => {
-      const filtered = prev.filter((item) => item.id !== id)
-      if (selectedAddressId === id && filtered.length > 0) {
-        setSelectedAddressId(filtered[0].id)
-      }
-      return filtered
-    })
+    deleteAddressMutation.mutate(id)
   }
 
   const handleNext = async () => {
     if (currentStep === 1) {
-      if (!selectedAddressId) return
+      if (!selectedAddressId) {
+        showToast.error("Please select or add a shipping address")
+        return
+      }
       setCurrentStep(2)
       window.scrollTo({ top: 0, behavior: "smooth" })
     } else if (currentStep === 2) {
@@ -187,15 +241,19 @@ export function useCheckout() {
       setCurrentStep(3)
       window.scrollTo({ top: 0, behavior: "smooth" })
     } else if (currentStep === 3) {
-      if (paymentMethod === "credit-card") {
+      if (!selectedAddressId) {
+        showToast.error("Please select a shipping address")
+        setCurrentStep(1)
+        return
+      }
+      if (paymentMethod === "credit_card") {
         const valid = await cardForm.trigger()
         if (!valid) return
       }
-      setIsProcessing(true)
-      setTimeout(() => {
-        setIsProcessing(false)
-        setIsOrderCompleted(true)
-      }, 1000)
+      createOrderMutation.mutate({
+        addressId: selectedAddressId,
+        paymentMethod,
+      })
     }
   }
 
@@ -216,14 +274,17 @@ export function useCheckout() {
     (s) => s.id === selectedShippingId
   )
 
-  const subtotal = 2347
+  const cartItemsCount: number = cartRes?.data?.totalItems ?? 0
+  const subtotal: number = Number(cartRes?.data?.totalPrice ?? 0)
   const shippingCost = selectedShipping?.price ?? 0
-  const tax = 50
+  const tax = 0
   const total = subtotal + shippingCost + tax
 
   return {
     currentStep,
     setCurrentStep,
+    isLoading: isLoadingCart || isLoadingAddresses,
+    cartItemsCount,
     addresses,
     selectedAddressId,
     setSelectedAddressId,
@@ -231,6 +292,8 @@ export function useCheckout() {
     setIsAddAddressOpen,
     editingAddressId,
     addressControl: addressForm.control,
+    isSavingAddress:
+      createAddressMutation.isPending || updateAddressMutation.isPending,
     handleOpenAddAddress,
     handleOpenEditAddress,
     handleSaveAddress,
@@ -242,7 +305,8 @@ export function useCheckout() {
     setPaymentMethod,
     cardControl: cardForm.control,
     isOrderCompleted,
-    isProcessing,
+    createdOrderId,
+    isProcessing: createOrderMutation.isPending,
     handleNext,
     handleBack,
     selectedAddress,
