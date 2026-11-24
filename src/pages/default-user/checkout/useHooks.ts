@@ -1,5 +1,8 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 
 export interface AddressItem {
   id: string
@@ -20,13 +23,23 @@ export interface ShippingOption {
 
 export type PaymentMethod = "credit-card" | "paypal" | "cod"
 
-export interface CardDetails {
-  cardNumber: string
-  cardHolder: string
-  expiryDate: string
-  cvv: string
-  sameAsBilling: boolean
-}
+export const checkoutAddressSchema = z.object({
+  title: z.string().trim().min(1, "Address title is required"),
+  tag: z.enum(["HOME", "OFFICE", "OTHER"]),
+  address: z.string().trim().min(1, "Street address is required"),
+  phone: z.string().trim().min(1, "Phone number is required"),
+})
+
+export const cardDetailsSchema = z.object({
+  cardNumber: z.string().trim().min(1, "Card number is required"),
+  cardHolder: z.string().trim().min(1, "Cardholder name is required"),
+  expiryDate: z.string().trim().min(1, "Expiry date is required"),
+  cvv: z.string().trim().min(3, "CVV is required"),
+  sameAsBilling: z.boolean(),
+})
+
+export type CheckoutAddressValues = z.infer<typeof checkoutAddressSchema>
+export type CardDetails = z.infer<typeof cardDetailsSchema>
 
 export const defaultAddresses: AddressItem[] = [
   {
@@ -75,49 +88,46 @@ export const shippingOptions: ShippingOption[] = [
 export function useCheckout() {
   const navigate = useNavigate()
 
-  // Stepper state: 1 = Address, 2 = Shipping, 3 = Payment
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1)
 
-  // Step 1: Address states
   const [addresses, setAddresses] = useState<AddressItem[]>(defaultAddresses)
   const [selectedAddressId, setSelectedAddressId] = useState<string>("addr-1")
   const [isAddAddressOpen, setIsAddAddressOpen] = useState<boolean>(false)
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null)
-  const [addressForm, setAddressForm] = useState<{
-    title: string
-    tag: "HOME" | "OFFICE" | "OTHER"
-    address: string
-    phone: string
-  }>({
-    title: "",
-    tag: "HOME",
-    address: "",
-    phone: "",
+
+  const addressForm = useForm<CheckoutAddressValues>({
+    resolver: zodResolver(checkoutAddressSchema),
+    defaultValues: {
+      title: "",
+      tag: "HOME",
+      address: "",
+      phone: "",
+    },
   })
 
-  // Step 2: Shipping states
   const [selectedShippingId, setSelectedShippingId] =
     useState<string>("ship-free")
 
-  // Step 3: Payment states
   const [paymentMethod, setPaymentMethod] =
     useState<PaymentMethod>("credit-card")
-  const [cardForm, setCardForm] = useState<CardDetails>({
-    cardNumber: "4242 •••• •••• 4242",
-    cardHolder: "Alex Johnson",
-    expiryDate: "12/28",
-    cvv: "321",
-    sameAsBilling: true,
+
+  const cardForm = useForm<CardDetails>({
+    resolver: zodResolver(cardDetailsSchema),
+    defaultValues: {
+      cardNumber: "4242 •••• •••• 4242",
+      cardHolder: "Alex Johnson",
+      expiryDate: "12/28",
+      cvv: "321",
+      sameAsBilling: true,
+    },
   })
 
-  // Completion state
   const [isOrderCompleted, setIsOrderCompleted] = useState<boolean>(false)
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
 
-  // Address actions
   const handleOpenAddAddress = () => {
     setEditingAddressId(null)
-    setAddressForm({
+    addressForm.reset({
       title: "",
       tag: "HOME",
       address: "",
@@ -128,7 +138,7 @@ export function useCheckout() {
 
   const handleOpenEditAddress = (addr: AddressItem) => {
     setEditingAddressId(addr.id)
-    setAddressForm({
+    addressForm.reset({
       title: addr.title,
       tag: addr.tag,
       address: addr.address,
@@ -137,29 +147,25 @@ export function useCheckout() {
     setIsAddAddressOpen(true)
   }
 
-  const handleSaveAddress = () => {
-    if (!addressForm.title.trim() || !addressForm.address.trim()) return
-
+  const handleSaveAddress = addressForm.handleSubmit((values) => {
     if (editingAddressId) {
       setAddresses((prev) =>
         prev.map((item) =>
-          item.id === editingAddressId
-            ? { ...item, ...addressForm }
-            : item
+          item.id === editingAddressId ? { ...item, ...values } : item
         )
       )
     } else {
       const newId = `addr-${Date.now()}`
       const newAddr: AddressItem = {
         id: newId,
-        ...addressForm,
+        ...values,
       }
       setAddresses((prev) => [...prev, newAddr])
       setSelectedAddressId(newId)
     }
 
     setIsAddAddressOpen(false)
-  }
+  })
 
   const handleDeleteAddress = (id: string) => {
     setAddresses((prev) => {
@@ -171,8 +177,7 @@ export function useCheckout() {
     })
   }
 
-  // Navigation actions
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep === 1) {
       if (!selectedAddressId) return
       setCurrentStep(2)
@@ -182,6 +187,10 @@ export function useCheckout() {
       setCurrentStep(3)
       window.scrollTo({ top: 0, behavior: "smooth" })
     } else if (currentStep === 3) {
+      if (paymentMethod === "credit-card") {
+        const valid = await cardForm.trigger()
+        if (!valid) return
+      }
       setIsProcessing(true)
       setTimeout(() => {
         setIsProcessing(false)
@@ -207,7 +216,6 @@ export function useCheckout() {
     (s) => s.id === selectedShippingId
   )
 
-  // Subtotal & summary
   const subtotal = 2347
   const shippingCost = selectedShipping?.price ?? 0
   const tax = 50
@@ -222,8 +230,7 @@ export function useCheckout() {
     isAddAddressOpen,
     setIsAddAddressOpen,
     editingAddressId,
-    addressForm,
-    setAddressForm,
+    addressControl: addressForm.control,
     handleOpenAddAddress,
     handleOpenEditAddress,
     handleSaveAddress,
@@ -233,8 +240,7 @@ export function useCheckout() {
     setSelectedShippingId,
     paymentMethod,
     setPaymentMethod,
-    cardForm,
-    setCardForm,
+    cardControl: cardForm.control,
     isOrderCompleted,
     isProcessing,
     handleNext,

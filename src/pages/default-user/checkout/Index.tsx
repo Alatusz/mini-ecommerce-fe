@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom"
+import { Controller } from "react-hook-form"
 import {
   MapPin,
   Truck,
@@ -31,8 +32,7 @@ function CheckoutPage() {
     isAddAddressOpen,
     setIsAddAddressOpen,
     editingAddressId,
-    addressForm,
-    setAddressForm,
+    addressControl,
     handleOpenAddAddress,
     handleOpenEditAddress,
     handleSaveAddress,
@@ -42,8 +42,7 @@ function CheckoutPage() {
     setSelectedShippingId,
     paymentMethod,
     setPaymentMethod,
-    cardForm,
-    setCardForm,
+    cardControl,
     isOrderCompleted,
     isProcessing,
     handleNext,
@@ -389,91 +388,116 @@ function CheckoutPage() {
               {/* Credit Card Inputs */}
               {paymentMethod === "credit-card" && (
                 <div className="rounded-2xl border border-border/50 bg-card p-5 sm:p-6 flex flex-col gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-muted-foreground mb-1">
-                      Card Number
-                    </label>
-                    <Input
-                      value={cardForm.cardNumber}
-                      onChange={(e) =>
-                        setCardForm((prev) => ({
-                          ...prev,
-                          cardNumber: e.target.value,
-                        }))
-                      }
-                      placeholder="•••• •••• •••• ••••"
-                      className="h-11 bg-background"
-                    />
-                  </div>
+                  <Controller
+                    name="cardNumber"
+                    control={cardControl}
+                    render={({ field, fieldState }) => (
+                      <div>
+                        <label className="block text-xs font-medium text-muted-foreground mb-1">
+                          Card Number
+                        </label>
+                        <Input
+                          {...field}
+                          placeholder="•••• •••• •••• ••••"
+                          aria-invalid={fieldState.invalid}
+                          className="h-11 bg-background"
+                        />
+                        {fieldState.error && (
+                          <p className="mt-1 text-[11px] text-destructive">
+                            {fieldState.error.message}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  />
 
-                  <div>
-                    <label className="block text-xs font-medium text-muted-foreground mb-1">
-                      Cardholder Name
-                    </label>
-                    <Input
-                      value={cardForm.cardHolder}
-                      onChange={(e) =>
-                        setCardForm((prev) => ({
-                          ...prev,
-                          cardHolder: e.target.value,
-                        }))
-                      }
-                      placeholder="Name on card"
-                      className="h-11 bg-background"
-                    />
-                  </div>
+                  <Controller
+                    name="cardHolder"
+                    control={cardControl}
+                    render={({ field, fieldState }) => (
+                      <div>
+                        <label className="block text-xs font-medium text-muted-foreground mb-1">
+                          Cardholder Name
+                        </label>
+                        <Input
+                          {...field}
+                          placeholder="Name on card"
+                          aria-invalid={fieldState.invalid}
+                          className="h-11 bg-background"
+                        />
+                        {fieldState.error && (
+                          <p className="mt-1 text-[11px] text-destructive">
+                            {fieldState.error.message}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  />
 
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-medium text-muted-foreground mb-1">
-                        Expiry Date
-                      </label>
-                      <Input
-                        value={cardForm.expiryDate}
-                        onChange={(e) =>
-                          setCardForm((prev) => ({
-                            ...prev,
-                            expiryDate: e.target.value,
-                          }))
-                        }
-                        placeholder="MM/YY"
-                        className="h-11 bg-background"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-muted-foreground mb-1">
-                        CVV
-                      </label>
-                      <Input
-                        value={cardForm.cvv}
-                        onChange={(e) =>
-                          setCardForm((prev) => ({
-                            ...prev,
-                            cvv: e.target.value,
-                          }))
-                        }
-                        placeholder="•••"
-                        className="h-11 bg-background"
-                      />
-                    </div>
+                    <Controller
+                      name="expiryDate"
+                      control={cardControl}
+                      render={({ field, fieldState }) => (
+                        <div>
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">
+                            Expiry Date
+                          </label>
+                          <Input
+                            {...field}
+                            placeholder="MM/YY"
+                            aria-invalid={fieldState.invalid}
+                            className="h-11 bg-background"
+                          />
+                          {fieldState.error && (
+                            <p className="mt-1 text-[11px] text-destructive">
+                              {fieldState.error.message}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    />
+                    <Controller
+                      name="cvv"
+                      control={cardControl}
+                      render={({ field, fieldState }) => (
+                        <div>
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">
+                            CVV
+                          </label>
+                          <Input
+                            {...field}
+                            placeholder="•••"
+                            aria-invalid={fieldState.invalid}
+                            className="h-11 bg-background"
+                          />
+                          {fieldState.error && (
+                            <p className="mt-1 text-[11px] text-destructive">
+                              {fieldState.error.message}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    />
                   </div>
 
-                  <label className="flex items-center gap-2 pt-2 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={cardForm.sameAsBilling}
-                      onChange={(e) =>
-                        setCardForm((prev) => ({
-                          ...prev,
-                          sameAsBilling: e.target.checked,
-                        }))
-                      }
-                      className="size-4 rounded accent-black cursor-pointer"
-                    />
-                    <span className="text-xs text-muted-foreground">
-                      Same as billing address
-                    </span>
-                  </label>
+                  <Controller
+                    name="sameAsBilling"
+                    control={cardControl}
+                    render={({ field }) => (
+                      <label className="flex items-center gap-2 pt-2 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={(e) => field.onChange(e.target.checked)}
+                          className="size-4 rounded accent-black cursor-pointer"
+                        />
+                        <span className="text-xs text-muted-foreground">
+                          Same as billing address
+                        </span>
+                      </label>
+                    )}
+                  />
                 </div>
               )}
 
@@ -598,101 +622,121 @@ function CheckoutPage() {
             </DialogTitle>
           </DialogHeader>
 
-          <div className="flex flex-col gap-3.5 py-2">
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">
-                Address Title / Nickname
-              </label>
-              <Input
-                placeholder="e.g. Home, Office, Apartment"
-                value={addressForm.title}
-                onChange={(e) =>
-                  setAddressForm((prev) => ({
-                    ...prev,
-                    title: e.target.value,
-                  }))
-                }
-                className="h-10 text-xs sm:text-sm"
-              />
-            </div>
+          <form onSubmit={handleSaveAddress} className="flex flex-col gap-3.5 py-2">
+            <Controller
+              name="title"
+              control={addressControl}
+              render={({ field, fieldState }) => (
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">
+                    Address Title / Nickname
+                  </label>
+                  <Input
+                    {...field}
+                    placeholder="e.g. Home, Office, Apartment"
+                    aria-invalid={fieldState.invalid}
+                    className="h-10 text-xs sm:text-sm"
+                  />
+                  {fieldState.error && (
+                    <p className="mt-1 text-[11px] text-destructive">
+                      {fieldState.error.message}
+                    </p>
+                  )}
+                </div>
+              )}
+            />
 
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">
-                Type
-              </label>
-              <div className="flex gap-2">
-                {(["HOME", "OFFICE", "OTHER"] as const).map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() =>
-                      setAddressForm((prev) => ({ ...prev, tag }))
-                    }
-                    className={`px-3 py-1.5 rounded-md text-xs font-semibold cursor-pointer transition-colors ${
-                      addressForm.tag === tag
-                        ? "bg-black text-white dark:bg-white dark:text-black"
-                        : "bg-muted text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <Controller
+              name="tag"
+              control={addressControl}
+              render={({ field }) => (
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">
+                    Type
+                  </label>
+                  <div className="flex gap-2">
+                    {(["HOME", "OFFICE", "OTHER"] as const).map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => field.onChange(tag)}
+                        className={`px-3 py-1.5 rounded-md text-xs font-semibold cursor-pointer transition-colors ${
+                          field.value === tag
+                            ? "bg-black text-white dark:bg-white dark:text-black"
+                            : "bg-muted text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            />
 
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">
-                Street Address
-              </label>
-              <Input
-                placeholder="Street address, city, state, zip"
-                value={addressForm.address}
-                onChange={(e) =>
-                  setAddressForm((prev) => ({
-                    ...prev,
-                    address: e.target.value,
-                  }))
-                }
-                className="h-10 text-xs sm:text-sm"
-              />
-            </div>
+            <Controller
+              name="address"
+              control={addressControl}
+              render={({ field, fieldState }) => (
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">
+                    Street Address
+                  </label>
+                  <Input
+                    {...field}
+                    placeholder="Street address, city, state, zip"
+                    aria-invalid={fieldState.invalid}
+                    className="h-10 text-xs sm:text-sm"
+                  />
+                  {fieldState.error && (
+                    <p className="mt-1 text-[11px] text-destructive">
+                      {fieldState.error.message}
+                    </p>
+                  )}
+                </div>
+              )}
+            />
 
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">
-                Phone Number
-              </label>
-              <Input
-                placeholder="(xxx) xxx-xxxx"
-                value={addressForm.phone}
-                onChange={(e) =>
-                  setAddressForm((prev) => ({
-                    ...prev,
-                    phone: e.target.value,
-                  }))
-                }
-                className="h-10 text-xs sm:text-sm"
-              />
-            </div>
-          </div>
+            <Controller
+              name="phone"
+              control={addressControl}
+              render={({ field, fieldState }) => (
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">
+                    Phone Number
+                  </label>
+                  <Input
+                    {...field}
+                    placeholder="(xxx) xxx-xxxx"
+                    aria-invalid={fieldState.invalid}
+                    className="h-10 text-xs sm:text-sm"
+                  />
+                  {fieldState.error && (
+                    <p className="mt-1 text-[11px] text-destructive">
+                      {fieldState.error.message}
+                    </p>
+                  )}
+                </div>
+              )}
+            />
 
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsAddAddressOpen(false)}
-              className="cursor-pointer"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              onClick={handleSaveAddress}
-              disabled={!addressForm.title.trim() || !addressForm.address.trim()}
-              className="cursor-pointer bg-black text-white dark:bg-white dark:text-black"
-            >
-              Save Address
-            </Button>
-          </DialogFooter>
+            <DialogFooter className="gap-2 sm:gap-0 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsAddAddressOpen(false)}
+                className="cursor-pointer"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="cursor-pointer bg-black text-white dark:bg-white dark:text-black"
+              >
+                Save Address
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 
