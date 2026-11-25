@@ -43,6 +43,11 @@ export interface OrderItem {
   paymentStatus?: string
   shippingAddress?: string | null
   shippingPhone?: string | null
+  shippingRateId?: string | null
+  shippingMethodName?: string
+  shippingCost?: number
+  couponCode?: string | null
+  discountAmount?: number
   createdAt: string
   user?: {
     id: string
@@ -60,6 +65,8 @@ export interface OrderItem {
 export interface CreateOrderPayload {
   addressId: string
   paymentMethod?: "cod" | "credit_card" | "promptpay" | string
+  shippingRateId?: string
+  couponCode?: string
 }
 
 export interface UpdateOrderStatusPayload {

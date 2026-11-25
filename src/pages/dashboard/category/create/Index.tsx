@@ -308,7 +308,7 @@ export default function DashboardCategoryCreatePage() {
                   type="submit"
                   size="sm"
                   disabled={isSubmitting}
-                  className="h-8 cursor-pointer gap-1.5 bg-foreground px-3.5 text-xs text-background hover:bg-foreground/90"
+                  className="h-8 cursor-pointer gap-1.5 px-3.5 text-xs"
                 >
                   {isSubmitting ? (
                     <Loader2 className="size-3.5 animate-spin" />

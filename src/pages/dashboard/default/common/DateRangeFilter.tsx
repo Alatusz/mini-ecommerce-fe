@@ -153,7 +153,7 @@ export function DateRangeFilter({
             variant="outline"
             size="sm"
             className={cn(
-              "h-9 cursor-pointer gap-2 border-border/60 bg-background px-3 text-xs font-normal shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground",
+              "h-9 cursor-pointer gap-2 border-border/60 px-3 text-xs font-normal shadow-xs",
               isOpen && "border-ring ring-2 ring-ring/20",
               className
             )}
@@ -267,7 +267,7 @@ export function DateRangeFilter({
                 variant="outline"
                 size="sm"
                 onClick={handleCancel}
-                className="h-8 cursor-pointer border-border px-3.5 text-xs hover:bg-accent"
+                className="h-8 cursor-pointer px-3.5 text-xs"
               >
                 Cancel
               </Button>

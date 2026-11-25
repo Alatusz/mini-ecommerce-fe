@@ -42,7 +42,7 @@ export default function DashboardProductPage() {
         <Link to="/dashboard/product/create">
           <Button
             size="sm"
-            className="h-8 shrink-0 cursor-pointer gap-1.5 bg-foreground px-3.5 text-xs text-background hover:bg-foreground/90"
+            className="h-8 shrink-0 cursor-pointer gap-1.5 px-3.5 text-xs"
           >
             <Plus className="size-3.5" />
             <span>Add Product</span>

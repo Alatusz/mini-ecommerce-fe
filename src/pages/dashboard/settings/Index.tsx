@@ -214,7 +214,7 @@ export default function DashboardSettingsPage() {
                 <Badge className="text-xs">Primary Badge</Badge>
                 <Badge variant="secondary" className="text-xs">Secondary</Badge>
                 <Badge variant="outline" className="text-xs">Outline</Badge>
-                <Badge className="bg-primary/15 text-primary hover:bg-primary/20 border-0 text-xs">
+                <Badge className="bg-primary/15 text-primary border-0 text-xs">
                   Soft Tinted
                 </Badge>
               </div>

@@ -251,7 +251,7 @@ function ProductDetailPage() {
             <Button
               variant="outline"
               onClick={handleToggleWishlist}
-              className={`w-full sm:flex-1 h-12 rounded-lg text-xs sm:text-sm font-medium border-foreground/40 hover:bg-accent cursor-pointer transition-colors ${
+              className={`w-full sm:flex-1 h-12 rounded-lg text-xs sm:text-sm font-medium cursor-pointer ${
                 isWishlist ? "text-red-500 border-red-500/40" : ""
               }`}
             >
@@ -263,7 +263,7 @@ function ProductDetailPage() {
 
             <Button
               onClick={handleAddToCart}
-              className="w-full sm:flex-1 h-12 rounded-lg text-xs sm:text-sm font-medium bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 cursor-pointer transition-colors"
+              className="w-full sm:flex-1 h-12 rounded-lg text-xs sm:text-sm font-medium cursor-pointer"
             >
               {isAddedToCart ? (
                 <>
@@ -454,7 +454,7 @@ function ProductDetailPage() {
           <Button
             variant="outline"
             onClick={handleToggleDetails}
-            className="h-10 px-6 rounded-lg text-xs sm:text-sm font-medium gap-1.5 cursor-pointer border-border hover:bg-accent hover:text-foreground"
+            className="h-10 px-6 rounded-lg text-xs sm:text-sm font-medium gap-1.5 cursor-pointer"
           >
             {isDetailsExpanded ? "View Less" : "View More"}
             <ChevronDown

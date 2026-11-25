@@ -454,7 +454,7 @@ export default function MyOrdersPage() {
                       <Link to="/products">
                         <Button
                           size="sm"
-                          className="text-xs cursor-pointer h-8 gap-1 bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black"
+                          className="text-xs cursor-pointer h-8 gap-1"
                         >
                           <RotateCcw className="size-3" />
                           <span>ซื้อซ้ำ</span>
