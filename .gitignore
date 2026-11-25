@@ -7,10 +7,18 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies & Build caches
 node_modules
 dist
 dist-ssr
+.vite
+coverage
 *.local
+
+# Environment variables
+.env
+.env.*
+!.env.example
 
 # Editor directories and files
 .vscode/*
@@ -22,6 +30,14 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-src/prompt/summary.md
-src/prompt/dashboard-design-skill.md
-src/prompt/conventions.md
+
+# AI / Prompt / Skill files
+src/prompt/
+.agents/
+.claude/
+.cursor/
+.devin/
+SKILL.md
+skills-lock.json
+CODING_MINDSET.md
+transitions/
