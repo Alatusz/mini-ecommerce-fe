@@ -77,3 +77,21 @@ export const deleteCoupon = async (id: string) => {
   const response = await apiClient.delete(`/coupons/${id}`)
   return response.data
 }
+
+export interface ValidateCouponResponse {
+  success: boolean
+  data: {
+    couponCode: string
+    discountType: CouponDiscountType
+    discountValue: number
+    discountAmount: number
+  }
+}
+
+export const validateCoupon = async (payload: {
+  code: string
+  subtotal: number
+}): Promise<ValidateCouponResponse> => {
+  const response = await apiClient.post("/coupons/validate", payload)
+  return response.data
+}

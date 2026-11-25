@@ -105,7 +105,7 @@ function Navbar() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="cursor-pointer hover:bg-accent"
+                className="cursor-pointer"
                 aria-label="รายการโปรด"
                 title="รายการโปรด"
               >
@@ -161,7 +161,7 @@ function Navbar() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative cursor-pointer hover:bg-accent"
+                className="relative cursor-pointer"
                 aria-label="ตะกร้าสินค้า"
                 title="ตะกร้าสินค้า"
               >
@@ -312,15 +312,17 @@ function Navbar() {
                   </span>
                 </div>
               )}
-              <Link to="/cart" className="w-full">
-                <DrawerClose
-                  render={
-                    <Button className="w-full cursor-pointer">
-                      ดูตะกร้าสินค้า
-                    </Button>
-                  }
-                />
-              </Link>
+              {cartItems.length > 0 && (
+                <Link to="/checkout" className="w-full">
+                  <DrawerClose
+                    render={
+                      <Button className="w-full cursor-pointer">
+                        ดำเนินการสั่งซื้อ
+                      </Button>
+                    }
+                  />
+                </Link>
+              )}
               <DrawerClose
                 render={
                   <Button variant="outline" className="w-full cursor-pointer">

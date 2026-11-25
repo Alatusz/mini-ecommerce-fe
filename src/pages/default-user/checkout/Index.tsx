@@ -1,32 +1,19 @@
 import { Link } from "react-router-dom"
-import { Controller } from "react-hook-form"
-import {
-  MapPin,
-  Truck,
-  CreditCard,
-  Plus,
-  Pencil,
-  X,
-  CheckCircle2,
-  Check,
-  ShieldCheck,
-} from "lucide-react"
-
-import { useCheckout } from "./useHooks"
+import { ChevronRight, Loader2, ShoppingBag } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog"
+import { useCheckout } from "./useHooks"
+import { ShippingStep } from "./common/ShippingStep"
+import { PaymentStep } from "./common/PaymentStep"
+import { OrderSummary } from "./common/OrderSummary"
+import { AddressDialog } from "./common/AddressDialog"
+import { OrderSuccessDialog } from "./common/OrderSuccessDialog"
 
 function CheckoutPage() {
   const {
     currentStep,
+    setCurrentStep,
     isLoading,
+    cartItems,
     cartItemsCount,
     addresses,
     selectedAddressId,
@@ -46,6 +33,12 @@ function CheckoutPage() {
     paymentMethod,
     setPaymentMethod,
     cardControl,
+    couponInput,
+    setCouponInput,
+    appliedCoupon,
+    isValidatingCoupon,
+    handleApplyCoupon,
+    handleRemoveCoupon,
     isOrderCompleted,
     createdOrderId,
     isProcessing,
@@ -54,755 +47,134 @@ function CheckoutPage() {
     selectedAddress,
     selectedShipping,
     subtotal,
+    discountAmount,
     shippingCost,
-    tax,
     total,
   } = useCheckout()
 
+  if (isLoading && !isOrderCompleted) {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+        <div className="flex flex-col items-center justify-center gap-3 py-24 text-muted-foreground">
+          <Loader2 className="size-6 animate-spin" />
+          <p className="text-sm font-medium">Loading checkout...</p>
+        </div>
+      </div>
+    )
+  }
+
   if (!isLoading && cartItemsCount === 0 && !isOrderCompleted) {
     return (
-      <div className="mx-auto max-w-md py-20 text-center space-y-4">
-        <h1 className="text-xl font-bold">Your cart is empty</h1>
-        <p className="text-xs text-muted-foreground">
-          Add some products to your cart before proceeding to checkout.
+      <div className="mx-auto max-w-md px-4 py-24 text-center">
+        <div className="mx-auto mb-5 flex size-14 items-center justify-center rounded-2xl border border-border/60 bg-muted/40 text-muted-foreground">
+          <ShoppingBag className="size-6" />
+        </div>
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">
+          Your cart is empty
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+          Add products to your cart before proceeding to checkout.
         </p>
-        <Link to="/products">
-          <Button className="cursor-pointer">Browse Products</Button>
+        <Link to="/products" className="mt-6 inline-block">
+          <Button className="h-11 px-6 rounded-xl cursor-pointer font-medium">
+            Browse Products
+          </Button>
         </Link>
       </div>
     )
   }
 
   return (
-    <div className="mx-auto max-w-5xl py-8 sm:py-12 px-4 sm:px-6">
-      {/* ── Stepper Navigation ── */}
-      <div className="mb-12 sm:mb-16">
-        <div className="flex items-center justify-between max-w-3xl mx-auto">
-          {/* Step 1: Address */}
-          <div className="flex items-center gap-3">
-            <div
-              className={`size-10 rounded-full flex items-center justify-center transition-colors ${
-                currentStep >= 1
-                  ? "bg-black text-white dark:bg-white dark:text-black"
-                  : "bg-muted text-muted-foreground"
-              }`}
-            >
-              {currentStep > 1 ? (
-                <Check className="size-5" />
-              ) : (
-                <MapPin className="size-5" />
-              )}
-            </div>
-            <div className="flex flex-col text-left">
-              <span className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">
-                Step 1
-              </span>
-              <span
-                className={`text-sm sm:text-base font-bold ${
-                  currentStep >= 1 ? "text-foreground" : "text-muted-foreground"
-                }`}
-              >
-                Address
-              </span>
-            </div>
-          </div>
-
-          {/* Dotted Line connector */}
-          <div className="flex-1 border-t border-dashed border-zinc-300 dark:border-zinc-700 mx-4 sm:mx-8" />
-
-          {/* Step 2: Shipping */}
-          <div className="flex items-center gap-3">
-            <div
-              className={`size-10 rounded-full flex items-center justify-center transition-colors ${
-                currentStep >= 2
-                  ? "bg-black text-white dark:bg-white dark:text-black"
-                  : "bg-muted text-muted-foreground"
-              }`}
-            >
-              {currentStep > 2 ? (
-                <Check className="size-5" />
-              ) : (
-                <Truck className="size-5" />
-              )}
-            </div>
-            <div className="flex flex-col text-left">
-              <span className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">
-                Step 2
-              </span>
-              <span
-                className={`text-sm sm:text-base font-bold ${
-                  currentStep >= 2 ? "text-foreground" : "text-muted-foreground"
-                }`}
-              >
-                Shipping
-              </span>
-            </div>
-          </div>
-
-          {/* Dotted Line connector */}
-          <div className="flex-1 border-t border-dashed border-zinc-300 dark:border-zinc-700 mx-4 sm:mx-8" />
-
-          {/* Step 3: Payment */}
-          <div className="flex items-center gap-3">
-            <div
-              className={`size-10 rounded-full flex items-center justify-center transition-colors ${
-                currentStep === 3
-                  ? "bg-black text-white dark:bg-white dark:text-black"
-                  : "bg-muted text-muted-foreground"
-              }`}
-            >
-              <CreditCard className="size-5" />
-            </div>
-            <div className="flex flex-col text-left">
-              <span className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">
-                Step 3
-              </span>
-              <span
-                className={`text-sm sm:text-base font-bold ${
-                  currentStep === 3 ? "text-foreground" : "text-muted-foreground"
-                }`}
-              >
-                Payment
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Step 1 Content: Select Address ── */}
-      {currentStep === 1 && (
-        <div className="flex flex-col">
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-6">
-            Select Address
-          </h1>
-
-          <div className="flex flex-col gap-4">
-            {addresses.map((addr) => {
-              const isSelected = selectedAddressId === addr.id
-
-              return (
-                <div
-                  key={addr.id}
-                  onClick={() => setSelectedAddressId(addr.id)}
-                  className={`rounded-2xl p-5 sm:p-6 cursor-pointer transition-all flex items-start justify-between gap-4 border ${
-                    isSelected
-                      ? "bg-zinc-100/80 dark:bg-zinc-800/60 border-zinc-300 dark:border-zinc-600 shadow-xs"
-                      : "bg-zinc-50 dark:bg-zinc-900/40 border-border/40 hover:bg-zinc-100/50 dark:hover:bg-zinc-800/40"
-                  }`}
-                >
-                  {/* Left: Radio + Address Details */}
-                  <div className="flex items-start gap-4 min-w-0">
-                    {/* Radio Button */}
-                    <div className="pt-0.5 shrink-0">
-                      <div
-                        className={`size-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                          isSelected
-                            ? "border-black dark:border-white"
-                            : "border-zinc-400"
-                        }`}
-                      >
-                        {isSelected && (
-                          <span className="size-2.5 rounded-full bg-black dark:bg-white" />
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Details */}
-                    <div className="flex flex-col min-w-0">
-                      <div className="flex items-center gap-2.5 flex-wrap">
-                        <span className="font-semibold text-foreground text-sm sm:text-base">
-                          {addr.title}
-                        </span>
-                        <span className="bg-black text-white text-[10px] font-bold px-2 py-0.5 rounded-xs tracking-wider uppercase">
-                          {addr.tag}
-                        </span>
-                      </div>
-
-                      <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 leading-relaxed">
-                        {addr.address}
-                      </p>
-
-                      <p className="text-xs sm:text-sm text-foreground font-medium mt-1">
-                        {addr.phone}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Right: Actions */}
-                  <div
-                    className="flex items-center gap-3 shrink-0 pt-0.5"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => handleOpenEditAddress(addr)}
-                      className="text-muted-foreground hover:text-foreground p-1 transition-colors cursor-pointer"
-                      title="Edit address"
-                    >
-                      <Pencil className="size-4" />
-                    </button>
-                    {addresses.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteAddress(addr.id)}
-                        className="text-muted-foreground hover:text-destructive p-1 transition-colors cursor-pointer"
-                        title="Delete address"
-                      >
-                        <X className="size-4.5" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-
-          {/* Add New Address Separator */}
-          <div className="relative my-10 flex items-center justify-center">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-dashed border-zinc-300 dark:border-zinc-700" />
-            </div>
+    <div className="w-full">
+      <div className="grid grid-cols-1 items-stretch gap-8 lg:grid-cols-12 lg:gap-10">
+        {/* Left Column: Shipping + Payment */}
+        <div className="lg:col-span-7 flex flex-col lg:min-h-[680px] rounded-2xl border border-border/60 bg-card p-6 sm:p-8 shadow-2xs">
+          <nav
+            aria-label="Checkout steps"
+            className="mb-4 flex items-center gap-1.5 text-xs font-medium"
+          >
             <button
               type="button"
-              onClick={handleOpenAddAddress}
-              className="relative z-10 flex flex-col items-center gap-1.5 bg-background px-4 group cursor-pointer"
+              onClick={() => setCurrentStep(1)}
+              className={`cursor-pointer transition-colors ${
+                currentStep === 1
+                  ? "text-sky-600 dark:text-sky-400 font-semibold"
+                  : "text-foreground hover:text-sky-600"
+              }`}
             >
-              <div className="size-7 rounded-full bg-black text-white dark:bg-white dark:text-black flex items-center justify-center transition-transform group-hover:scale-105">
-                <Plus className="size-4" />
-              </div>
-              <span className="text-xs font-semibold text-foreground">
-                Add New Address
-              </span>
+              Shipping
             </button>
-          </div>
+            <ChevronRight className="size-3.5 text-muted-foreground" />
+            <button
+              type="button"
+              disabled={currentStep === 1}
+              onClick={() => {
+                if (currentStep === 2) setCurrentStep(2)
+              }}
+              className={`transition-colors ${
+                currentStep === 2
+                  ? "text-sky-600 dark:text-sky-400 font-semibold cursor-default"
+                  : "text-muted-foreground cursor-default"
+              }`}
+            >
+              Payment
+            </button>
+          </nav>
+
+          {currentStep === 1 ? (
+            <ShippingStep
+              addresses={addresses}
+              selectedAddressId={selectedAddressId}
+              onSelectAddress={setSelectedAddressId}
+              onOpenAddAddress={handleOpenAddAddress}
+              onOpenEditAddress={handleOpenEditAddress}
+              onDeleteAddress={handleDeleteAddress}
+              shippingOptions={shippingOptions}
+              selectedShippingId={selectedShippingId}
+              onSelectShipping={setSelectedShippingId}
+            />
+          ) : (
+            <PaymentStep
+              selectedAddress={selectedAddress}
+              selectedShipping={selectedShipping}
+              paymentMethod={paymentMethod}
+              onSelectPaymentMethod={setPaymentMethod}
+              cardControl={cardControl}
+              onEditShippingStep={() => setCurrentStep(1)}
+            />
+          )}
         </div>
-      )}
 
-      {/* ── Step 2 Content: Shipping Method ── */}
-      {currentStep === 2 && (
-        <div className="flex flex-col">
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-6">
-            Shipment Method
-          </h1>
-
-          <div className="flex flex-col gap-4">
-            {shippingOptions.map((opt) => {
-              const isSelected = selectedShippingId === opt.id
-
-              return (
-                <div
-                  key={opt.id}
-                  onClick={() => setSelectedShippingId(opt.id)}
-                  className={`rounded-2xl p-5 sm:p-6 cursor-pointer transition-all flex items-center justify-between gap-4 border ${
-                    isSelected
-                      ? "bg-zinc-100/80 dark:bg-zinc-800/60 border-zinc-300 dark:border-zinc-600 shadow-xs"
-                      : "bg-zinc-50 dark:bg-zinc-900/40 border-border/40 hover:bg-zinc-100/50 dark:hover:bg-zinc-800/40"
-                  }`}
-                >
-                  <div className="flex items-center gap-4 min-w-0">
-                    {/* Radio Button */}
-                    <div className="shrink-0">
-                      <div
-                        className={`size-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                          isSelected
-                            ? "border-black dark:border-white"
-                            : "border-zinc-400"
-                        }`}
-                      >
-                        {isSelected && (
-                          <span className="size-2.5 rounded-full bg-black dark:bg-white" />
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col min-w-0">
-                      <div className="flex items-center gap-2.5 flex-wrap">
-                        <span className="font-semibold text-foreground text-sm sm:text-base">
-                          {opt.title}
-                        </span>
-                        <span className="bg-black text-white text-[10px] font-bold px-2 py-0.5 rounded-xs tracking-wider uppercase">
-                          {opt.badge}
-                        </span>
-                      </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                        {opt.description}
-                      </p>
-                      <span className="text-xs text-muted-foreground font-medium mt-1">
-                        {opt.estimatedDate}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="text-base sm:text-lg font-bold text-foreground shrink-0">
-                    {opt.price === 0 ? "Free" : `฿${opt.price.toLocaleString()}`}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-
-          {/* Delivery Note */}
-          <div className="mt-8 flex items-center gap-3 p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/40 border border-border/40 text-xs sm:text-sm text-muted-foreground">
-            <ShieldCheck className="size-5 shrink-0 text-foreground" />
-            <span>
-              All deliveries are insured and handled by trusted logistics partners with live order tracking.
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* ── Step 3 Content: Payment ── */}
-      {currentStep === 3 && (
-        <div className="flex flex-col">
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-6">
-            Payment Method
-          </h1>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Left: Payment Form (7 cols) */}
-            <div className="lg:col-span-7 flex flex-col gap-5">
-              {/* Payment Type Selection */}
-              <div className="grid grid-cols-3 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod("credit_card")}
-                  className={`p-3 sm:p-4 rounded-xl border text-center transition-all cursor-pointer ${
-                    paymentMethod === "credit_card"
-                      ? "border-black dark:border-white bg-zinc-100/70 dark:bg-zinc-800/60 font-semibold"
-                      : "border-border/60 hover:bg-muted/40 text-muted-foreground"
-                  }`}
-                >
-                  <CreditCard className="size-5 mx-auto mb-1.5" />
-                  <span className="text-xs sm:text-sm">Credit Card</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod("promptpay")}
-                  className={`p-3 sm:p-4 rounded-xl border text-center transition-all cursor-pointer ${
-                    paymentMethod === "promptpay"
-                      ? "border-black dark:border-white bg-zinc-100/70 dark:bg-zinc-800/60 font-semibold"
-                      : "border-border/60 hover:bg-muted/40 text-muted-foreground"
-                  }`}
-                >
-                  <span className="font-bold text-sm block mb-1">PromptPay</span>
-                  <span className="text-xs text-muted-foreground">QR Payment</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod("cod")}
-                  className={`p-3 sm:p-4 rounded-xl border text-center transition-all cursor-pointer ${
-                    paymentMethod === "cod"
-                      ? "border-black dark:border-white bg-zinc-100/70 dark:bg-zinc-800/60 font-semibold"
-                      : "border-border/60 hover:bg-muted/40 text-muted-foreground"
-                  }`}
-                >
-                  <Truck className="size-5 mx-auto mb-1.5" />
-                  <span className="text-xs sm:text-sm">Cash On Delivery</span>
-                </button>
-              </div>
-
-              {/* Credit Card Inputs */}
-              {paymentMethod === "credit_card" && (
-                <div className="rounded-2xl border border-border/50 bg-card p-5 sm:p-6 flex flex-col gap-4">
-                  <Controller
-                    name="cardNumber"
-                    control={cardControl}
-                    render={({ field, fieldState }) => (
-                      <div>
-                        <label className="block text-xs font-medium text-muted-foreground mb-1">
-                          Card Number
-                        </label>
-                        <Input
-                          {...field}
-                          placeholder="•••• •••• •••• ••••"
-                          aria-invalid={fieldState.invalid}
-                          className="h-11 bg-background"
-                        />
-                        {fieldState.error && (
-                          <p className="mt-1 text-[11px] text-destructive">
-                            {fieldState.error.message}
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  />
-
-                  <Controller
-                    name="cardHolder"
-                    control={cardControl}
-                    render={({ field, fieldState }) => (
-                      <div>
-                        <label className="block text-xs font-medium text-muted-foreground mb-1">
-                          Cardholder Name
-                        </label>
-                        <Input
-                          {...field}
-                          placeholder="Name on card"
-                          aria-invalid={fieldState.invalid}
-                          className="h-11 bg-background"
-                        />
-                        {fieldState.error && (
-                          <p className="mt-1 text-[11px] text-destructive">
-                            {fieldState.error.message}
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <Controller
-                      name="expiryDate"
-                      control={cardControl}
-                      render={({ field, fieldState }) => (
-                        <div>
-                          <label className="block text-xs font-medium text-muted-foreground mb-1">
-                            Expiry Date
-                          </label>
-                          <Input
-                            {...field}
-                            placeholder="MM/YY"
-                            aria-invalid={fieldState.invalid}
-                            className="h-11 bg-background"
-                          />
-                          {fieldState.error && (
-                            <p className="mt-1 text-[11px] text-destructive">
-                              {fieldState.error.message}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    />
-                    <Controller
-                      name="cvv"
-                      control={cardControl}
-                      render={({ field, fieldState }) => (
-                        <div>
-                          <label className="block text-xs font-medium text-muted-foreground mb-1">
-                            CVV
-                          </label>
-                          <Input
-                            {...field}
-                            placeholder="•••"
-                            aria-invalid={fieldState.invalid}
-                            className="h-11 bg-background"
-                          />
-                          {fieldState.error && (
-                            <p className="mt-1 text-[11px] text-destructive">
-                              {fieldState.error.message}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    />
-                  </div>
-
-                  <Controller
-                    name="sameAsBilling"
-                    control={cardControl}
-                    render={({ field }) => (
-                      <label className="flex items-center gap-2 pt-2 cursor-pointer select-none">
-                        <input
-                          type="checkbox"
-                          checked={field.value}
-                          onChange={(e) => field.onChange(e.target.checked)}
-                          className="size-4 rounded accent-black cursor-pointer"
-                        />
-                        <span className="text-xs text-muted-foreground">
-                          Same as billing address
-                        </span>
-                      </label>
-                    )}
-                  />
-                </div>
-              )}
-
-              {paymentMethod === "promptpay" && (
-                <div className="rounded-2xl border border-border/50 bg-card p-6 text-center">
-                  <p className="text-sm font-semibold mb-2">PromptPay QR</p>
-                  <p className="text-xs text-muted-foreground">
-                    Scan PromptPay QR code after placing your order to complete payment.
-                  </p>
-                </div>
-              )}
-
-              {paymentMethod === "cod" && (
-                <div className="rounded-2xl border border-border/50 bg-card p-6 text-center">
-                  <p className="text-sm font-semibold mb-2">Cash on Delivery</p>
-                  <p className="text-xs text-muted-foreground">
-                    Please prepare the exact cash amount for the courier upon parcel delivery.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Right: Order Summary Preview (5 cols) */}
-            <div className="lg:col-span-5">
-              <div className="rounded-2xl border border-border/50 bg-card p-6 flex flex-col gap-5">
-                <h2 className="text-base font-bold text-foreground">
-                  Order Summary
-                </h2>
-
-                {/* Selected Address preview */}
-                <div className="border-b border-border/40 pb-4 text-xs sm:text-sm">
-                  <span className="text-xs text-muted-foreground block mb-1">
-                    Delivering to:
-                  </span>
-                  <div className="font-semibold text-foreground">
-                    {selectedAddress?.title}{" "}
-                    <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded uppercase">
-                      {selectedAddress?.tag}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground truncate mt-0.5">
-                    {selectedAddress?.address}
-                  </p>
-                </div>
-
-                {/* Selected Shipping preview */}
-                <div className="border-b border-border/40 pb-4 text-xs sm:text-sm">
-                  <span className="text-xs text-muted-foreground block mb-1">
-                    Shipping Method:
-                  </span>
-                  <div className="flex justify-between font-semibold text-foreground">
-                    <span>{selectedShipping?.title}</span>
-                    <span>
-                      {selectedShipping?.price === 0
-                        ? "Free"
-                        : `฿${selectedShipping?.price.toLocaleString()}`}
-                    </span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">
-                    {selectedShipping?.estimatedDate}
-                  </span>
-                </div>
-
-                {/* Cost Breakdown */}
-                <div className="flex flex-col gap-2.5 text-xs sm:text-sm">
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Subtotal</span>
-                    <span className="font-medium text-foreground">
-                      ฿{subtotal.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Shipping</span>
-                    <span className="font-medium text-foreground">
-                      {shippingCost === 0
-                        ? "Free"
-                        : `฿${shippingCost.toLocaleString()}`}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Estimated Tax</span>
-                    <span className="font-medium text-foreground">
-                      ฿{tax.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between pt-3 border-t border-border/40 text-base font-bold text-foreground">
-                    <span>Total</span>
-                    <span>฿{total.toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Bottom Navigation Controls (Back & Next) ── */}
-      <div className="mt-12 pt-6 border-t border-border/40 flex items-center justify-end gap-4">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={handleBack}
-          className="h-12 px-8 sm:px-12 rounded-lg text-sm font-semibold cursor-pointer border-border/80"
-        >
-          Back
-        </Button>
-
-        <Button
-          type="button"
-          onClick={handleNext}
-          disabled={isProcessing}
-          className="h-12 px-8 sm:px-12 rounded-lg bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 text-sm font-semibold cursor-pointer"
-        >
-          {isProcessing
-            ? "Processing..."
-            : currentStep === 3
-            ? "Pay Now"
-            : "Next"}
-        </Button>
+        {/* Right Column: Your Cart Summary */}
+        <OrderSummary
+          currentStep={currentStep}
+          cartItems={cartItems}
+          couponInput={couponInput}
+          onCouponInputChange={setCouponInput}
+          appliedCoupon={appliedCoupon}
+          isValidatingCoupon={isValidatingCoupon}
+          onApplyCoupon={handleApplyCoupon}
+          onRemoveCoupon={handleRemoveCoupon}
+          subtotal={subtotal}
+          discountAmount={discountAmount}
+          shippingCost={shippingCost}
+          total={total}
+          isProcessing={isProcessing}
+          onNext={handleNext}
+          onBack={handleBack}
+        />
       </div>
 
-      {/* ── Dialog: Add / Edit Address ── */}
-      <Dialog open={isAddAddressOpen} onOpenChange={setIsAddAddressOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-base font-bold">
-              {editingAddressId ? "Edit Address" : "Add New Address"}
-            </DialogTitle>
-          </DialogHeader>
+      <AddressDialog
+        open={isAddAddressOpen}
+        onOpenChange={setIsAddAddressOpen}
+        isEditing={Boolean(editingAddressId)}
+        control={addressControl}
+        isSaving={isSavingAddress}
+        onSubmit={handleSaveAddress}
+      />
 
-          <form onSubmit={handleSaveAddress} className="flex flex-col gap-3.5 py-2">
-            <Controller
-              name="title"
-              control={addressControl}
-              render={({ field, fieldState }) => (
-                <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1">
-                    Address Title / Nickname
-                  </label>
-                  <Input
-                    {...field}
-                    placeholder="e.g. Home, Office, Apartment"
-                    aria-invalid={fieldState.invalid}
-                    className="h-10 text-xs sm:text-sm"
-                  />
-                  {fieldState.error && (
-                    <p className="mt-1 text-[11px] text-destructive">
-                      {fieldState.error.message}
-                    </p>
-                  )}
-                </div>
-              )}
-            />
-
-            <Controller
-              name="tag"
-              control={addressControl}
-              render={({ field }) => (
-                <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1">
-                    Type
-                  </label>
-                  <div className="flex gap-2">
-                    {(["HOME", "OFFICE", "OTHER"] as const).map((tag) => (
-                      <button
-                        key={tag}
-                        type="button"
-                        onClick={() => field.onChange(tag)}
-                        className={`px-3 py-1.5 rounded-md text-xs font-semibold cursor-pointer transition-colors ${
-                          field.value === tag
-                            ? "bg-black text-white dark:bg-white dark:text-black"
-                            : "bg-muted text-muted-foreground hover:text-foreground"
-                        }`}
-                      >
-                        {tag}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            />
-
-            <Controller
-              name="address"
-              control={addressControl}
-              render={({ field, fieldState }) => (
-                <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1">
-                    Street Address
-                  </label>
-                  <Input
-                    {...field}
-                    placeholder="Street address, city, state, zip"
-                    aria-invalid={fieldState.invalid}
-                    className="h-10 text-xs sm:text-sm"
-                  />
-                  {fieldState.error && (
-                    <p className="mt-1 text-[11px] text-destructive">
-                      {fieldState.error.message}
-                    </p>
-                  )}
-                </div>
-              )}
-            />
-
-            <Controller
-              name="phone"
-              control={addressControl}
-              render={({ field, fieldState }) => (
-                <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1">
-                    Phone Number
-                  </label>
-                  <Input
-                    {...field}
-                    placeholder="(xxx) xxx-xxxx"
-                    aria-invalid={fieldState.invalid}
-                    className="h-10 text-xs sm:text-sm"
-                  />
-                  {fieldState.error && (
-                    <p className="mt-1 text-[11px] text-destructive">
-                      {fieldState.error.message}
-                    </p>
-                  )}
-                </div>
-              )}
-            />
-
-            <DialogFooter className="gap-2 sm:gap-0 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsAddAddressOpen(false)}
-                className="cursor-pointer"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSavingAddress}
-                className="cursor-pointer bg-black text-white dark:bg-white dark:text-black"
-              >
-                {isSavingAddress ? "Saving..." : "Save Address"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* ── Dialog: Order Completed Confirmation ── */}
-      <Dialog open={isOrderCompleted}>
-        <DialogContent className="sm:max-w-md text-center">
-          <div className="flex flex-col items-center justify-center pt-4 pb-2">
-            <div className="size-16 rounded-full bg-green-100 dark:bg-green-950/60 text-green-600 flex items-center justify-center mb-4">
-              <CheckCircle2 className="size-9" />
-            </div>
-
-            <DialogTitle className="text-xl font-bold text-foreground">
-              Order Placed Successfully!
-            </DialogTitle>
-
-            <p className="text-xs sm:text-sm text-muted-foreground mt-2 max-w-xs leading-relaxed">
-              Thank you for your order. We have received your order and are preparing your package for shipment.
-            </p>
-
-            <div className="w-full mt-5 p-3 rounded-lg bg-muted/60 text-xs font-mono text-muted-foreground flex justify-between">
-              <span>Order Number:</span>
-              <span className="font-bold text-foreground">
-                #{createdOrderId || "ORD"}
-              </span>
-            </div>
-          </div>
-
-          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:justify-center mt-3">
-            <Link to="/my-orders" className="w-full sm:w-1/2">
-              <Button className="w-full h-10 bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black cursor-pointer text-xs font-semibold">
-                ดูคำสั่งซื้อของฉัน
-              </Button>
-            </Link>
-            <Link to="/" className="w-full sm:w-1/2">
-              <Button variant="outline" className="w-full h-10 cursor-pointer text-xs font-semibold">
-                กลับสู่หน้าแรก
-              </Button>
-            </Link>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <OrderSuccessDialog open={isOrderCompleted} orderId={createdOrderId} />
     </div>
   )
 }
