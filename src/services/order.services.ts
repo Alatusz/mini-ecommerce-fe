@@ -23,6 +23,7 @@ export interface OrderLineItem {
   id: string
   orderId: string
   rating?: number
+  review? : string
   productId: string
   quantity: number
   price: number
@@ -118,9 +119,14 @@ export const updateOrderStatus = async (
   return response.data
 }
 
-export const rateOrderItem = async (itemId: string, rating: number) => {
+export const rateOrderItem = async (
+  itemId: string,
+  rating: number,
+  review?: string
+) => {
   const response = await apiClient.patch(`/orders/items/${itemId}/rating`, {
     rating,
+    review,
   })
   return response.data
 }

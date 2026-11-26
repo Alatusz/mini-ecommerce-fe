@@ -22,6 +22,14 @@ export interface ProductCategoryItem {
   status?: "active" | "archived" | "draft"
 }
 
+export interface ProductReviewItem {
+  id: string
+  rating: number
+  review?: string | null
+  ratedAt?: string | null
+  reviewerName: string
+}
+
 // ข้อมูลสินค้าตัวเต็มที่ส่งมาจาก Database (Response Entity)
 export interface ProductItem {
   id: string
@@ -35,6 +43,10 @@ export interface ProductItem {
   status: ProductPublishStatus
   images: string[]
   categories: ProductCategoryItem[]
+  ratingAvg?: number
+  ratingCount?: number
+  ratingBreakdown?: Record<number, number>
+  reviews?: ProductReviewItem[]
   ordersCount?: number
   createdAt: string
   updatedAt: string

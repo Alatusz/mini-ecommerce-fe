@@ -29,11 +29,17 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
 
 const customerSteps = [
   { step: 1, key: "Pending", title: "สั่งซื้อสำเร็จ", sub: "รอตรวจสอบ" },
   { step: 2, key: "Processing", title: "กำลังเตรียมของ", sub: "กำลังแพ็คเกจ" },
-  { step: 3, key: "Shipped", title: "ส่งให้บริษัทขนส่ง", sub: "อยู่ระหว่างนำจ่าย" },
+  {
+    step: 3,
+    key: "Shipped",
+    title: "ส่งให้บริษัทขนส่ง",
+    sub: "อยู่ระหว่างนำจ่าย",
+  },
   { step: 4, key: "Completed", title: "จัดส่งสำเร็จ", sub: "ได้รับสินค้าแล้ว" },
 ]
 
@@ -72,6 +78,8 @@ export default function MyOrdersPage() {
     setRatingTargetItem,
     selectedStars,
     setSelectedStars,
+    reviewText,
+    setReviewText,
     isRating,
     handleSubmitRating,
   } = useMyOrders()
@@ -82,7 +90,7 @@ export default function MyOrdersPage() {
         return (
           <Badge
             variant="outline"
-            className="border-amber-500/30 bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 text-xs font-semibold gap-1"
+            className="gap-1 border-amber-500/30 bg-amber-50 text-xs font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
           >
             <Clock className="size-3" />
             รอดำเนินการ (Pending)
@@ -92,7 +100,7 @@ export default function MyOrdersPage() {
         return (
           <Badge
             variant="outline"
-            className="border-blue-500/30 bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 text-xs font-semibold gap-1"
+            className="gap-1 border-blue-500/30 bg-blue-50 text-xs font-semibold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
           >
             <Package className="size-3" />
             กำลังเตรียมพัสดุ (Processing)
@@ -102,7 +110,7 @@ export default function MyOrdersPage() {
         return (
           <Badge
             variant="outline"
-            className="border-purple-500/30 bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 text-xs font-semibold gap-1"
+            className="gap-1 border-purple-500/30 bg-purple-50 text-xs font-semibold text-purple-700 dark:bg-purple-950/40 dark:text-purple-300"
           >
             <Truck className="size-3" />
             อยู่ระหว่างจัดส่ง (Shipped)
@@ -112,7 +120,7 @@ export default function MyOrdersPage() {
         return (
           <Badge
             variant="outline"
-            className="border-emerald-500/30 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 text-xs font-semibold gap-1"
+            className="gap-1 border-emerald-500/30 bg-emerald-50 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
           >
             <CheckCircle2 className="size-3" />
             จัดส่งสำเร็จ (Completed)
@@ -122,7 +130,7 @@ export default function MyOrdersPage() {
         return (
           <Badge
             variant="outline"
-            className="border-red-500/30 bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300 text-xs font-semibold gap-1"
+            className="gap-1 border-red-500/30 bg-red-50 text-xs font-semibold text-red-700 dark:bg-red-950/40 dark:text-red-300"
           >
             <XCircle className="size-3" />
             ยกเลิกแล้ว (Cancelled)
@@ -132,14 +140,15 @@ export default function MyOrdersPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl py-4 sm:py-8 space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6 py-4 sm:py-8">
       {/* ── Page Header ── */}
       <div className="border-b border-border/60 pb-5">
         <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
           คำสั่งซื้อของฉัน (My Orders)
         </h1>
-        <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-          ติดตามสถานะพัสดุ ตรวจสอบประวัติการสั่งซื้อ และจัดการรายการคำสั่งซื้อของคุณ
+        <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
+          ติดตามสถานะพัสดุ ตรวจสอบประวัติการสั่งซื้อ
+          และจัดการรายการคำสั่งซื้อของคุณ
         </p>
       </div>
 
@@ -150,7 +159,11 @@ export default function MyOrdersPage() {
           {[
             { key: "All", label: "ทั้งหมด", count: stats.all },
             { key: "Pending", label: "รอตรวจสอบ", count: stats.pending },
-            { key: "Processing", label: "กำลังเตรียมของ", count: stats.processing },
+            {
+              key: "Processing",
+              label: "กำลังเตรียมของ",
+              count: stats.processing,
+            },
             { key: "Shipped", label: "ระหว่างจัดส่ง", count: stats.shipped },
             { key: "Completed", label: "สำเร็จแล้ว", count: stats.completed },
             { key: "Cancelled", label: "ยกเลิกแล้ว", count: stats.cancelled },
@@ -160,15 +173,15 @@ export default function MyOrdersPage() {
               variant={selectedStatus === tab.key ? "default" : "outline"}
               size="sm"
               onClick={() => setSelectedStatus(tab.key)}
-              className={`text-xs h-8 px-3 shrink-0 cursor-pointer ${
+              className={`h-8 shrink-0 cursor-pointer px-3 text-xs ${
                 selectedStatus === tab.key ? "" : "text-muted-foreground"
               }`}
             >
               <span>{tab.label}</span>
               <span
-                className={`ml-1.5 text-[10px] px-1.5 py-0.2 rounded-full ${
+                className={`py-0.2 ml-1.5 rounded-full px-1.5 text-[10px] ${
                   selectedStatus === tab.key
-                    ? "bg-primary-foreground/20 text-primary-foreground font-semibold"
+                    ? "bg-primary-foreground/20 font-semibold text-primary-foreground"
                     : "bg-muted text-muted-foreground"
                 }`}
               >
@@ -179,13 +192,13 @@ export default function MyOrdersPage() {
         </div>
 
         {/* Search Bar */}
-        <div className="relative w-full sm:w-64 shrink-0">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+        <div className="relative w-full shrink-0 sm:w-64">
+          <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="ค้นหา #ORD หรือชื่อสินค้า..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-8 pl-8 text-xs bg-muted/20"
+            className="h-8 bg-muted/20 pl-8 text-xs"
           />
         </div>
       </div>
@@ -193,9 +206,9 @@ export default function MyOrdersPage() {
       {/* ── Orders List ── */}
       {orders.length === 0 ? (
         /* Empty State */
-        <Card className="border-border/60 shadow-2xs py-16 text-center">
-          <CardContent className="flex flex-col items-center justify-center max-w-sm mx-auto space-y-3">
-            <div className="size-14 rounded-2xl bg-muted/60 text-muted-foreground flex items-center justify-center">
+        <Card className="border-border/60 py-16 text-center shadow-2xs">
+          <CardContent className="mx-auto flex max-w-sm flex-col items-center justify-center space-y-3">
+            <div className="flex size-14 items-center justify-center rounded-2xl bg-muted/60 text-muted-foreground">
               <Package className="size-7" />
             </div>
             <h3 className="text-base font-bold text-foreground">
@@ -210,7 +223,7 @@ export default function MyOrdersPage() {
             </p>
             <div className="pt-2">
               <Link to="/products">
-                <Button size="sm" className="gap-1.5 text-xs cursor-pointer">
+                <Button size="sm" className="cursor-pointer gap-1.5 text-xs">
                   <span>เลือกชมสินค้าเลย</span>
                   <ArrowRight className="size-3.5" />
                 </Button>
@@ -228,19 +241,19 @@ export default function MyOrdersPage() {
             return (
               <Card
                 key={order.id}
-                className="border-border/60 shadow-2xs overflow-hidden transition-all hover:border-foreground/30"
+                className="overflow-hidden border-border/60 shadow-2xs transition-all hover:border-foreground/30"
               >
                 {/* 1. Order Card Header */}
-                <div className="bg-muted/30 px-5 py-3.5 border-b border-border/40 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/40 bg-muted/30 px-5 py-3.5 text-xs">
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-1.5">
-                      <span className="font-mono font-bold text-sm text-foreground">
+                      <span className="font-mono text-sm font-bold text-foreground">
                         {order.orderNumber}
                       </span>
                       <button
                         type="button"
                         onClick={() => handleCopy(order.orderNumber)}
-                        className="p-1 text-muted-foreground hover:text-foreground rounded cursor-pointer transition-colors"
+                        className="cursor-pointer rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
                         title="คัดลอกหมายเลขคำสั่งซื้อ"
                       >
                         {copiedCode === order.orderNumber ? (
@@ -251,30 +264,33 @@ export default function MyOrdersPage() {
                       </button>
                     </div>
 
-                    <span className="text-muted-foreground hidden sm:inline">•</span>
+                    <span className="hidden text-muted-foreground sm:inline">
+                      •
+                    </span>
 
-                    <span className="text-muted-foreground flex items-center gap-1">
+                    <span className="flex items-center gap-1 text-muted-foreground">
                       <Calendar className="size-3" />
                       สั่งซื้อเมื่อ {order.date}
                     </span>
                   </div>
                 </div>
 
-                <CardContent className="p-5 space-y-5">
+                <CardContent className="space-y-5 p-5">
                   {/* Cancelled State Banner */}
                   {isCancelled && (
-                    <div className="rounded-lg border border-red-500/30 bg-red-50/50 dark:bg-red-950/20 p-3.5 flex items-center gap-2 text-xs text-red-700 dark:text-red-300">
+                    <div className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-50/50 p-3.5 text-xs text-red-700 dark:bg-red-950/20 dark:text-red-300">
                       <XCircle className="size-4 shrink-0" />
                       <span>
-                        <strong>คำสั่งซื้อนี้ถูกยกเลิกแล้ว (Cancelled):</strong> รายการคำสั่งซื้อนี้ได้รับการยกเลิกเรียบร้อยแล้ว
+                        <strong>คำสั่งซื้อนี้ถูกยกเลิกแล้ว (Cancelled):</strong>{" "}
+                        รายการคำสั่งซื้อนี้ได้รับการยกเลิกเรียบร้อยแล้ว
                       </span>
                     </div>
                   )}
 
                   {/* 2. Visual Stepper Tracker (เมื่อไม่ใช่ Cancelled) */}
                   {!isCancelled && (
-                    <div className="rounded-xl border border-border/60 bg-card p-4 sm:p-5 shadow-2xs">
-                      <div className="flex items-start w-full relative">
+                    <div className="rounded-xl border border-border/60 bg-card p-4 shadow-2xs sm:p-5">
+                      <div className="relative flex w-full items-start">
                         {customerSteps.map((s, idx) => {
                           const isActive = stepNum >= s.step
                           const isLineActive = stepNum > s.step
@@ -282,12 +298,12 @@ export default function MyOrdersPage() {
                           return (
                             <div
                               key={s.step}
-                              className="flex-1 flex flex-col items-center relative group"
+                              className="group relative flex flex-1 flex-col items-center"
                             >
                               {/* Horizontal Connecting Line */}
                               {idx < customerSteps.length - 1 && (
                                 <div
-                                  className={`absolute top-4 h-[2px] transition-all duration-300 pointer-events-none z-0 ${
+                                  className={`pointer-events-none absolute top-4 z-0 h-[2px] transition-all duration-300 ${
                                     isLineActive ? "bg-primary" : "bg-border/80"
                                   }`}
                                   style={{
@@ -299,12 +315,12 @@ export default function MyOrdersPage() {
 
                               {/* Circle */}
                               <div
-                                className={`relative z-10 size-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-200 ${
+                                className={`relative z-10 flex size-8 items-center justify-center rounded-full text-xs font-bold transition-all duration-200 ${
                                   isActive
                                     ? s.step === stepNum
-                                      ? "bg-primary text-primary-foreground ring-4 ring-primary/15 scale-105"
+                                      ? "scale-105 bg-primary text-primary-foreground ring-4 ring-primary/15"
                                       : "bg-primary text-primary-foreground"
-                                    : "bg-card text-muted-foreground/70 border-2 border-border/80"
+                                    : "border-2 border-border/80 bg-card text-muted-foreground/70"
                                 }`}
                               >
                                 {isActive && s.step < stepNum ? (
@@ -315,7 +331,7 @@ export default function MyOrdersPage() {
                               </div>
 
                               {/* Title & Sub */}
-                              <div className="mt-2 text-center flex flex-col items-center">
+                              <div className="mt-2 flex flex-col items-center text-center">
                                 <span
                                   className={`text-xs transition-colors ${
                                     isActive
@@ -325,7 +341,7 @@ export default function MyOrdersPage() {
                                 >
                                   {s.title}
                                 </span>
-                                <span className="text-[10px] text-muted-foreground hidden sm:block mt-0.5">
+                                <span className="mt-0.5 hidden text-[10px] text-muted-foreground sm:block">
                                   {s.sub}
                                 </span>
                               </div>
@@ -342,12 +358,12 @@ export default function MyOrdersPage() {
                       order.items.map((item) => (
                         <div
                           key={item.id}
-                          className="py-3 first:pt-0 last:pb-0 flex items-center justify-between gap-4"
+                          className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0"
                         >
-                          <div className="flex items-center gap-3 min-w-0">
+                          <div className="flex min-w-0 items-center gap-3">
                             <Link
                               to={`/products/${item.id}`}
-                              className="size-14 rounded-xl bg-muted/40 p-1.5 border border-border/40 flex items-center justify-center shrink-0 overflow-hidden hover:border-foreground/30 transition-colors"
+                              className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/40 bg-muted/40 p-1.5 transition-colors hover:border-foreground/30"
                               title={item.name}
                             >
                               <img
@@ -359,33 +375,37 @@ export default function MyOrdersPage() {
                             <div className="min-w-0">
                               <Link
                                 to={`/products/${item.id}`}
-                                className="hover:underline transition-colors"
+                                className="transition-colors hover:underline"
                                 title={item.name}
                               >
-                                <h4 className="text-xs sm:text-sm font-semibold text-foreground truncate">
+                                <h4 className="truncate text-xs font-semibold text-foreground sm:text-sm">
                                   {item.name}
                                 </h4>
                               </Link>
                               {item.variant && (
-                                <p className="text-[11px] text-muted-foreground mt-0.5">
+                                <p className="mt-0.5 text-[11px] text-muted-foreground">
                                   {item.variant}
                                 </p>
                               )}
-                              <p className="text-[11px] text-muted-foreground mt-0.5">
-                                จำนวน: <span className="font-semibold text-foreground">{item.quantity}</span> ชิ้น
+                              <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                จำนวน:{" "}
+                                <span className="font-semibold text-foreground">
+                                  {item.quantity}
+                                </span>{" "}
+                                ชิ้น
                               </p>
                             </div>
                           </div>
 
-                          <div className="text-right shrink-0">
-                            <span className="text-xs sm:text-sm font-bold text-foreground">
+                          <div className="shrink-0 text-right">
+                            <span className="text-xs font-bold text-foreground sm:text-sm">
                               ฿{(item.price * item.quantity).toLocaleString()}
                             </span>
-                            <span className="text-[11px] text-muted-foreground block">
+                            <span className="block text-[11px] text-muted-foreground">
                               (฿{item.price.toLocaleString()} / ชิ้น)
                             </span>
-                            {order.status === "Completed" && (
-                              item.rating > 0 ? (
+                            {order.status === "Completed" &&
+                              (item.rating > 0 ? (
                                 <span className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-amber-500">
                                   <Star className="size-3.5 fill-amber-400 text-amber-400" />
                                   {item.rating}/5
@@ -399,13 +419,12 @@ export default function MyOrdersPage() {
                                     setRatingTargetItem(item)
                                     setSelectedStars(0)
                                   }}
-                                  className="mt-1.5 h-7 gap-1 text-xs cursor-pointer"
+                                  className="mt-1.5 h-7 cursor-pointer gap-1 text-xs"
                                 >
                                   <Star className="size-3" />
                                   <span>รีวิว</span>
                                 </Button>
-                              )
-                            )}
+                              ))}
                           </div>
                         </div>
                       ))
@@ -423,13 +442,17 @@ export default function MyOrdersPage() {
 
                   {/* 4. Tracking Bar (if available) */}
                   {order.trackingNumber && (
-                    <div className="rounded-lg border border-border/60 bg-muted/20 p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                    <div className="flex flex-col justify-between gap-2 rounded-lg border border-border/60 bg-muted/20 p-3 text-xs sm:flex-row sm:items-center">
                       <div className="flex items-center gap-2">
-                        <Truck className="size-4 text-primary shrink-0" />
+                        <Truck className="size-4 shrink-0 text-primary" />
                         <div>
-                          <span className="text-muted-foreground">ขนส่งโดย: </span>
-                          <strong className="text-foreground">{order.carrier}</strong>
-                          <span className="text-muted-foreground ml-2 font-mono">
+                          <span className="text-muted-foreground">
+                            ขนส่งโดย:{" "}
+                          </span>
+                          <strong className="text-foreground">
+                            {order.carrier}
+                          </strong>
+                          <span className="ml-2 font-mono text-muted-foreground">
                             ({order.trackingNumber})
                           </span>
                         </div>
@@ -438,7 +461,7 @@ export default function MyOrdersPage() {
                       <button
                         type="button"
                         onClick={() => handleCopy(order.trackingNumber!)}
-                        className="text-primary hover:underline text-xs flex items-center gap-1 cursor-pointer"
+                        className="flex cursor-pointer items-center gap-1 text-xs text-primary hover:underline"
                       >
                         <Copy className="size-3" />
                         <span>คัดลอกเลขพัสดุ</span>
@@ -447,13 +470,15 @@ export default function MyOrdersPage() {
                   )}
 
                   {/* 5. Card Footer: Total Amount & Action Buttons */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-border/40">
+                  <div className="flex flex-col justify-between gap-3 border-t border-border/40 pt-3 sm:flex-row sm:items-center">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">ยอดรวมคำสั่งซื้อ:</span>
-                      <span className="text-base sm:text-lg font-bold text-foreground">
+                      <span className="text-xs text-muted-foreground">
+                        ยอดรวมคำสั่งซื้อ:
+                      </span>
+                      <span className="text-base font-bold text-foreground sm:text-lg">
                         ฿{order.total.toLocaleString()}
                       </span>
-                      <Badge variant="secondary" className="text-[10px] ml-1">
+                      <Badge variant="secondary" className="ml-1 text-[10px]">
                         ชำระผ่าน {order.paymentMethod}
                       </Badge>
                     </div>
@@ -464,7 +489,7 @@ export default function MyOrdersPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => setCancellingOrder(order)}
-                          className="text-xs text-muted-foreground hover:text-destructive cursor-pointer h-8"
+                          className="h-8 cursor-pointer text-xs text-muted-foreground hover:text-destructive"
                         >
                           ยกเลิกคำสั่งซื้อ
                         </Button>
@@ -474,7 +499,7 @@ export default function MyOrdersPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => setSelectedOrder(order)}
-                        className="text-xs cursor-pointer h-8 gap-1"
+                        className="h-8 cursor-pointer gap-1 text-xs"
                       >
                         <span>ดูรายละเอียด & การจัดส่ง</span>
                         <ChevronRight className="size-3.5" />
@@ -483,7 +508,7 @@ export default function MyOrdersPage() {
                       <Link to="/products">
                         <Button
                           size="sm"
-                          className="text-xs cursor-pointer h-8 gap-1"
+                          className="h-8 cursor-pointer gap-1 text-xs"
                         >
                           <RotateCcw className="size-3" />
                           <span>ซื้อซ้ำ</span>
@@ -503,7 +528,7 @@ export default function MyOrdersPage() {
         open={!!selectedOrder}
         onOpenChange={(open) => !open && setSelectedOrder(null)}
       >
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center justify-between pr-6">
               <DialogTitle className="text-lg font-bold">
@@ -511,7 +536,7 @@ export default function MyOrdersPage() {
               </DialogTitle>
               {selectedOrder && getStatusBadge(selectedOrder.status)}
             </div>
-            <DialogDescription className="text-xs text-muted-foreground font-mono">
+            <DialogDescription className="font-mono text-xs text-muted-foreground">
               {selectedOrder?.orderNumber} • สั่งซื้อเมื่อ {selectedOrder?.date}
             </DialogDescription>
           </DialogHeader>
@@ -519,42 +544,56 @@ export default function MyOrdersPage() {
           {selectedOrder && (
             <div className="space-y-5 pt-2 text-xs">
               {/* Shipping & Delivery Info */}
-              <div className="rounded-xl border border-border/60 bg-muted/20 p-4 space-y-3">
-                <h4 className="font-bold text-foreground text-xs flex items-center gap-1.5">
+              <div className="space-y-3 rounded-xl border border-border/60 bg-muted/20 p-4">
+                <h4 className="flex items-center gap-1.5 text-xs font-bold text-foreground">
                   <MapPin className="size-3.5 text-primary" />
                   ข้อมูลการจัดส่งและผู้รับ
                 </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="grid grid-cols-1 gap-3 text-xs sm:grid-cols-2">
                   <div>
-                    <span className="text-muted-foreground block text-[11px]">ชื่อผู้รับ</span>
+                    <span className="block text-[11px] text-muted-foreground">
+                      ชื่อผู้รับ
+                    </span>
                     <span className="font-semibold text-foreground">
                       {selectedOrder.customer.name}
                     </span>
-                    <span className="text-muted-foreground block text-[11px] mt-0.5">
+                    <span className="mt-0.5 block text-[11px] text-muted-foreground">
                       {selectedOrder.customer.email}
                     </span>
                   </div>
 
                   <div>
-                    <span className="text-muted-foreground block text-[11px]">ที่อยู่จัดส่ง</span>
+                    <span className="block text-[11px] text-muted-foreground">
+                      ที่อยู่จัดส่ง
+                    </span>
                     <span className="text-foreground">
-                      {selectedOrder.shippingAddress || "123 Sukhumvit Road, Khlong Toei, Bangkok 10110"}
+                      {selectedOrder.shippingAddress ||
+                        "123 Sukhumvit Road, Khlong Toei, Bangkok 10110"}
                     </span>
                   </div>
                 </div>
 
                 {selectedOrder.trackingNumber && (
-                  <div className="pt-2 border-t border-border/40 flex items-center justify-between text-xs">
+                  <div className="flex items-center justify-between border-t border-border/40 pt-2 text-xs">
                     <div>
-                      <span className="text-muted-foreground">บริษัทขนส่ง: </span>
-                      <strong className="text-foreground">{selectedOrder.carrier}</strong>
+                      <span className="text-muted-foreground">
+                        บริษัทขนส่ง:{" "}
+                      </span>
+                      <strong className="text-foreground">
+                        {selectedOrder.carrier}
+                      </strong>
                     </div>
                     <div className="flex items-center gap-1.5 font-mono">
-                      <span>เลขพัสดุ: <strong>{selectedOrder.trackingNumber}</strong></span>
+                      <span>
+                        เลขพัสดุ:{" "}
+                        <strong>{selectedOrder.trackingNumber}</strong>
+                      </span>
                       <button
                         type="button"
-                        onClick={() => handleCopy(selectedOrder.trackingNumber!)}
-                        className="p-1 text-muted-foreground hover:text-foreground cursor-pointer"
+                        onClick={() =>
+                          handleCopy(selectedOrder.trackingNumber!)
+                        }
+                        className="cursor-pointer p-1 text-muted-foreground hover:text-foreground"
                         title="คัดลอกเลขพัสดุ"
                       >
                         <Copy className="size-3" />
@@ -566,18 +605,23 @@ export default function MyOrdersPage() {
 
               {/* Items Table */}
               <div className="space-y-2">
-                <h4 className="font-bold text-foreground text-xs flex items-center gap-1.5">
+                <h4 className="flex items-center gap-1.5 text-xs font-bold text-foreground">
                   <Package className="size-3.5 text-primary" />
-                  รายการสินค้าในคำสั่งซื้อ ({selectedOrder.items?.length || selectedOrder.itemsCount} รายการ)
+                  รายการสินค้าในคำสั่งซื้อ (
+                  {selectedOrder.items?.length || selectedOrder.itemsCount}{" "}
+                  รายการ)
                 </h4>
 
-                <div className="rounded-xl border border-border/60 divide-y divide-border/40 overflow-hidden">
+                <div className="divide-y divide-border/40 overflow-hidden rounded-xl border border-border/60">
                   {selectedOrder.items?.map((item) => (
-                    <div key={item.id} className="p-3 flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between gap-3 p-3"
+                    >
+                      <div className="flex min-w-0 items-center gap-3">
                         <Link
                           to={`/products/${item.id}`}
-                          className="size-11 rounded-lg bg-muted/40 p-1 border border-border/40 flex items-center justify-center shrink-0 hover:border-foreground/30 transition-colors"
+                          className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-border/40 bg-muted/40 p-1 transition-colors hover:border-foreground/30"
                           title={item.name}
                         >
                           <img
@@ -589,13 +633,17 @@ export default function MyOrdersPage() {
                         <div className="min-w-0">
                           <Link
                             to={`/products/${item.id}`}
-                            className="hover:underline transition-colors"
+                            className="transition-colors hover:underline"
                             title={item.name}
                           >
-                            <p className="font-semibold text-foreground truncate">{item.name}</p>
+                            <p className="truncate font-semibold text-foreground">
+                              {item.name}
+                            </p>
                           </Link>
                           {item.variant && (
-                            <p className="text-[11px] text-muted-foreground">{item.variant}</p>
+                            <p className="text-[11px] text-muted-foreground">
+                              {item.variant}
+                            </p>
                           )}
                           <p className="text-[11px] text-muted-foreground">
                             ${item.price.toFixed(2)} × {item.quantity}
@@ -603,7 +651,7 @@ export default function MyOrdersPage() {
                         </div>
                       </div>
 
-                      <span className="font-bold text-foreground shrink-0">
+                      <span className="shrink-0 font-bold text-foreground">
                         ${(item.price * item.quantity).toFixed(2)}
                       </span>
                     </div>
@@ -612,22 +660,30 @@ export default function MyOrdersPage() {
               </div>
 
               {/* Payment Summary */}
-              <div className="rounded-xl border border-border/60 p-4 space-y-2 bg-card">
+              <div className="space-y-2 rounded-xl border border-border/60 bg-card p-4">
                 <div className="flex justify-between text-muted-foreground">
                   <span>ราคาสินค้ารวม (Subtotal)</span>
-                  <span className="text-foreground">${selectedOrder.total.toFixed(2)}</span>
+                  <span className="text-foreground">
+                    ${selectedOrder.total.toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>ค่าบริการจัดส่ง (Shipping)</span>
-                  <span className="text-emerald-600 dark:text-emerald-400 font-medium">ฟรี (Free)</span>
+                  <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                    ฟรี (Free)
+                  </span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>วิธีชำระเงิน</span>
-                  <span className="text-foreground">{selectedOrder.paymentMethod}</span>
+                  <span className="text-foreground">
+                    {selectedOrder.paymentMethod}
+                  </span>
                 </div>
-                <div className="flex justify-between text-sm font-bold text-foreground pt-2 border-t border-border/40">
+                <div className="flex justify-between border-t border-border/40 pt-2 text-sm font-bold text-foreground">
                   <span>ยอดสุทธิ (Total)</span>
-                  <span className="text-base">${selectedOrder.total.toFixed(2)}</span>
+                  <span className="text-base">
+                    ${selectedOrder.total.toFixed(2)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -657,16 +713,17 @@ export default function MyOrdersPage() {
             <DialogTitle className="text-base font-bold">
               ยืนยันการยกเลิกคำสั่งซื้อ
             </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground pt-1.5">
+            <DialogDescription className="pt-1.5 text-xs text-muted-foreground">
               คุณต้องการยกเลิกคำสั่งซื้อ{" "}
-              <strong className="text-foreground font-mono">
+              <strong className="font-mono text-foreground">
                 {cancellingOrder?.orderNumber}
               </strong>{" "}
-              ใช่หรือไม่? เมื่อยกเลิกแล้วจะไม่สามารถกู้คืนได้ และยอดเงินจะได้รับการดำเนินการคืนตามเงื่อนไข
+              ใช่หรือไม่? เมื่อยกเลิกแล้วจะไม่สามารถกู้คืนได้
+              และยอดเงินจะได้รับการดำเนินการคืนตามเงื่อนไข
             </DialogDescription>
           </DialogHeader>
 
-          <DialogFooter className="gap-2 sm:gap-0 pt-3">
+          <DialogFooter className="gap-2 pt-3 sm:gap-0">
             <Button
               type="button"
               variant="outline"
@@ -679,8 +736,10 @@ export default function MyOrdersPage() {
             <Button
               variant="destructive"
               size="sm"
-              onClick={() => cancellingOrder && handleCancelOrder(cancellingOrder.id)}
-              className="cursor-pointer text-xs gap-1.5"
+              onClick={() =>
+                cancellingOrder && handleCancelOrder(cancellingOrder.id)
+              }
+              className="cursor-pointer gap-1.5 text-xs"
             >
               <XCircle className="size-3.5" />
               <span>ยืนยันยกเลิกคำสั่งซื้อ</span>
@@ -696,6 +755,7 @@ export default function MyOrdersPage() {
           if (!open) {
             setRatingTargetItem(null)
             setSelectedStars(0)
+            setReviewText("")
           }
         }}
       >
@@ -704,7 +764,7 @@ export default function MyOrdersPage() {
             <DialogTitle className="text-base font-bold">
               ให้คะแนนสินค้า
             </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground pt-1">
+            <DialogDescription className="pt-1 text-xs text-muted-foreground">
               เลือกจำนวนดาวเพื่อให้คะแนนความพึงพอใจสำหรับสินค้านี้
             </DialogDescription>
           </DialogHeader>
@@ -715,10 +775,10 @@ export default function MyOrdersPage() {
                 <img
                   src={ratingTargetItem.image}
                   alt={ratingTargetItem.name}
-                  className="size-12 rounded-md object-cover border"
+                  className="size-12 rounded-md border object-cover"
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs sm:text-sm font-semibold text-foreground">
+                  <p className="truncate text-xs font-semibold text-foreground sm:text-sm">
                     {ratingTargetItem.name}
                   </p>
                   <p className="text-[11px] text-muted-foreground">
@@ -736,7 +796,7 @@ export default function MyOrdersPage() {
                       type="button"
                       onClick={() => setSelectedStars(star)}
                       aria-label={`ให้ ${star} ดาว`}
-                      className="p-1 cursor-pointer"
+                      className="cursor-pointer p-1"
                     >
                       <Star
                         className={`size-7 ${
@@ -752,12 +812,25 @@ export default function MyOrdersPage() {
             </div>
           )}
 
+          <Textarea
+            value={reviewText}
+            onChange={(e) => setReviewText(e.target.value)}
+            maxLength={500}
+            rows={3}
+            placeholder="เขียนรีวิวสินค้า (ไม่บังคับ)..."
+            className="text-xs sm:text-sm"
+          />
+
           <DialogFooter className="gap-2 sm:gap-0">
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => setRatingTargetItem(null)}
+              onClick={() => {
+                setRatingTargetItem(null)
+                setSelectedStars(0)
+                setReviewText("")
+              }}
               disabled={isRating}
               className="cursor-pointer text-xs"
             >
@@ -768,7 +841,7 @@ export default function MyOrdersPage() {
               size="sm"
               disabled={selectedStars === 0 || isRating}
               onClick={handleSubmitRating}
-              className="cursor-pointer text-xs gap-1.5"
+              className="cursor-pointer gap-1.5 text-xs"
             >
               <Star className="size-3.5" />
               <span>{isRating ? "กำลังส่ง..." : "ส่งคะแนน"}</span>
