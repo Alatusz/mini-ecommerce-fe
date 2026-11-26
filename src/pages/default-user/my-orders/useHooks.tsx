@@ -4,17 +4,19 @@ import { QUERY_KEYS } from "@/lib/constants"
 import { queryClient } from "@/lib/queryClient"
 import { showToast } from "@/lib/toast"
 import { useAuth } from "@/context/AuthContext"
-import { getMyOrders, cancelOrder } from "@/services/order.services"
+import {
+  getMyOrders,
+  cancelOrder,
+  rateOrderItem,
+} from "@/services/order.services"
 
 export type OrderStatus =
-  | "Pending"
-  | "Processing"
-  | "Shipped"
-  | "Completed"
-  | "Cancelled"
+  "Pending" | "Processing" | "Shipped" | "Completed" | "Cancelled"
 
 export interface OrderLineItem {
   id: string
+  orderItemId: string
+  rating: number
   name: string
   price: number
   quantity: number
@@ -71,6 +73,9 @@ export function useMyOrders() {
   const [cancellingOrder, setCancellingOrder] = useState<OrderItem | null>(null)
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
   const [isCopiedSuccess, setIsCopiedSuccess] = useState(false)
+  const [ratingTargetItem, setRatingTargetItem] =
+    useState<OrderLineItem | null>(null)
+  const [selectedStars, setSelectedStars] = useState<number>(0)
 
   const { data: myOrdersRes, isLoading } = useQuery({
     queryKey: [QUERY_KEYS.STOREFRONT.MY_ORDERS],
@@ -83,6 +88,8 @@ export function useMyOrders() {
     return rawList.map((o) => {
       const items: OrderLineItem[] = (o.items ?? []).map((item: any) => ({
         id: item.productId || item.id,
+        orderItemId: item.id,
+        rating: Number(item.rating ?? 0),
         name: item.product?.name || item.productId,
         price: Number(item.price ?? 0),
         quantity: Number(item.quantity ?? 1),
@@ -138,6 +145,30 @@ export function useMyOrders() {
     },
   })
 
+  const rateMutation = useMutation({
+    mutationFn: ({ itemId, rating }: { itemId: string; rating: number }) =>
+      rateOrderItem(itemId, rating),
+
+    onSuccess: () => {
+      showToast.success("ให้คะแนนสินค้าสำเร็จแล้ว")
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.STOREFRONT.MY_ORDERS],
+      })
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.DASHBOARD.ORDERS_LIST],
+      })
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.STOREFRONT.PRODUCTS],
+      })
+
+      setRatingTargetItem(null)
+      setSelectedStars(0)
+    },
+    onError: (err: any) => {
+      showToast.error(err?.response?.data?.message || "ไม่สามารถส่งคะแนนได้")
+    },
+  })
+
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text)
     setCopiedCode(text)
@@ -174,6 +205,14 @@ export function useMyOrders() {
     })
   }, [orders, selectedStatus, searchQuery])
 
+  const handleSubmitRating = () => {
+    if (!ratingTargetItem || selectedStars < 1) return
+    rateMutation.mutate({
+      itemId: ratingTargetItem.orderItemId,
+      rating: selectedStars,
+    })
+  }
+
   const stats = useMemo(() => {
     return {
       all: orders.length,
@@ -203,5 +242,11 @@ export function useMyOrders() {
     handleCopy,
     handleCancelOrder,
     stats,
+    ratingTargetItem,
+    setRatingTargetItem,
+    selectedStars,
+    setSelectedStars,
+    isRating: rateMutation.isPending,
+    handleSubmitRating,
   }
 }
