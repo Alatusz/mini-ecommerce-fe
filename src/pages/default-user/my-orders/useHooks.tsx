@@ -30,10 +30,16 @@ export interface OrderItem {
   orderNumber: string
   date: string
   status: OrderStatus
+  subtotal: number
   total: number
+  shippingMethodName?: string
+  shippingCost: number
+  couponCode?: string | null
+  discountAmount: number
   itemsCount: number
   paymentMethod: string
   shippingAddress?: string
+  shippingPhone?: string
   customer: {
     name: string
     email: string
@@ -98,6 +104,11 @@ export function useMyOrders() {
         image: item.product?.images?.[0] || "/alatusz-logo.svg",
       }))
 
+      const subtotal = items.reduce(
+        (sum, i) => sum + i.price * i.quantity,
+        0
+      )
+
       return {
         id: o.id,
         orderNumber: o.id,
@@ -109,13 +120,19 @@ export function useMyOrders() {
             })
           : "—",
         status: mapOrderStatus(o.status),
-        total: Number(o.totalAmount ?? 0),
+        subtotal,
+        total: Number(o.totalAmount ?? subtotal),
+        shippingMethodName: o.shippingMethodName || undefined,
+        shippingCost: Number(o.shippingCost ?? 0),
+        couponCode: o.couponCode || null,
+        discountAmount: Number(o.discountAmount ?? 0),
         itemsCount: items.reduce((sum, i) => sum + i.quantity, 0),
         paymentMethod:
           PAYMENT_METHOD_LABELS[o.paymentMethod] || o.paymentMethod || "—",
         shippingAddress: o.shippingAddress || "",
+        shippingPhone: o.shippingPhone || "",
         customer: {
-          name: o.shippingPhone || user?.email || "Customer",
+          name: user?.email || "Customer",
           email: user?.email || "",
         },
         items,
