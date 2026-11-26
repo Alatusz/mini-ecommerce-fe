@@ -27,6 +27,29 @@ export const ORDER_STATUS_OPTIONS = [
   { id: "cancelled", label: "Cancelled", dot: "bg-red-500" },
 ] as const
 
+export interface OrderNextAction {
+  nextStatus: "paid" | "shipped" | "delivered"
+  label: string
+}
+
+export function getNextOrderAction(
+  status?: string,
+  paymentMethod?: string
+): OrderNextAction | null {
+  if (status === "pending") {
+    return paymentMethod === "cod"
+      ? { nextStatus: "shipped", label: "จัดส่งสินค้า" }
+      : { nextStatus: "paid", label: "ยืนยันชำระเงิน" }
+  }
+  if (status === "paid") {
+    return { nextStatus: "shipped", label: "จัดส่งสินค้า" }
+  }
+  if (status === "shipped") {
+    return { nextStatus: "delivered", label: "ส่งสำเร็จ" }
+  }
+  return null
+}
+
 export type OrderSearchTarget = "id" | "customer"
 
 export const ORDER_SEARCH_TARGET_OPTIONS = [

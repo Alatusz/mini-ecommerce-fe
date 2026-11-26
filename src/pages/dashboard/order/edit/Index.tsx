@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom"
-import { Controller } from "react-hook-form"
 import {
   ArrowLeft,
   Check,
@@ -11,45 +10,42 @@ import {
   CheckCircle2,
   Package,
   Truck,
-  RotateCcw,
   ArrowRight,
   MapPin,
   Phone,
 } from "lucide-react"
 
-import {
-  useOrderEdit,
-  orderSteps,
-  type PaymentStatus,
-} from "./useHooks"
-import {
-  PAYMENT_METHOD_OPTIONS,
-  PAYMENT_STATUS_OPTIONS,
-} from "../useHubs"
+import { useOrderEdit, orderSteps } from "./useHooks"
+import { PAYMENT_METHOD_OPTIONS, PAYMENT_STATUS_OPTIONS } from "../useHubs"
 import { PageContent } from "@/components/common/PageContent"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+
+const STEP_ICONS: Record<number, React.ReactNode> = {
+  1: <Clock className="size-3.5" />,
+  2: <CreditCard className="size-3.5" />,
+  3: <Truck className="size-3.5" />,
+  4: <CheckCircle2 className="size-3.5" />,
+}
 
 export default function DashboardOrderEditPage() {
   const {
     id,
     order,
-    control,
     isLoading,
     isNotFound,
-    isLockedCancelled,
+    isTerminalOrder,
+    isStatusChanged,
+    isDirty,
+    nextAction,
+    canCancel,
     status,
+    paymentStatus,
     currentStepNumber,
     isSubmitting,
-    handleStatusChange,
-    handleSetStep,
+    handleNextStep,
+    handleRequestCancel,
     handleSubmit,
     handleCancel,
   } = useOrderEdit()
@@ -92,21 +88,6 @@ export default function DashboardOrderEditPage() {
     )
   }
 
-  const getStepIcon = (step: number) => {
-    switch (step) {
-      case 1:
-        return <Clock className="size-3.5" />
-      case 2:
-        return <CreditCard className="size-3.5" />
-      case 3:
-        return <Truck className="size-3.5" />
-      case 4:
-        return <CheckCircle2 className="size-3.5" />
-      default:
-        return null
-    }
-  }
-
   const activeStepInfo = orderSteps.find((s) => s.step === currentStepNumber)
   const items = order.items ?? []
   const totalUnits = items.reduce((sum, item) => sum + item.quantity, 0)
@@ -128,6 +109,10 @@ export default function DashboardOrderEditPage() {
     order.paymentMethod ||
     "—"
 
+  const paymentStatusLabel =
+    PAYMENT_STATUS_OPTIONS.find((opt) => opt.id === paymentStatus)?.label ||
+    paymentStatus
+
   const formattedDate = order.createdAt
     ? new Date(order.createdAt).toLocaleString("en-GB", {
         day: "2-digit",
@@ -144,7 +129,7 @@ export default function DashboardOrderEditPage() {
         {/* ── Header ── */}
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h1 className="font-mono text-lg font-semibold tracking-tight tabular-nums text-foreground">
+            <h1 className="font-mono text-lg font-semibold tracking-tight text-foreground tabular-nums">
               #{order.id}
             </h1>
             <p className="text-xs text-muted-foreground">{formattedDate}</p>
@@ -194,36 +179,20 @@ export default function DashboardOrderEditPage() {
                             />
                           )}
 
-                          <button
-                            type="button"
-                            disabled={isLockedCancelled}
-                            onClick={() => handleSetStep(s.step)}
+                          <div
                             className={`relative z-10 flex size-8 items-center justify-center rounded-full text-xs font-semibold tabular-nums transition-all ${
-                              isLockedCancelled
-                                ? "cursor-not-allowed"
-                                : "cursor-pointer"
-                            } ${
                               isActive
                                 ? isCurrent
                                   ? "bg-foreground text-background ring-4 ring-foreground/15"
                                   : "bg-foreground text-background"
-                                : "border border-border bg-card text-muted-foreground hover:border-foreground/40 hover:text-foreground"
+                                : "border border-border bg-card text-muted-foreground"
                             }`}
                             title={`${s.step}. ${s.label}`}
                           >
                             {s.step}
-                          </button>
+                          </div>
 
-                          <button
-                            type="button"
-                            disabled={isLockedCancelled}
-                            onClick={() => handleSetStep(s.step)}
-                            className={`mt-2.5 flex flex-col items-center text-center focus:outline-none ${
-                              isLockedCancelled
-                                ? "cursor-not-allowed"
-                                : "cursor-pointer"
-                            }`}
-                          >
+                          <div className="mt-2.5 flex flex-col items-center text-center">
                             <span
                               className={`text-xs transition-colors ${
                                 isActive
@@ -233,7 +202,7 @@ export default function DashboardOrderEditPage() {
                             >
                               {s.label}
                             </span>
-                          </button>
+                          </div>
                         </div>
                       )
                     })}
@@ -248,24 +217,12 @@ export default function DashboardOrderEditPage() {
                     <XCircle className="size-4 shrink-0" />
                     <span>Cancelled · Voided</span>
                   </div>
-                  {!isLockedCancelled && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleSetStep(1)}
-                      className="h-7 shrink-0 cursor-pointer gap-1.5 text-xs"
-                    >
-                      <RotateCcw className="size-3" />
-                      <span>Restore</span>
-                    </Button>
-                  )}
                 </div>
               ) : (
                 <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/20 px-3.5 py-2.5 text-xs">
                   <div className="flex items-center gap-2.5">
                     <div className="flex size-6 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                      {getStepIcon(currentStepNumber)}
+                      {STEP_ICONS[currentStepNumber] ?? null}
                     </div>
                     <span className="font-medium text-foreground">
                       Step {currentStepNumber}/4 · {activeStepInfo?.label}
@@ -275,15 +232,15 @@ export default function DashboardOrderEditPage() {
                     </span>
                   </div>
 
-                  {currentStepNumber < 4 && (
+                  {nextAction && !isTerminalOrder && !isStatusChanged && (
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => handleSetStep(currentStepNumber + 1)}
+                      onClick={handleNextStep}
                       className="h-7 shrink-0 cursor-pointer gap-1.5 text-xs"
                     >
-                      <span>Step {currentStepNumber + 1}</span>
+                      <span>{nextAction.label}</span>
                       <ArrowRight className="size-3" />
                     </Button>
                   )}
@@ -363,33 +320,9 @@ export default function DashboardOrderEditPage() {
                       <CreditCard className="size-3.5 text-muted-foreground" />
                       <span>{paymentMethodLabel}</span>
                     </div>
-                    <Controller
-                      name="paymentStatus"
-                      control={control}
-                      render={({ field }) => (
-                        <Select
-                          value={field.value}
-                          onValueChange={(val) =>
-                            field.onChange(val as PaymentStatus)
-                          }
-                        >
-                          <SelectTrigger className="h-7 w-full cursor-pointer text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {PAYMENT_STATUS_OPTIONS.map((opt) => (
-                              <SelectItem
-                                key={opt.id}
-                                value={opt.id}
-                                className="cursor-pointer text-xs"
-                              >
-                                {opt.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
+                    <Badge variant="secondary" className="text-[11px] font-medium">
+                      {paymentStatusLabel}
+                    </Badge>
                   </div>
                 </div>
               </div>
@@ -448,49 +381,15 @@ export default function DashboardOrderEditPage() {
                 </div>
               </div>
 
-              {/* ── Stage Selector ── */}
-              <div className="space-y-1.5 pt-1">
-                <span className="text-xs font-medium text-foreground">
-                  Stage
-                </span>
-                <div className="grid grid-cols-2 gap-2.5 pt-0.5 sm:grid-cols-4">
-                  {orderSteps.map((s) => {
-                    const selected = status === s.key
-                    return (
-                      <button
-                        key={s.step}
-                        type="button"
-                        disabled={isLockedCancelled}
-                        onClick={() => handleSetStep(s.step)}
-                        className={`flex items-center justify-between rounded-lg border px-3 py-2 text-left text-xs transition-all ${
-                          isLockedCancelled
-                            ? "cursor-not-allowed opacity-60"
-                            : "cursor-pointer"
-                        } ${
-                          selected
-                            ? "border-primary/40 bg-primary/5 font-medium text-foreground ring-1 ring-primary/20"
-                            : "border-border/60 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-                        }`}
-                      >
-                        <span className="truncate">{s.label}</span>
-                        <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
-                          #{s.step}
-                        </span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
               {/* ── Bottom Action Footer ── */}
               <div className="flex items-center justify-between border-t border-border/40 pt-4">
                 <div>
-                  {status !== "cancelled" && !isLockedCancelled && (
+                  {canCancel && status !== "cancelled" && (
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleStatusChange("cancelled")}
+                      onClick={handleRequestCancel}
                       disabled={isSubmitting}
                       className="h-8 cursor-pointer gap-1 text-xs text-muted-foreground hover:text-destructive"
                     >
@@ -514,7 +413,7 @@ export default function DashboardOrderEditPage() {
                   <Button
                     type="submit"
                     size="sm"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isTerminalOrder || !isDirty}
                     className="h-8 cursor-pointer gap-1.5 px-3.5 text-xs"
                   >
                     {isSubmitting ? (
