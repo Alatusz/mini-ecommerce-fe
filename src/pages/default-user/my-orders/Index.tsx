@@ -9,7 +9,6 @@ import {
   Check,
   Search,
   ArrowRight,
-  MapPin,
   RotateCcw,
   Calendar,
   ChevronRight,
@@ -17,6 +16,7 @@ import {
 } from "lucide-react"
 
 import { useMyOrders, type OrderItem } from "./useHooks"
+import { OrderDetailsDialog } from "./common/OrderDetailsDialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -524,184 +524,12 @@ export default function MyOrdersPage() {
       )}
 
       {/* ── Order Details Dialog ── */}
-      <Dialog
-        open={!!selectedOrder}
-        onOpenChange={(open) => !open && setSelectedOrder(null)}
-      >
-        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
-          <DialogHeader>
-            <div className="flex items-center justify-between pr-6">
-              <DialogTitle className="text-lg font-bold">
-                รายละเอียดคำสั่งซื้อ
-              </DialogTitle>
-              {selectedOrder && getStatusBadge(selectedOrder.status)}
-            </div>
-            <DialogDescription className="font-mono text-xs text-muted-foreground">
-              {selectedOrder?.orderNumber} • สั่งซื้อเมื่อ {selectedOrder?.date}
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedOrder && (
-            <div className="space-y-5 pt-2 text-xs">
-              {/* Shipping & Delivery Info */}
-              <div className="space-y-3 rounded-xl border border-border/60 bg-muted/20 p-4">
-                <h4 className="flex items-center gap-1.5 text-xs font-bold text-foreground">
-                  <MapPin className="size-3.5 text-primary" />
-                  ข้อมูลการจัดส่งและผู้รับ
-                </h4>
-                <div className="grid grid-cols-1 gap-3 text-xs sm:grid-cols-2">
-                  <div>
-                    <span className="block text-[11px] text-muted-foreground">
-                      ชื่อผู้รับ
-                    </span>
-                    <span className="font-semibold text-foreground">
-                      {selectedOrder.customer.name}
-                    </span>
-                    <span className="mt-0.5 block text-[11px] text-muted-foreground">
-                      {selectedOrder.customer.email}
-                    </span>
-                  </div>
-
-                  <div>
-                    <span className="block text-[11px] text-muted-foreground">
-                      ที่อยู่จัดส่ง
-                    </span>
-                    <span className="text-foreground">
-                      {selectedOrder.shippingAddress ||
-                        "123 Sukhumvit Road, Khlong Toei, Bangkok 10110"}
-                    </span>
-                  </div>
-                </div>
-
-                {selectedOrder.trackingNumber && (
-                  <div className="flex items-center justify-between border-t border-border/40 pt-2 text-xs">
-                    <div>
-                      <span className="text-muted-foreground">
-                        บริษัทขนส่ง:{" "}
-                      </span>
-                      <strong className="text-foreground">
-                        {selectedOrder.carrier}
-                      </strong>
-                    </div>
-                    <div className="flex items-center gap-1.5 font-mono">
-                      <span>
-                        เลขพัสดุ:{" "}
-                        <strong>{selectedOrder.trackingNumber}</strong>
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleCopy(selectedOrder.trackingNumber!)
-                        }
-                        className="cursor-pointer p-1 text-muted-foreground hover:text-foreground"
-                        title="คัดลอกเลขพัสดุ"
-                      >
-                        <Copy className="size-3" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Items Table */}
-              <div className="space-y-2">
-                <h4 className="flex items-center gap-1.5 text-xs font-bold text-foreground">
-                  <Package className="size-3.5 text-primary" />
-                  รายการสินค้าในคำสั่งซื้อ (
-                  {selectedOrder.items?.length || selectedOrder.itemsCount}{" "}
-                  รายการ)
-                </h4>
-
-                <div className="divide-y divide-border/40 overflow-hidden rounded-xl border border-border/60">
-                  {selectedOrder.items?.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between gap-3 p-3"
-                    >
-                      <div className="flex min-w-0 items-center gap-3">
-                        <Link
-                          to={`/products/${item.id}`}
-                          className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-border/40 bg-muted/40 p-1 transition-colors hover:border-foreground/30"
-                          title={item.name}
-                        >
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            className="max-h-full max-w-full object-contain"
-                          />
-                        </Link>
-                        <div className="min-w-0">
-                          <Link
-                            to={`/products/${item.id}`}
-                            className="transition-colors hover:underline"
-                            title={item.name}
-                          >
-                            <p className="truncate font-semibold text-foreground">
-                              {item.name}
-                            </p>
-                          </Link>
-                          {item.variant && (
-                            <p className="text-[11px] text-muted-foreground">
-                              {item.variant}
-                            </p>
-                          )}
-                          <p className="text-[11px] text-muted-foreground">
-                            ${item.price.toFixed(2)} × {item.quantity}
-                          </p>
-                        </div>
-                      </div>
-
-                      <span className="shrink-0 font-bold text-foreground">
-                        ${(item.price * item.quantity).toFixed(2)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Payment Summary */}
-              <div className="space-y-2 rounded-xl border border-border/60 bg-card p-4">
-                <div className="flex justify-between text-muted-foreground">
-                  <span>ราคาสินค้ารวม (Subtotal)</span>
-                  <span className="text-foreground">
-                    ${selectedOrder.total.toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between text-muted-foreground">
-                  <span>ค่าบริการจัดส่ง (Shipping)</span>
-                  <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                    ฟรี (Free)
-                  </span>
-                </div>
-                <div className="flex justify-between text-muted-foreground">
-                  <span>วิธีชำระเงิน</span>
-                  <span className="text-foreground">
-                    {selectedOrder.paymentMethod}
-                  </span>
-                </div>
-                <div className="flex justify-between border-t border-border/40 pt-2 text-sm font-bold text-foreground">
-                  <span>ยอดสุทธิ (Total)</span>
-                  <span className="text-base">
-                    ${selectedOrder.total.toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <DialogFooter className="pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setSelectedOrder(null)}
-              className="cursor-pointer text-xs"
-            >
-              ปิดหน้าต่าง
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <OrderDetailsDialog
+        order={selectedOrder}
+        statusBadge={selectedOrder ? getStatusBadge(selectedOrder.status) : null}
+        onClose={() => setSelectedOrder(null)}
+        onCopyTracking={handleCopy}
+      />
 
       {/* ── Cancel Order Dialog ── */}
       <Dialog
