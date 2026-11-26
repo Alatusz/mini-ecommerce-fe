@@ -47,9 +47,7 @@ export function OrderSummary({
       {/* Cart Items */}
       <div className="space-y-3 max-h-52 overflow-y-auto pr-1">
         {cartItems.map((item) => {
-          const unitPrice = Number(
-            item.product?.sellPrice ?? item.product?.originalPrice ?? 0
-          )
+          const unitPrice = Number(item.product?.sellPrice ?? 0)
           const imgSrc = item.product?.images?.[0] || FALLBACK_IMAGE
 
           return (

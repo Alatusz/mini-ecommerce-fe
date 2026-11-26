@@ -174,7 +174,6 @@ export function useProductCreate() {
         description: values.description.trim() || undefined,
         slug: values.sku.trim().toLowerCase(),
         sellPrice: priceNum,
-        originalPrice: priceNum,
         stock: stockNum,
         images: finalImageUrl ? [finalImageUrl] : [],
         status: values.status,

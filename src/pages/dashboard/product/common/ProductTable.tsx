@@ -128,7 +128,7 @@ export function ProductTable({
       productColumnHelper.accessor("sellPrice", {
         header: "Price",
         cell: (info) => {
-          const price = info.getValue() ?? info.row.original.originalPrice ?? 0
+          const price = info.getValue() ?? 0
           return (
             <span className="text-xs font-semibold text-foreground tabular-nums">
               ${price.toLocaleString("en-US", { minimumFractionDigits: 2 })}
