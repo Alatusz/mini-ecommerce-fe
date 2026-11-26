@@ -1,6 +1,5 @@
-import { useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
-import { Star, Heart, ShoppingCart } from "lucide-react"
+import { Star, ShoppingCart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/context/AuthContext"
 import { useAddToCartMutation } from "@/hooks/use-cartHubs"
@@ -27,7 +26,6 @@ interface ProductCardProps {
 }
 
 function ProductCard({ product }: ProductCardProps) {
-  const [isFavorite, setIsFavorite] = useState(false)
   const { user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -64,21 +62,6 @@ function ProductCard({ product }: ProductCardProps) {
             loading="lazy"
           />
         </Link>
-
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            setIsFavorite(!isFavorite)
-          }}
-          className="absolute top-2 right-2 flex size-7 items-center justify-center rounded-full bg-black/20 text-white cursor-pointer transition-colors hover:bg-black/40 z-10"
-          aria-label="Wishlist"
-        >
-          <Heart
-            className={`size-3.5 ${isFavorite ? "fill-red-500 text-red-500" : ""}`}
-          />
-        </button>
       </div>
 
       {/* Content */}

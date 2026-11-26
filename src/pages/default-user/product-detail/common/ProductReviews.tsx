@@ -1,31 +1,30 @@
 import { MessageSquare, Star } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
-import { type ProductReviewItem } from "@/services/product.services"
+import {
+  type ProductRatingBar,
+  type ProductReviewItem,
+} from "@/services/product.services"
+
+const EMPTY_BARS: ProductRatingBar[] = [5, 4, 3, 2, 1].map((star) => ({
+  star,
+  count: 0,
+  percent: 0,
+}))
 
 interface ProductReviewsProps {
   ratingAvg?: number
   ratingCount?: number
-  ratingBreakdown?: Record<number, number>
+  ratingBars?: ProductRatingBar[]
   reviews?: ProductReviewItem[]
 }
 
 export function ProductReviews({
   ratingAvg = 0,
-  ratingCount,
-  ratingBreakdown,
+  ratingCount = 0,
+  ratingBars,
   reviews,
 }: ProductReviewsProps) {
-  const totalRatings = ratingCount ?? reviews?.length ?? 0
-
-  const ratingCounts = [5, 4, 3, 2, 1].map((star) => {
-    const count =
-      ratingBreakdown?.[star] ??
-      reviews?.filter((r) => r.rating === star).length ??
-      0
-    const percent =
-      totalRatings > 0 ? Math.round((count / totalRatings) * 100) : 0
-    return { star, count, percent }
-  })
+  const bars = ratingBars?.length ? ratingBars : EMPTY_BARS
 
   return (
     <section className="space-y-4">
@@ -33,7 +32,7 @@ export function ProductReviews({
         Customer Reviews
       </h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {/* Col 1: Rating Summary & 5-Level Breakdown */}
         <Card className="border-border/60 shadow-2xs">
           <CardContent className="flex h-full flex-col justify-between gap-6 p-6 sm:p-8">
@@ -66,14 +65,14 @@ export function ProductReviews({
                 <p className="text-xs text-muted-foreground">
                   Based on{" "}
                   <span className="font-semibold text-foreground tabular-nums">
-                    {totalRatings}
+                    {ratingCount}
                   </span>{" "}
-                  {totalRatings === 1 ? "verified rating" : "verified ratings"}
+                  {ratingCount === 1 ? "verified rating" : "verified ratings"}
                 </p>
               </div>
 
               <div className="flex-1 space-y-2 sm:max-w-xs">
-                {ratingCounts.map(({ star, count, percent }) => (
+                {bars.map(({ star, count, percent }) => (
                   <div key={star} className="flex items-center gap-2.5 text-xs">
                     <span className="flex w-7 shrink-0 items-center justify-end gap-0.5 font-medium text-foreground tabular-nums">
                       {star}

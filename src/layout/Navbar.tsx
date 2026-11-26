@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom"
 import {
-  Heart,
   LayoutDashboard,
   LogOut,
   Minus,
@@ -95,62 +94,6 @@ function Navbar() {
 
       {/* Right Controls */}
       <div className="flex items-center gap-1 sm:gap-2">
-        {/* Wishlist Drawer */}
-        <Drawer
-          showSwipeHandle={isMobile}
-          swipeDirection={isMobile ? "down" : "right"}
-        >
-          <DrawerTrigger
-            render={
-              <Button
-                variant="ghost"
-                size="icon"
-                className="cursor-pointer"
-                aria-label="รายการโปรด"
-                title="รายการโปรด"
-              >
-                <Heart className="h-5 w-5" />
-              </Button>
-            }
-          />
-          <DrawerContent>
-            <DrawerHeader>
-              <DrawerTitle className="flex items-center gap-2">
-                <Heart className="h-4 w-4" />
-                รายการโปรด
-                <Badge variant="secondary" className="ml-auto font-normal">
-                  0 รายการ
-                </Badge>
-              </DrawerTitle>
-              <DrawerDescription>
-                สินค้าที่คุณบันทึกไว้สำหรับเลือกดูภายหลัง
-              </DrawerDescription>
-            </DrawerHeader>
-
-            <div className="flex flex-1 flex-col items-center justify-center p-6 text-center">
-              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                <Heart className="h-6 w-6" />
-              </div>
-              <p className="text-sm font-medium text-foreground">
-                ยังไม่มีสินค้าในรายการโปรด
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                กดไอคอนหัวใจที่สินค้าเพื่อบันทึกรายการที่คุณสนใจ
-              </p>
-            </div>
-
-            <DrawerFooter>
-              <DrawerClose
-                render={
-                  <Button variant="outline" className="w-full cursor-pointer">
-                    ปิด
-                  </Button>
-                }
-              />
-            </DrawerFooter>
-          </DrawerContent>
-        </Drawer>
-
         {/* Cart Drawer */}
         <Drawer
           showSwipeHandle={isMobile}
