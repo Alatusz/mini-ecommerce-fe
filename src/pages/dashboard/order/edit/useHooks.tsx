@@ -2,6 +2,7 @@ import { useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import {
+  getNextOrderAction,
   useOrderDetailQuery,
   useUpdateOrderStatusMutation,
   type OrderItem,
@@ -52,20 +53,8 @@ export const orderSteps: OrderStep[] = [
   },
 ]
 
-export const getStepNumber = (status: string): number => {
-  switch (status) {
-    case "pending":
-      return 1
-    case "paid":
-      return 2
-    case "shipped":
-      return 3
-    case "delivered":
-      return 4
-    default:
-      return 0
-  }
-}
+export const getStepNumber = (status: string): number =>
+  orderSteps.find((s) => s.key === status)?.step ?? 0
 
 export function useOrderEdit() {
   const { id } = useParams<{ id: string }>()
@@ -73,10 +62,15 @@ export function useOrderEdit() {
 
   const { data, isLoading, isError } = useOrderDetailQuery(id)
   const updateStatusMutation = useUpdateOrderStatusMutation()
-
   const order: OrderItem | undefined = data?.data
 
-  const form = useForm<OrderEditFormValues>({
+  const {
+    watch,
+    reset,
+    setValue,
+    handleSubmit: rhfHandleSubmit,
+    formState: { isDirty },
+  } = useForm<OrderEditFormValues>({
     defaultValues: {
       status: "pending",
       paymentStatus: "pending",
@@ -85,69 +79,82 @@ export function useOrderEdit() {
 
   useEffect(() => {
     if (!order) return
-    form.reset({
+    reset({
       status: (order.status as OrderStatus) || "pending",
       paymentStatus: (order.paymentStatus as PaymentStatus) || "pending",
     })
-  }, [order, form])
+  }, [order, reset])
 
-  const status = form.watch("status")
-  const paymentStatus = form.watch("paymentStatus")
-  const isLockedCancelled = order?.status === "cancelled"
+  const status = watch("status")
+  const paymentStatus = watch("paymentStatus")
+  const isTerminalOrder =
+    order?.status === "cancelled" || order?.status === "delivered"
+  const isStatusChanged = Boolean(order && status !== order.status)
+  const nextAction = getNextOrderAction(order?.status, order?.paymentMethod)
 
-  const handleStatusChange = (newStatus: OrderStatus) => {
-    if (isLockedCancelled) return
-    form.setValue("status", newStatus, { shouldDirty: true })
-  }
+  const canCancel =
+    order?.status === "pending" ||
+    (order?.paymentMethod !== "cod" && order?.status === "paid") ||
+    (order?.paymentMethod === "cod" && order?.status === "shipped")
 
-  const handleSetStep = (stepNumber: number) => {
-    if (isLockedCancelled) return
-    const target = orderSteps.find((s) => s.step === stepNumber)
-    if (target) {
-      form.setValue("status", target.key, { shouldDirty: true })
+  const applyStatusTransition = (nextStatus: OrderStatus) => {
+    setValue("status", nextStatus, { shouldDirty: true })
+
+    if (nextStatus === "paid") {
+      setValue("paymentStatus", "completed", { shouldDirty: true })
+    } else if (nextStatus === "delivered" && order?.paymentMethod === "cod") {
+      setValue("paymentStatus", "completed", { shouldDirty: true })
+    } else if (nextStatus === "cancelled") {
+      setValue(
+        "paymentStatus",
+        order?.paymentStatus === "completed" ? "refund" : "failed",
+        { shouldDirty: true }
+      )
     }
   }
 
-  const handlePaymentStatusChange = (newPaymentStatus: PaymentStatus) => {
-    form.setValue("paymentStatus", newPaymentStatus, { shouldDirty: true })
+  const handleNextStep = () => {
+    if (!nextAction || isTerminalOrder) return
+    applyStatusTransition(nextAction.nextStatus)
   }
 
-  const handleSubmit = form.handleSubmit((values) => {
-    if (!id || !order) return
+  const handleRequestCancel = () => {
+    if (!canCancel) return
+    applyStatusTransition("cancelled")
+  }
 
-    const payload: UpdateOrderStatusPayload = {
-      paymentStatus: values.paymentStatus,
-      ...(isLockedCancelled ? {} : { status: values.status }),
-    }
+  const handleSubmit = rhfHandleSubmit((values) => {
+    if (!id || !order || isTerminalOrder) return
 
     updateStatusMutation.mutate(
-      { id, payload },
       {
-        onSuccess: () => {
-          navigate("/dashboard/order")
-        },
+        id,
+        payload: { status: values.status },
+      },
+      {
+        onSuccess: () => navigate("/dashboard/order"),
       }
     )
   })
 
-  const handleCancel = () => {
-    navigate("/dashboard/order")
-  }
+  const handleCancel = () => navigate("/dashboard/order")
 
   return {
     id,
     order,
-    control: form.control,
     isLoading,
     isNotFound: !isLoading && (isError || !order),
-    isLockedCancelled,
+    isTerminalOrder,
+    isStatusChanged,
+    isDirty,
+    nextAction,
+    canCancel,
     status,
     paymentStatus,
     currentStepNumber: getStepNumber(status),
     isSubmitting: updateStatusMutation.isPending,
-    handleStatusChange,
-    handleSetStep,
-    handlePaymentStatusChange,
+    handleNextStep,
+    handleRequestCancel,
     handleSubmit,
     handleCancel,
   }

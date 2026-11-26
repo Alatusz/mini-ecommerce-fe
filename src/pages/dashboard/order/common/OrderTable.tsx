@@ -12,18 +12,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { OrderFilterDrawer, type OrderFilterState } from "./OrderFilterDrawer"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
-  OrderFilterDrawer,
-  type OrderFilterState,
-} from "./OrderFilterDrawer"
-import {
+  getNextOrderAction,
   ORDER_STATUS_OPTIONS,
   type OrderItem,
   type OrderSearchTarget,
@@ -107,11 +98,11 @@ export function OrderTable({
         header: "Payment",
         cell: ({ row }) => (
           <div className="flex items-center gap-1.5 text-xs">
-            <span className="uppercase text-muted-foreground">
+            <span className="text-muted-foreground uppercase">
               {row.original.paymentMethod || "cod"}
             </span>
             <span>·</span>
-            <span className="capitalize font-medium">
+            <span className="font-medium capitalize">
               {row.original.paymentStatus || "pending"}
             </span>
           </div>
@@ -123,35 +114,31 @@ export function OrderTable({
           const order = row.original
           const current = order.status || "pending"
           const statusOpt = ORDER_STATUS_OPTIONS.find((s) => s.id === current)
+          const nextAction = getNextOrderAction(current, order.paymentMethod)
+
           return (
-            <Select
-              value={current}
-              disabled={isUpdatingStatus}
-              onValueChange={(val) => val && onStatusChange(order.id, val)}
-            >
-              <SelectTrigger className="h-7 w-[125px] text-xs">
-                <SelectValue>
-                  <span className="flex items-center gap-1.5">
-                    <span
-                      className={`size-2 shrink-0 rounded-full ${statusOpt?.dot ?? "bg-zinc-400"}`}
-                    />
-                    <span>{statusOpt?.label ?? current}</span>
-                  </span>
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {ORDER_STATUS_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.id} value={opt.id}>
-                    <span className="flex items-center gap-2">
-                      <span
-                        className={`size-2 shrink-0 rounded-full ${opt.dot}`}
-                      />
-                      <span>{opt.label}</span>
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/40 px-2.5 py-0.5 text-xs font-medium">
+                <span
+                  className={`size-2 shrink-0 rounded-full ${statusOpt?.dot ?? "bg-zinc-400"}`}
+                />
+                <span>{statusOpt?.label ?? current}</span>
+              </span>
+              {nextAction && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={isUpdatingStatus}
+                  onClick={() =>
+                    onStatusChange(order.id, nextAction.nextStatus)
+                  }
+                  className="h-7 cursor-pointer px-2.5 text-xs"
+                >
+                  {nextAction.label}
+                </Button>
+              )}
+            </div>
           )
         },
       }),
