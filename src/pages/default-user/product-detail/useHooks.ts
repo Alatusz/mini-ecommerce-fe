@@ -24,7 +24,6 @@ export function useProductDetail() {
 
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0)
   const [quantity, setQuantity] = useState<number>(1)
-  const [isWishlist, setIsWishlist] = useState<boolean>(false)
   const [isAddedToCart, setIsAddedToCart] = useState<boolean>(false)
 
   const thumbnails = useMemo(() => {
@@ -34,17 +33,7 @@ export function useProductDetail() {
     return [FALLBACK_IMAGE]
   }, [product?.images])
 
-  const currentPrice = Number(
-    product?.sellPrice ?? product?.originalPrice ?? 0
-  )
-  const originalPrice =
-    product?.originalPrice && Number(product.originalPrice) > currentPrice
-      ? Number(product.originalPrice)
-      : null
-
-  const discountPercent = originalPrice
-    ? Math.round(((originalPrice - currentPrice) / originalPrice) * 100)
-    : 0
+  const currentPrice = Number(product?.sellPrice ?? 0)
 
   const maxStock = Math.max(0, Number(product?.stock ?? 0))
   const isOutOfStock = maxStock <= 0
@@ -75,10 +64,6 @@ export function useProductDetail() {
     )
   }
 
-  const handleToggleWishlist = () => {
-    setIsWishlist((prev) => !prev)
-  }
-
   return {
     product,
     isLoading,
@@ -89,17 +74,13 @@ export function useProductDetail() {
     setActiveImageIndex,
     currentImage: thumbnails[activeImageIndex] || thumbnails[0],
     currentPrice,
-    originalPrice,
-    discountPercent,
     quantity,
     maxStock,
     isOutOfStock,
-    isWishlist,
     isAddedToCart,
     isAddingToCart: addToCartMutation.isPending,
     handleDecrement,
     handleIncrement,
     handleAddToCart,
-    handleToggleWishlist,
   }
 }

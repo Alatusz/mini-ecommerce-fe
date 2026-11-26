@@ -1,4 +1,4 @@
-import { Check, Heart, Minus, Plus, ShoppingCart } from "lucide-react"
+import { Check, Minus, Plus, ShoppingCart } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,36 +17,28 @@ interface ProductInfoProps {
   product: ProductItem
   category: ProductCategoryItem | null
   currentPrice: number
-  originalPrice: number | null
-  discountPercent: number
   quantity: number
   maxStock: number
   isOutOfStock: boolean
-  isWishlist: boolean
   isAddedToCart: boolean
   isAddingToCart: boolean
   onDecrement: () => void
   onIncrement: () => void
   onAddToCart: () => void
-  onToggleWishlist: () => void
 }
 
 export function ProductInfo({
   product,
   category,
   currentPrice,
-  originalPrice,
-  discountPercent,
   quantity,
   maxStock,
   isOutOfStock,
-  isWishlist,
   isAddedToCart,
   isAddingToCart,
   onDecrement,
   onIncrement,
   onAddToCart,
-  onToggleWishlist,
 }: ProductInfoProps) {
   const sanitizedDescription = product.description
     ? sanitizeHtml(product.description)
@@ -66,18 +58,10 @@ export function ProductInfo({
           {product.name}
         </h1>
 
-        <div className="flex items-baseline gap-3 mt-3">
+        <div className="mt-3">
           <span className="text-2xl sm:text-3xl font-bold text-foreground tabular-nums">
             ฿{currentPrice.toLocaleString()}
           </span>
-          {originalPrice && (
-            <>
-              <span className="text-base sm:text-lg text-muted-foreground line-through tabular-nums">
-                ฿{originalPrice.toLocaleString()}
-              </span>
-              <Badge variant="destructive">-{discountPercent}%</Badge>
-            </>
-          )}
         </div>
       </div>
 
@@ -171,19 +155,6 @@ export function ProductInfo({
               </span>
             </>
           )}
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          onClick={onToggleWishlist}
-          aria-label="Toggle wishlist"
-          className={`size-11 shrink-0 rounded-lg cursor-pointer ${
-            isWishlist ? "text-red-500 border-red-500/40" : ""
-          }`}
-        >
-          <Heart className={`size-4 ${isWishlist ? "fill-red-500" : ""}`} />
         </Button>
       </div>
     </div>

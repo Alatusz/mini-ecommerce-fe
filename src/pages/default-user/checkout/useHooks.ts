@@ -50,7 +50,6 @@ export interface CheckoutCartItem {
     name: string
     images?: string[]
     sellPrice?: number | null
-    originalPrice?: number | null
   }
 }
 

@@ -17,23 +17,19 @@ function ProductDetailPage() {
     setActiveImageIndex,
     currentImage,
     currentPrice,
-    originalPrice,
-    discountPercent,
     quantity,
     maxStock,
     isOutOfStock,
-    isWishlist,
     isAddedToCart,
     isAddingToCart,
     handleDecrement,
     handleIncrement,
     handleAddToCart,
-    handleToggleWishlist,
   } = useProductDetail()
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-6xl py-24 flex flex-col items-center justify-center gap-3 text-muted-foreground">
+      <div className="mx-auto flex max-w-6xl flex-col items-center justify-center gap-3 py-24 text-muted-foreground">
         <Loader2 className="size-6 animate-spin" />
         <p className="text-sm font-medium">Loading product...</p>
       </div>
@@ -42,7 +38,7 @@ function ProductDetailPage() {
 
   if (isNotFound || !product) {
     return (
-      <div className="mx-auto max-w-md py-24 text-center space-y-4">
+      <div className="mx-auto max-w-md space-y-4 py-24 text-center">
         <div className="mx-auto flex size-14 items-center justify-center rounded-2xl border bg-muted/40 text-muted-foreground">
           <PackageX className="size-6" />
         </div>
@@ -51,7 +47,7 @@ function ProductDetailPage() {
           This product may have been removed or is no longer available.
         </p>
         <Link to="/products" className="inline-block">
-          <Button variant="outline" className="gap-2 cursor-pointer">
+          <Button variant="outline" className="cursor-pointer gap-2">
             <ArrowLeft className="size-4" />
             <span>Back to Products</span>
           </Button>
@@ -61,8 +57,8 @@ function ProductDetailPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl py-4 sm:py-8 space-y-10">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+    <div className="mx-auto max-w-6xl space-y-10 py-4 sm:py-8">
+      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12 lg:gap-12">
         <ProductGallery
           productName={product.name}
           thumbnails={thumbnails}
@@ -75,25 +71,21 @@ function ProductDetailPage() {
           product={product}
           category={category}
           currentPrice={currentPrice}
-          originalPrice={originalPrice}
-          discountPercent={discountPercent}
           quantity={quantity}
           maxStock={maxStock}
           isOutOfStock={isOutOfStock}
-          isWishlist={isWishlist}
           isAddedToCart={isAddedToCart}
           isAddingToCart={isAddingToCart}
           onDecrement={handleDecrement}
           onIncrement={handleIncrement}
           onAddToCart={handleAddToCart}
-          onToggleWishlist={handleToggleWishlist}
         />
       </div>
 
       <ProductReviews
         ratingAvg={product.ratingAvg}
         ratingCount={product.ratingCount}
-        ratingBreakdown={product.ratingBreakdown}
+        ratingBars={product.ratingBars}
         reviews={product.reviews}
       />
     </div>

@@ -27,7 +27,6 @@ export interface StorefrontProductParams {
   category?: string | string[]
   minPrice?: number
   maxPrice?: number
-  onSale?: boolean
   sort?: "newest" | "price-asc" | "price-desc" | "name"
   page?: number
   limit?: number

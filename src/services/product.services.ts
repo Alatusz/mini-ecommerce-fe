@@ -7,7 +7,6 @@ export interface IProduct {
   name: string
   slug?: string
   description?: string
-  originalPrice?: number
   sellPrice: number
   stock: number
   images: string[]
@@ -30,13 +29,18 @@ export interface ProductReviewItem {
   reviewerName: string
 }
 
+export interface ProductRatingBar {
+  star: number
+  count: number
+  percent: number
+}
+
 // ข้อมูลสินค้าตัวเต็มที่ส่งมาจาก Database (Response Entity)
 export interface ProductItem {
   id: string
   name: string
   sku: string
   description?: string | null
-  originalPrice?: number | null
   sellPrice: number | null
   stock: number
   stockStatus: ProductStockStatus
@@ -45,7 +49,7 @@ export interface ProductItem {
   categories: ProductCategoryItem[]
   ratingAvg?: number
   ratingCount?: number
-  ratingBreakdown?: Record<number, number>
+  ratingBars?: ProductRatingBar[]
   reviews?: ProductReviewItem[]
   ordersCount?: number
   createdAt: string
