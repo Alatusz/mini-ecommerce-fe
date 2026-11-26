@@ -332,7 +332,7 @@ export default function UserProfilePage() {
                   type="submit"
                   size="sm"
                   disabled={isSavingProfile}
-                  className="cursor-pointer gap-1.5 bg-black text-xs text-white hover:bg-zinc-800 dark:bg-white dark:text-black"
+                  className="cursor-pointer gap-1.5 text-xs"
                 >
                   {isSavingProfile ? (
                     <Loader2 className="size-3.5 animate-spin" />
@@ -373,7 +373,7 @@ export default function UserProfilePage() {
             {addresses.map((addr) => (
               <Card
                 key={addr.id}
-                className="relative border-border/60 shadow-2xs transition-all hover:border-foreground/30"
+                className="relative border-border/60 shadow-2xs"
               >
                 <CardContent className="space-y-3 p-5">
                   <div className="flex items-center justify-between">
@@ -548,7 +548,7 @@ export default function UserProfilePage() {
                   type="submit"
                   size="sm"
                   disabled={isChangingPassword}
-                  className="cursor-pointer gap-1.5 bg-black text-xs text-white hover:bg-zinc-800 dark:bg-white dark:text-black"
+                  className="cursor-pointer gap-1.5 text-xs"
                 >
                   {isChangingPassword ? (
                     <Loader2 className="size-3.5 animate-spin" />
@@ -694,7 +694,7 @@ export default function UserProfilePage() {
                 type="submit"
                 size="sm"
                 disabled={isSavingAddress}
-                className="cursor-pointer bg-black text-xs text-white hover:bg-zinc-800 dark:bg-white dark:text-black"
+                className="cursor-pointer text-xs"
               >
                 {isSavingAddress ? "กำลังบันทึก..." : "บันทึกที่อยู่"}
               </Button>

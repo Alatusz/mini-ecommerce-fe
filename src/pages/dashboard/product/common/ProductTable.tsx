@@ -1,17 +1,13 @@
 import { useMemo } from "react"
 import { Link } from "react-router-dom"
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react"
+import { FALLBACK_IMAGE } from "@/lib/constants"
 
 import {
   DataGrid,
   createColumnHelper,
   type DataGridFeatures,
 } from "@/components/common/data-grid"
-import type {
-  ProductItem,
-  ProductPublishStatus,
-} from "@/services/product.services"
-import { FALLBACK_IMAGE } from "@/lib/constants"
 import {
   Select,
   SelectContent,
@@ -19,7 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-
+import type {
+  ProductItem,
+  ProductPublishStatus,
+} from "@/services/product.services"
 const STOCK_STATUS_COLORS = {
   in_stock: {
     textClass: "text-emerald-600 dark:text-emerald-400 font-medium",
@@ -37,6 +36,7 @@ const getStockTextColor = (stock: number): string => {
   if (stock <= 10) return STOCK_STATUS_COLORS.low_stock.textClass
   return STOCK_STATUS_COLORS.in_stock.textClass
 }
+
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,

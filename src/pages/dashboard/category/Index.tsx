@@ -50,7 +50,7 @@ export default function DashboardCategoryPage() {
         <Link to="/dashboard/category/create">
           <Button
             size="sm"
-            className="h-8 shrink-0 cursor-pointer gap-1.5 rounded-full bg-foreground px-3.5 text-xs text-background hover:bg-foreground/90"
+            className="h-8 shrink-0 cursor-pointer gap-1.5 rounded-full px-3.5 text-xs"
           >
             <Plus className="size-3.5" />
             <span>Add Category</span>

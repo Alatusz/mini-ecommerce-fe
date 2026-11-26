@@ -296,11 +296,7 @@ function ProductListPage() {
                         <PaginationLink
                           isActive={currentPage === p}
                           onClick={() => updateParams({ page: p })}
-                          className={`size-8 text-xs cursor-pointer ${
-                            currentPage === p
-                              ? "bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black"
-                              : ""
-                          }`}
+                          className="size-8 text-xs cursor-pointer"
                         >
                           {p}
                         </PaginationLink>

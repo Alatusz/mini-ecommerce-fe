@@ -22,6 +22,7 @@ export interface GetOrdersParams {
 export interface OrderLineItem {
   id: string
   orderId: string
+  rating?: number
   productId: string
   quantity: number
   price: number
@@ -43,6 +44,11 @@ export interface OrderItem {
   paymentStatus?: string
   shippingAddress?: string | null
   shippingPhone?: string | null
+  shippingRateId?: string | null
+  shippingMethodName?: string
+  shippingCost?: number
+  couponCode?: string | null
+  discountAmount?: number
   createdAt: string
   user?: {
     id: string
@@ -60,6 +66,8 @@ export interface OrderItem {
 export interface CreateOrderPayload {
   addressId: string
   paymentMethod?: "cod" | "credit_card" | "promptpay" | string
+  shippingRateId?: string
+  couponCode?: string
 }
 
 export interface UpdateOrderStatusPayload {
@@ -106,6 +114,13 @@ export const updateOrderStatus = async (
   data: UpdateOrderStatusPayload
 ) => {
   const response = await apiClient.patch(`/orders/${id}/status`, data)
-  
+
+  return response.data
+}
+
+export const rateOrderItem = async (itemId: string, rating: number) => {
+  const response = await apiClient.patch(`/orders/items/${itemId}/rating`, {
+    rating,
+  })
   return response.data
 }

@@ -13,6 +13,7 @@ import {
   RotateCcw,
   Calendar,
   ChevronRight,
+  Star,
 } from "lucide-react"
 
 import { useMyOrders, type OrderItem } from "./useHooks"
@@ -67,6 +68,12 @@ export default function MyOrdersPage() {
     handleCopy,
     handleCancelOrder,
     stats,
+    ratingTargetItem,
+    setRatingTargetItem,
+    selectedStars,
+    setSelectedStars,
+    isRating,
+    handleSubmitRating,
   } = useMyOrders()
 
   const getStatusBadge = (status: OrderItem["status"]) => {
@@ -377,6 +384,28 @@ export default function MyOrdersPage() {
                             <span className="text-[11px] text-muted-foreground block">
                               (฿{item.price.toLocaleString()} / ชิ้น)
                             </span>
+                            {order.status === "Completed" && (
+                              item.rating > 0 ? (
+                                <span className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-amber-500">
+                                  <Star className="size-3.5 fill-amber-400 text-amber-400" />
+                                  {item.rating}/5
+                                </span>
+                              ) : (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setRatingTargetItem(item)
+                                    setSelectedStars(0)
+                                  }}
+                                  className="mt-1.5 h-7 gap-1 text-xs cursor-pointer"
+                                >
+                                  <Star className="size-3" />
+                                  <span>รีวิว</span>
+                                </Button>
+                              )
+                            )}
                           </div>
                         </div>
                       ))
@@ -454,7 +483,7 @@ export default function MyOrdersPage() {
                       <Link to="/products">
                         <Button
                           size="sm"
-                          className="text-xs cursor-pointer h-8 gap-1 bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black"
+                          className="text-xs cursor-pointer h-8 gap-1"
                         >
                           <RotateCcw className="size-3" />
                           <span>ซื้อซ้ำ</span>
@@ -655,6 +684,94 @@ export default function MyOrdersPage() {
             >
               <XCircle className="size-3.5" />
               <span>ยืนยันยกเลิกคำสั่งซื้อ</span>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: Rate Product */}
+      <Dialog
+        open={Boolean(ratingTargetItem)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setRatingTargetItem(null)
+            setSelectedStars(0)
+          }
+        }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold">
+              ให้คะแนนสินค้า
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground pt-1">
+              เลือกจำนวนดาวเพื่อให้คะแนนความพึงพอใจสำหรับสินค้านี้
+            </DialogDescription>
+          </DialogHeader>
+
+          {ratingTargetItem && (
+            <div className="space-y-4 py-2">
+              <div className="flex items-center gap-3 rounded-lg border border-border/60 bg-muted/20 p-3">
+                <img
+                  src={ratingTargetItem.image}
+                  alt={ratingTargetItem.name}
+                  className="size-12 rounded-md object-cover border"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs sm:text-sm font-semibold text-foreground">
+                    {ratingTargetItem.name}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    จำนวน {ratingTargetItem.quantity} ชิ้น
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-center gap-2 py-2">
+                {[1, 2, 3, 4, 5].map((star) => {
+                  const active = star <= selectedStars
+                  return (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setSelectedStars(star)}
+                      aria-label={`ให้ ${star} ดาว`}
+                      className="p-1 cursor-pointer"
+                    >
+                      <Star
+                        className={`size-7 ${
+                          active
+                            ? "fill-amber-400 text-amber-400"
+                            : "text-muted-foreground/40"
+                        }`}
+                      />
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setRatingTargetItem(null)}
+              disabled={isRating}
+              className="cursor-pointer text-xs"
+            >
+              ยกเลิก
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              disabled={selectedStars === 0 || isRating}
+              onClick={handleSubmitRating}
+              className="cursor-pointer text-xs gap-1.5"
+            >
+              <Star className="size-3.5" />
+              <span>{isRating ? "กำลังส่ง..." : "ส่งคะแนน"}</span>
             </Button>
           </DialogFooter>
         </DialogContent>

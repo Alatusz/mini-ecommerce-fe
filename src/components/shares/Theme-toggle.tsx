@@ -14,13 +14,13 @@ function ThemeToggle() {
       variant="ghost"
       size="icon"
       onClick={toggleTheme}
-      className="text-foceground cursor-pointer hover:bg-accent"
+      className="cursor-pointer"
       title="Toggle Theme"
     >
       {theme === "dark" ? (
-        <Sun className="h-5 w-5 transition-all" />
+        <Sun className="h-5 w-5" />
       ) : (
-        <Moon className="h-5 w-5 transition-all" />
+        <Moon className="h-5 w-5" />
       )}
     </Button>
   )

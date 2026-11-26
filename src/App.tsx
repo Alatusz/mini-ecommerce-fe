@@ -4,7 +4,6 @@ import LoginPage from "@/pages/auth/login/Index"
 import RegisterPage from "@/pages/auth/register/Index"
 import HomePage from "@/pages/home/Index"
 import ProductListPage from "@/pages/products/Index"
-import CartPage from "@/pages/default-user/cart/Index"
 import CheckoutPage from "@/pages/default-user/checkout/Index"
 import ProductDetailPage from "@/pages/default-user/product-detail/Index"
 import UserProfilePage from "@/pages/default-user/profile/Index"
@@ -23,6 +22,9 @@ import DashboardOrderEditPage from "@/pages/dashboard/order/edit/Index"
 import DashboardCouponPage from "@/pages/dashboard/coupon/Index"
 import DashboardCouponCreatePage from "@/pages/dashboard/coupon/create/Index"
 import DashboardCouponEditPage from "@/pages/dashboard/coupon/edit/Index"
+import DashboardShippingPage from "@/pages/dashboard/shipping/Index"
+import DashboardShippingCreatePage from "@/pages/dashboard/shipping/create/Index"
+import DashboardShippingEditPage from "@/pages/dashboard/shipping/edit/Index"
 import DashboardSettingsPage from "@/pages/dashboard/settings/Index"
 import { RequireAuth, GuestOnly } from "@/components/guards/AuthGuard"
 
@@ -40,7 +42,6 @@ export function App() {
         <Route path="products/:id" element={<ProductDetailPage />} />
         <Route path="product-detail/:id" element={<ProductDetailPage />} />
         <Route element={<RequireAuth />}>
-          <Route path="cart" element={<CartPage />} />
           <Route path="checkout" element={<CheckoutPage />} />
           <Route path="profile" element={<UserProfilePage />} />
           <Route path="my-orders" element={<MyOrdersPage />} />
@@ -68,6 +69,15 @@ export function App() {
           <Route path="coupon" element={<DashboardCouponPage />} />
           <Route path="coupon/create" element={<DashboardCouponCreatePage />} />
           <Route path="coupon/edit/:id" element={<DashboardCouponEditPage />} />
+          <Route path="shipping" element={<DashboardShippingPage />} />
+          <Route
+            path="shipping/create"
+            element={<DashboardShippingCreatePage />}
+          />
+          <Route
+            path="shipping/edit/:id"
+            element={<DashboardShippingEditPage />}
+          />
           <Route
             path="user-management"
             element={<DashboardUserManagementPage />}

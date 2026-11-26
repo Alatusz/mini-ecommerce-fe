@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -17,6 +17,11 @@ import {
   type ApiAddressItem,
 } from "@/hooks/use-profileHubs"
 import { createOrder } from "@/services/order.services"
+import { validateCoupon } from "@/services/coupon.services"
+import {
+  getActiveShippingRates,
+  type ShippingRateItem,
+} from "@/services/shippingRate.services"
 
 export interface AddressItem {
   id: string
@@ -34,6 +39,19 @@ export interface ShippingOption {
   description: string
   price: number
   estimatedDate: string
+}
+
+export interface CheckoutCartItem {
+  id: string
+  productId: string
+  quantity: number
+  product: {
+    id: string
+    name: string
+    images?: string[]
+    sellPrice?: number | null
+    originalPrice?: number | null
+  }
 }
 
 export type PaymentMethod = "credit_card" | "promptpay" | "cod"
@@ -56,33 +74,6 @@ export const cardDetailsSchema = z.object({
 export type CheckoutAddressValues = z.infer<typeof checkoutAddressSchema>
 export type CardDetails = z.infer<typeof cardDetailsSchema>
 
-export const shippingOptions: ShippingOption[] = [
-  {
-    id: "ship-free",
-    title: "Free Delivery",
-    badge: "STANDARD",
-    description: "Delivery in 5-7 business days",
-    price: 0,
-    estimatedDate: "Estimated delivery: 3-5 business days",
-  },
-  {
-    id: "ship-regular",
-    title: "Regular Delivery",
-    badge: "POPULAR",
-    description: "Delivery in 2-3 business days",
-    price: 50,
-    estimatedDate: "Estimated delivery: 2-3 business days",
-  },
-  {
-    id: "ship-express",
-    title: "Express Delivery",
-    badge: "FAST",
-    description: "Next-day priority delivery with tracking",
-    price: 120,
-    estimatedDate: "Estimated delivery: Tomorrow",
-  },
-]
-
 const normalizeTag = (tag?: string): "HOME" | "OFFICE" | "OTHER" => {
   const upper = (tag || "").toUpperCase()
   if (upper === "HOME" || upper === "OFFICE") return upper
@@ -92,11 +83,15 @@ const normalizeTag = (tag?: string): "HOME" | "OFFICE" | "OTHER" => {
 export function useCheckout() {
   const navigate = useNavigate()
 
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1)
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1)
 
   const { data: cartRes, isLoading: isLoadingCart } = useMyCartQuery()
   const { data: addressesRes, isLoading: isLoadingAddresses } =
     useAddressesQuery()
+  const { data: shippingRatesRes, isLoading: isLoadingShipping } = useQuery({
+    queryKey: [QUERY_KEYS.STOREFRONT.SHIPPING_RATES],
+    queryFn: getActiveShippingRates,
+  })
   const createAddressMutation = useCreateAddressMutation()
   const updateAddressMutation = useUpdateAddressMutation()
   const deleteAddressMutation = useDeleteAddressMutation()
@@ -138,8 +133,61 @@ export function useCheckout() {
     },
   })
 
-  const [selectedShippingId, setSelectedShippingId] =
-    useState<string>("ship-free")
+  const subtotal: number = Number(cartRes?.data?.totalPrice ?? 0)
+
+  const shippingOptions: ShippingOption[] = useMemo(() => {
+    const raw: ShippingRateItem[] = shippingRatesRes?.data ?? []
+    return raw.map((rate) => {
+      const hasFreeTier =
+        rate.freeMinSpend !== null && rate.freeMinSpend !== undefined
+      const freeMin = hasFreeTier ? Number(rate.freeMinSpend) : null
+      const isFreeBySpend = freeMin !== null && subtotal >= freeMin
+      const effectivePrice = isFreeBySpend ? 0 : Number(rate.price)
+
+      const badge =
+        effectivePrice === 0
+          ? "FREE"
+          : rate.maxDays <= 1
+            ? "FAST"
+            : "STANDARD"
+
+      const description =
+        freeMin !== null
+          ? isFreeBySpend
+            ? `Free shipping unlocked (min spend ฿${freeMin.toLocaleString()})`
+            : `Free shipping on orders over ฿${freeMin.toLocaleString()}`
+          : "Standard tracked carrier delivery"
+
+      const estimatedDate =
+        rate.minDays === rate.maxDays
+          ? `Estimated delivery: ${rate.minDays} business day(s)`
+          : `Estimated delivery: ${rate.minDays}-${rate.maxDays} business days`
+
+      return {
+        id: rate.id,
+        title: rate.name,
+        badge,
+        description,
+        price: effectivePrice,
+        estimatedDate,
+      }
+    })
+  }, [shippingRatesRes, subtotal])
+
+  const [selectedShippingId, setSelectedShippingId] = useState<string>("")
+
+  useEffect(() => {
+    if (shippingOptions.length === 0) {
+      setSelectedShippingId("")
+      return
+    }
+    if (
+      !selectedShippingId ||
+      !shippingOptions.some((s) => s.id === selectedShippingId)
+    ) {
+      setSelectedShippingId(shippingOptions[0].id)
+    }
+  }, [shippingOptions, selectedShippingId])
 
   const [paymentMethod, setPaymentMethod] =
     useState<PaymentMethod>("credit_card")
@@ -157,6 +205,42 @@ export function useCheckout() {
 
   const [isOrderCompleted, setIsOrderCompleted] = useState<boolean>(false)
   const [createdOrderId, setCreatedOrderId] = useState<string>("")
+  const [couponInput, setCouponInput] = useState<string>("")
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    couponCode: string
+    discountAmount: number
+  } | null>(null)
+
+  const validateCouponMutation = useMutation({
+    mutationFn: validateCoupon,
+    onSuccess: (res) => {
+      setAppliedCoupon({
+        couponCode: res.data.couponCode,
+        discountAmount: Number(res.data.discountAmount),
+      })
+      showToast.success(`Coupon "${res.data.couponCode}" applied`)
+    },
+    onError: (err: unknown) => {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message || "Invalid coupon code"
+      showToast.error(message)
+    },
+  })
+
+  const handleApplyCoupon = () => {
+    const trimmed = couponInput.trim()
+    if (!trimmed) {
+      showToast.error("Please enter a coupon code")
+      return
+    }
+    validateCouponMutation.mutate({ code: trimmed, subtotal })
+  }
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null)
+    setCouponInput("")
+  }
 
   const createOrderMutation = useMutation({
     mutationFn: createOrder,
@@ -168,6 +252,12 @@ export function useCheckout() {
       })
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.DASHBOARD.ORDERS_LIST],
+      })
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.DASHBOARD.COUPONS_LIST],
+      })
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.STOREFRONT.MY_ORDERS],
       })
     },
     onError: (err: any) => {
@@ -234,13 +324,12 @@ export function useCheckout() {
         showToast.error("Please select or add a shipping address")
         return
       }
+      if (!selectedShippingId) {
+        showToast.error("Please select a shipping method")
+        return
+      }
       setCurrentStep(2)
-      window.scrollTo({ top: 0, behavior: "smooth" })
     } else if (currentStep === 2) {
-      if (!selectedShippingId) return
-      setCurrentStep(3)
-      window.scrollTo({ top: 0, behavior: "smooth" })
-    } else if (currentStep === 3) {
       if (!selectedAddressId) {
         showToast.error("Please select a shipping address")
         setCurrentStep(1)
@@ -253,19 +342,17 @@ export function useCheckout() {
       createOrderMutation.mutate({
         addressId: selectedAddressId,
         paymentMethod,
+        shippingRateId: selectedShippingId || undefined,
+        couponCode: appliedCoupon?.couponCode,
       })
     }
   }
 
   const handleBack = () => {
     if (currentStep === 1) {
-      navigate("/cart")
+      navigate("/products")
     } else if (currentStep === 2) {
       setCurrentStep(1)
-      window.scrollTo({ top: 0, behavior: "smooth" })
-    } else if (currentStep === 3) {
-      setCurrentStep(2)
-      window.scrollTo({ top: 0, behavior: "smooth" })
     }
   }
 
@@ -274,16 +361,19 @@ export function useCheckout() {
     (s) => s.id === selectedShippingId
   )
 
+  const cartItems: CheckoutCartItem[] = cartRes?.data?.items ?? []
   const cartItemsCount: number = cartRes?.data?.totalItems ?? 0
-  const subtotal: number = Number(cartRes?.data?.totalPrice ?? 0)
   const shippingCost = selectedShipping?.price ?? 0
-  const tax = 0
-  const total = subtotal + shippingCost + tax
+  const discountAmount = appliedCoupon
+    ? Math.min(appliedCoupon.discountAmount, subtotal)
+    : 0
+  const total = Math.max(0, subtotal - discountAmount) + shippingCost
 
   return {
     currentStep,
     setCurrentStep,
-    isLoading: isLoadingCart || isLoadingAddresses,
+    isLoading: isLoadingCart || isLoadingAddresses || isLoadingShipping,
+    cartItems,
     cartItemsCount,
     addresses,
     selectedAddressId,
@@ -304,6 +394,12 @@ export function useCheckout() {
     paymentMethod,
     setPaymentMethod,
     cardControl: cardForm.control,
+    couponInput,
+    setCouponInput,
+    appliedCoupon,
+    isValidatingCoupon: validateCouponMutation.isPending,
+    handleApplyCoupon,
+    handleRemoveCoupon,
     isOrderCompleted,
     createdOrderId,
     isProcessing: createOrderMutation.isPending,
@@ -312,8 +408,8 @@ export function useCheckout() {
     selectedAddress,
     selectedShipping,
     subtotal,
+    discountAmount,
     shippingCost,
-    tax,
     total,
   }
 }
