@@ -1,0 +1,205 @@
+{
+  "shares": {
+    "actions": {
+      "save": "Save",
+      "saveChanges": "Save Changes",
+      "saving": "Saving...",
+      "create": "Create",
+      "creating": "Creating...",
+      "edit": "Edit",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "back": "Back",
+      "reset": "Reset",
+      "apply": "Apply",
+      "search": "Search",
+      "viewAll": "View all",
+      "loading": "Loading..."
+    },
+    "status": {
+      "active": "Active",
+      "draft": "Draft",
+      "archived": "Archived",
+      "published": "Published",
+      "pending": "Pending",
+      "paid": "Paid",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    }
+  },
+  "sidebar": {
+    "console": "Admin Console",
+    "groups": {
+      "storeManagement": "Store Management",
+      "marketingSales": "Marketing & Sales",
+      "analyticsLogistics": "Analytics & Logistics",
+      "systemStore": "System & Store"
+    },
+    "items": {
+      "dashboard": "Dashboard",
+      "orders": "Orders",
+      "products": "Products",
+      "categories": "Categories",
+      "customers": "Customers",
+      "reviews": "Reviews",
+      "coupons": "Coupons & Promo",
+      "banners": "Banners & CMS",
+      "analytics": "Analytics",
+      "inventory": "Inventory",
+      "shipping": "Shipping Rates",
+      "notifications": "Notifications",
+      "viewStorefront": "View Storefront",
+      "settings": "Settings"
+    }
+  },
+  "navbar": {
+    "store": "Store",
+    "admin": "Admin",
+    "searchPlaceholder": "Search dashboard...",
+    "viewStore": "View Store",
+    "notifications": "Notifications",
+    "newCount": "new",
+    "markAllRead": "Mark all read",
+    "adminProfile": "Admin Profile",
+    "storeSettings": "Store Settings",
+    "goToStorefront": "Go to Storefront",
+    "logout": "Log out",
+    "titles": {
+      "dashboard": "Overview",
+      "orders": "Orders Management",
+      "products": "Products Catalog",
+      "categories": "Product Categories",
+      "customers": "Customers Directory",
+      "reviews": "Reviews & Ratings",
+      "coupons": "Coupons & Discounts",
+      "banners": "Banners & CMS",
+      "analytics": "Sales & Revenue",
+      "inventory": "Inventory & Stock",
+      "shipping": "Shipping Rates",
+      "notifications": "System Notifications",
+      "settings": "Store Settings"
+    },
+    "breadcrumbs": {
+      "editOrder": "Edit Order",
+      "createCategory": "Create Category",
+      "editCategory": "Edit Category",
+      "createProduct": "Create Product",
+      "editProduct": "Edit Product",
+      "createCoupon": "Create Coupon",
+      "editCoupon": "Edit Coupon"
+    }
+  },
+  "dashboard": {
+    "overview": {
+      "title": "Dashboard Overview",
+      "description": "Monitor store performance, revenue, and recent orders."
+    },
+    "products": {
+      "title": "Products",
+      "description": "Manage product catalog, live inventory, and multi-channel pricing.",
+      "addProduct": "Add Product",
+      "createTitle": "Create Product",
+      "editTitle": "Edit Product"
+    },
+    "orders": {
+      "title": "Orders",
+      "description": "Manage customer orders, payment status, and fulfillment.",
+      "orderDetail": "Order Detail"
+    },
+    "categories": {
+      "title": "Categories",
+      "description": "Organize products into storefront categories.",
+      "addCategory": "Add Category",
+      "createTitle": "Create Category",
+      "editTitle": "Edit Category"
+    },
+    "customers": {
+      "title": "Customers & Users",
+      "description": "Manage customer accounts, roles, and access status.",
+      "addUser": "Add User"
+    },
+    "coupons": {
+      "title": "Coupons & Promo",
+      "description": "Create and manage promotional discount codes.",
+      "addCoupon": "Add Coupon",
+      "createTitle": "New Coupon",
+      "editTitle": "Edit Coupon"
+    },
+    "settings": {
+      "title": "Store Settings",
+      "description": "Customize the admin console appearance, brand color palettes, and language.",
+      "languageTitle": "Language",
+      "languageDescription": "Switch interface language between Thai and English."
+    }
+  },
+  "storefront": {
+    "navbar": {
+      "home": "Home",
+      "products": "All Products",
+      "myOrders": "My Orders",
+      "wishlist": "Wishlist",
+      "cart": "Shopping Cart",
+      "profile": "My Profile",
+      "orderHistory": "Order History",
+      "dashboard": "Admin Console",
+      "login": "Login",
+      "register": "Sign Up",
+      "logout": "Log out"
+    },
+    "home": {
+      "browseByCategory": "Browse By Category",
+      "allProducts": "All Products",
+      "newArrival": "New Arrival",
+      "onSale": "On Sale",
+      "discounts": "Discounts up to -50%"
+    },
+    "products": {
+      "addToCart": "Add to Cart",
+      "adding": "Adding...",
+      "outOfStock": "Out of Stock",
+      "filters": "Filters",
+      "price": "Price",
+      "categories": "Categories"
+    },
+    "cart": {
+      "title": "Shopping Cart",
+      "clearCart": "Clear Cart",
+      "empty": "Your cart is empty",
+      "checkout": "Checkout"
+    },
+    "checkout": {
+      "address": "Address",
+      "shipping": "Shipping",
+      "payment": "Payment",
+      "payNow": "Pay Now"
+    },
+    "profile": {
+      "personalInfo": "Personal Info",
+      "addresses": "Shipping Addresses",
+      "security": "Security & Password"
+    },
+    "myOrders": {
+      "title": "My Orders",
+      "subtitle": "Track shipment status, inspect order history, and manage your orders."
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Login",
+      "subtitle": "Enter your email below to login to your account",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Login",
+      "submitting": "Logging in..."
+    },
+    "register": {
+      "title": "Create an account",
+      "subtitle": "Enter your details below to create your account",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "submit": "Sign Up"
+    }
+  }
+}

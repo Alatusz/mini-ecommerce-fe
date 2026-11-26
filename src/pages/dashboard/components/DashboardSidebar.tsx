@@ -17,6 +17,7 @@ import {
 } from "lucide-react"
 
 import Logo from "@/assets/alatusz-logo.svg"
+import { useLanguage } from "@/context/LanguageContext"
 import {
   Sidebar,
   SidebarContent,
@@ -41,6 +42,8 @@ export function DashboardSidebar({
   setActiveMenu,
 }: DashboardSidebarProps = {}) {
   const location = useLocation()
+  const { dict } = useLanguage()
+  const s = dict.sidebar
 
   // Derive active menu from URL path if not explicitly provided
   let activeMenu = propActiveMenu
@@ -84,7 +87,7 @@ export function DashboardSidebar({
               Mini Ecommerce
             </span>
             <span className="text-[11px] font-medium text-muted-foreground">
-              Admin Console
+              {s.console}
             </span>
           </div>
         </Link>
@@ -94,7 +97,7 @@ export function DashboardSidebar({
       <SidebarContent>
         {/* 1. Store Management */}
         <SidebarGroup>
-          <SidebarGroupLabel>Store Management</SidebarGroupLabel>
+          <SidebarGroupLabel>{s.groups.storeManagement}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
@@ -102,11 +105,11 @@ export function DashboardSidebar({
                   <SidebarMenuButton
                     isActive={activeMenu === "dashboard"}
                     onClick={() => setActiveMenu?.("dashboard")}
-                    tooltip="Dashboard Overview"
+                    tooltip={s.items.dashboard}
                     className="cursor-pointer"
                   >
                     <LayoutDashboard className="size-4" />
-                    <span>Dashboard</span>
+                    <span>{s.items.dashboard}</span>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
@@ -116,11 +119,11 @@ export function DashboardSidebar({
                   <SidebarMenuButton
                     isActive={activeMenu === "orders"}
                     onClick={() => setActiveMenu?.("orders")}
-                    tooltip="Orders Management"
+                    tooltip={s.items.orders}
                     className="cursor-pointer"
                   >
                     <ShoppingBag className="size-4" />
-                    <span>Orders</span>
+                    <span>{s.items.orders}</span>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
@@ -130,11 +133,11 @@ export function DashboardSidebar({
                   <SidebarMenuButton
                     isActive={activeMenu === "products"}
                     onClick={() => setActiveMenu?.("products")}
-                    tooltip="Products Catalog"
+                    tooltip={s.items.products}
                     className="cursor-pointer"
                   >
                     <Package className="size-4" />
-                    <span>Products</span>
+                    <span>{s.items.products}</span>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
@@ -144,11 +147,11 @@ export function DashboardSidebar({
                   <SidebarMenuButton
                     isActive={activeMenu === "categories"}
                     onClick={() => setActiveMenu?.("categories")}
-                    tooltip="Product Categories"
+                    tooltip={s.items.categories}
                     className="cursor-pointer"
                   >
                     <Tags className="size-4" />
-                    <span>Categories</span>
+                    <span>{s.items.categories}</span>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
@@ -158,11 +161,11 @@ export function DashboardSidebar({
                   <SidebarMenuButton
                     isActive={activeMenu === "customers"}
                     onClick={() => setActiveMenu?.("customers")}
-                    tooltip="Customers Directory"
+                    tooltip={s.items.customers}
                     className="cursor-pointer"
                   >
                     <Users className="size-4" />
-                    <span>Customers</span>
+                    <span>{s.items.customers}</span>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
@@ -171,11 +174,11 @@ export function DashboardSidebar({
                 <SidebarMenuButton
                   isActive={activeMenu === "reviews"}
                   onClick={() => setActiveMenu?.("reviews")}
-                  tooltip="Reviews & Ratings"
+                  tooltip={s.items.reviews}
                   className="cursor-pointer"
                 >
                   <Star className="size-4" />
-                  <span>Reviews</span>
+                  <span>{s.items.reviews}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -186,7 +189,7 @@ export function DashboardSidebar({
 
         {/* 2. Marketing & Promotions */}
         <SidebarGroup>
-          <SidebarGroupLabel>Marketing & Sales</SidebarGroupLabel>
+          <SidebarGroupLabel>{s.groups.marketingSales}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
@@ -194,11 +197,11 @@ export function DashboardSidebar({
                   <SidebarMenuButton
                     isActive={activeMenu === "coupons"}
                     onClick={() => setActiveMenu?.("coupons")}
-                    tooltip="Coupons & Discounts"
+                    tooltip={s.items.coupons}
                     className="cursor-pointer"
                   >
                     <TicketPercent className="size-4" />
-                    <span>Coupons & Promo</span>
+                    <span>{s.items.coupons}</span>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
@@ -207,11 +210,11 @@ export function DashboardSidebar({
                 <SidebarMenuButton
                   isActive={activeMenu === "banners"}
                   onClick={() => setActiveMenu?.("banners")}
-                  tooltip="Banners & CMS"
+                  tooltip={s.items.banners}
                   className="cursor-pointer"
                 >
                   <ImageIcon className="size-4" />
-                  <span>Banners & CMS</span>
+                  <span>{s.items.banners}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -222,18 +225,18 @@ export function DashboardSidebar({
 
         {/* 3. Analytics & Logistics */}
         <SidebarGroup>
-          <SidebarGroupLabel>Analytics & Logistics</SidebarGroupLabel>
+          <SidebarGroupLabel>{s.groups.analyticsLogistics}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton
                   isActive={activeMenu === "analytics"}
                   onClick={() => setActiveMenu?.("analytics")}
-                  tooltip="Sales & Revenue Analytics"
+                  tooltip={s.items.analytics}
                   className="cursor-pointer"
                 >
                   <TrendingUp className="size-4" />
-                  <span>Analytics</span>
+                  <span>{s.items.analytics}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
@@ -241,11 +244,11 @@ export function DashboardSidebar({
                 <SidebarMenuButton
                   isActive={activeMenu === "inventory"}
                   onClick={() => setActiveMenu?.("inventory")}
-                  tooltip="Inventory & Stock"
+                  tooltip={s.items.inventory}
                   className="cursor-pointer"
                 >
                   <Layers className="size-4" />
-                  <span>Inventory</span>
+                  <span>{s.items.inventory}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
@@ -267,11 +270,11 @@ export function DashboardSidebar({
                 <SidebarMenuButton
                   isActive={activeMenu === "notifications"}
                   onClick={() => setActiveMenu?.("notifications")}
-                  tooltip="System Notifications"
+                  tooltip={s.items.notifications}
                   className="cursor-pointer"
                 >
                   <Bell className="size-4" />
-                  <span>Notifications</span>
+                  <span>{s.items.notifications}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -282,17 +285,17 @@ export function DashboardSidebar({
 
         {/* 4. System & Store */}
         <SidebarGroup>
-          <SidebarGroupLabel>System & Store</SidebarGroupLabel>
+          <SidebarGroupLabel>{s.groups.systemStore}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
                 <Link to="/" className="w-full">
                   <SidebarMenuButton
-                    tooltip="Back to Storefront"
+                    tooltip={s.items.viewStorefront}
                     className="cursor-pointer"
                   >
                     <Store className="size-4" />
-                    <span>View Storefront</span>
+                    <span>{s.items.viewStorefront}</span>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
@@ -302,11 +305,11 @@ export function DashboardSidebar({
                   <SidebarMenuButton
                     isActive={activeMenu === "settings"}
                     onClick={() => setActiveMenu?.("settings")}
-                    tooltip="Store Settings"
+                    tooltip={s.items.settings}
                     className="cursor-pointer"
                   >
                     <Settings className="size-4" />
-                    <span>Settings</span>
+                    <span>{s.items.settings}</span>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
