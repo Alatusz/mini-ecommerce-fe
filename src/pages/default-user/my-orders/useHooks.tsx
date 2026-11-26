@@ -17,6 +17,7 @@ export interface OrderLineItem {
   id: string
   orderItemId: string
   rating: number
+  review: string
   name: string
   price: number
   quantity: number
@@ -76,6 +77,7 @@ export function useMyOrders() {
   const [ratingTargetItem, setRatingTargetItem] =
     useState<OrderLineItem | null>(null)
   const [selectedStars, setSelectedStars] = useState<number>(0)
+  const [reviewText, setReviewText] = useState("")
 
   const { data: myOrdersRes, isLoading } = useQuery({
     queryKey: [QUERY_KEYS.STOREFRONT.MY_ORDERS],
@@ -146,8 +148,15 @@ export function useMyOrders() {
   })
 
   const rateMutation = useMutation({
-    mutationFn: ({ itemId, rating }: { itemId: string; rating: number }) =>
-      rateOrderItem(itemId, rating),
+    mutationFn: ({
+      itemId,
+      rating,
+      review,
+    }: {
+      itemId: string
+      rating: number
+      review?: string
+    }) => rateOrderItem(itemId, rating, review),
 
     onSuccess: () => {
       showToast.success("ให้คะแนนสินค้าสำเร็จแล้ว")
@@ -163,6 +172,7 @@ export function useMyOrders() {
 
       setRatingTargetItem(null)
       setSelectedStars(0)
+      setReviewText("")
     },
     onError: (err: any) => {
       showToast.error(err?.response?.data?.message || "ไม่สามารถส่งคะแนนได้")
@@ -210,6 +220,7 @@ export function useMyOrders() {
     rateMutation.mutate({
       itemId: ratingTargetItem.orderItemId,
       rating: selectedStars,
+      review : reviewText.trim() || undefined
     })
   }
 
@@ -244,8 +255,10 @@ export function useMyOrders() {
     stats,
     ratingTargetItem,
     setRatingTargetItem,
-    selectedStars,
     setSelectedStars,
+    reviewText,
+    setReviewText,
+    selectedStars,
     isRating: rateMutation.isPending,
     handleSubmitRating,
   }
